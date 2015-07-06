@@ -1,2 +1,12 @@
-Dependencies:
-libconfig
+GPUE requires Cuda 4.0 minimum, and runs as expected up to 6.0 on both Linux and Mac OS X (Nvidia GPU only), Python 2.6+, Numpy, Scipy, Matplotlib, Mencoder
+No testing on higher versions has been performed yet.
+
+To build, first check the predefined paths in the Makefile (CUDA lib/lib64, bin, include, etc).
+
+Configuring the simulation parameters is as easy as editing the bin/run_params.conf file, and entering them as specified. 
+Each new line will represent another simulation, with the maximum number of simultaneous simulations to be given as specified in run.sh.
+
+To run the simulations:
+chmod +x ./run.sh; ./run.sh
+
+If the image generation fails, this can be rectified manually by editing the files py/vis.py, and selecting the appropriate operation.
