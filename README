@@ -9,4 +9,4 @@ Each new line will represent another simulation, with the maximum number of simu
 To run the simulations:
 chmod +x ./run.sh; ./run.sh
 
-If the image generation fails, this can be specified by manually editing the files py/vis.py, and selecting the appropriate operation.
+If the image generation fails, this can be rectified manually by editing the files py/vis.py, and selecting the appropriate operation.
