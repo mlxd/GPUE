@@ -1,4 +1,4 @@
-GPUE requires Cuda 4.0 minimum, and runs as expected up to 6.0 on both Linux and Mac OS X (Nvidia GPU only), Python 2.6+, Numpy, Scipy, Matplotlib, Mencoder
+GPUE requires Cuda 4.0 minimum, and runs as expected up to 6.0 on both Linux and Mac OS X (Nvidia GPU only). Other requirements are Python 2.6+, Numpy, Scipy, Matplotlib, Mencoder.
 No testing on higher versions has been performed yet.
 
 To build, first check the predefined paths in the Makefile (CUDA lib/lib64, bin, include, etc).
