@@ -29,7 +29,7 @@
 #SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #!/bin/bash
 i=0
-EMAIL=mymail@addr.com
+EMAIL=lee.oriordan@oist.jp
 count=0
 NAME=$1
 PARAMS=$2
@@ -39,16 +39,9 @@ function run_gpue_test {
 }
 
 function run_gpue {
-	if [[ $(echo $1 | head -c 1) == "#" ]];then
-		return;
-	elif [[ $(echo $1 | head -c 1) == "" ]];then 
-		return
-	fi
-	
 	if [ -n  "$NAME" ];then
 		NAME=$(echo $NAME)_
 	fi
-	sleep 1
 	A=$(date '+%y/%m/%d/%H_%M_%S')
 	if [ -d ./$A ]; then
 		echo "Exists"
@@ -77,11 +70,18 @@ function run_gpue {
 }
 
 while read line ; do
-	run_gpue "$line" &
+	if [[ $(echo $line | head -c 1) == "#" ]];then
+		continue;
+	elif [[ $(echo $line | head -c 1) == "" ]];then 
+		continue;
+	else 
+		sleep 1;
+		run_gpue "$line" &
+	fi
+	
 	#echo "Running $line"
 	JOBS[$count]=$!
 	let count+=1
-	
 	if [ $count -gt 7 ]; then
 		wait
 		count=0
