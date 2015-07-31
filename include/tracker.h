@@ -41,37 +41,59 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include<stdio.h>
 #include<cuda.h>
 #include<cuda_runtime.h>
-#include<complex.h>
+//#include<complex.h>
 
 /** See the source file for info on functions.**/
-namespace Tracker{
-	
-	/** Vortex is used to track specific individual vortices.
+namespace Tracker {
+
+    /** Vortex is used to track specific individual vortices.
 	 * coords tracks x,y positions.
 	 * sign indicates direction of vortex rotation.
 	 * wind indicates the unit charge of the vortex.
 	 */
-	struct Vortex{
-		int2 coords;
-		int sign;
-		int wind;
-	};
+    struct Vortex {
+	    int2 coords;
+	    double2 coordsD;
+	    int sign;
+	    int wind;
+    };
 
-	int findVortex(int*,double2*, double, int, double*, int);
-	void vortPos(int *marker, struct Vortex *vLocation, int xDim, double2* wfc);
-	void olPos(int *marker, int2 *vLocation, int xDim);
-	struct Vortex* vortPosDelta(int *cMarker, int2 *pMarker, double* x, double tolerance, int numVortices, int xDim);
-	struct Vortex vortCentre(struct Vortex *cArray, int length, int xDim);
-	double vortAngle(struct Vortex *vortCoords, struct Vortex central, int numVort);
-	double vortSepAvg(struct Vortex *vArray, struct Vortex centre, int length);
-	double sigVOL(int2 *vArr, int2 *opLatt, double *x, int numVort);
+    /**
+	 * Values from solving Ax=b for vortex least squares core finder.
+	 */
+    static const double lsq[3][4] = {{-0.5, 0.5,  -0.5, 0.5},
+                                     {-0.5, -0.5, 0.5,  0.5},
+                                     {0.75, 0.25, 0.25, -0.25}};
 
-	/**
+    /** findVortex finds the vortex locations.
+	 */
+    int findVortex(int *, double2 *, double, int, double *, int);
+
+    void vortPos(int *marker, struct Vortex *vLocation, int xDim, double2 *wfc);
+
+    void olPos(int *marker, int2 *vLocation, int xDim);
+
+    struct Vortex *vortPosDelta(int *cMarker, int2 *pMarker, double *x, double tolerance, int numVortices, int xDim);
+
+    struct Vortex vortCentre(struct Vortex *cArray, int length, int xDim);
+
+    double vortAngle(struct Vortex *vortCoords, struct Vortex central, int numVort);
+
+    double vortSepAvg(struct Vortex *vArray, struct Vortex centre, int length);
+
+    double sigVOL(int2 *vArr, int2 *opLatt, double *x, int numVort);
+
+    /**
 	 * Finds the maxima of the optical lattice. Deprecated.
 	 */
-	int findOLMaxima(int *marker, double *V, double radius, int xDim, double* x);
-	void vortArrange(struct Vortex *vCoordsC, struct Vortex *vCoordsP, int length);
-	int phaseTest(int2 vLoc, double2* wfc, int xDim);
+    int findOLMaxima(int *marker, double *V, double radius, int xDim, double *x);
+
+    void vortArrange(struct Vortex *vCoordsC, struct Vortex *vCoordsP, int length);
+
+    int phaseTest(int2 vLoc, double2 *wfc, int xDim);
+
+    void lsFit(struct Tracker::Vortex *vortCoords, double2 *wfc, int numVort, int xDim);
+
 }
 
 #endif

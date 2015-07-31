@@ -377,10 +377,12 @@ int evolve( cufftDoubleComplex *gpuWfc,
 					fileName = "wfc_ev";
 					vortexLocation = (int*) calloc(xDim*yDim,sizeof(int));
 					num_vortices[0] = Tracker::findVortex(vortexLocation, wfc, 1e-4, xDim, x, i);
+
 					if(i==0){
 						vortCoords = (struct Tracker::Vortex*) malloc(sizeof(struct Tracker::Vortex)*(2*num_vortices[0]));
 						vortCoordsP = (struct Tracker::Vortex*) malloc(sizeof(struct Tracker::Vortex)*(2*num_vortices[0]));
 						Tracker::vortPos(vortexLocation, vortCoords, xDim, wfc);
+						Tracker::lsFit(vortCoords, wfc, num_vortices[0], xDim);
 						central_vortex = Tracker::vortCentre(vortCoords, num_vortices[0], xDim);
 						vort_angle = Tracker::vortAngle(vortCoords,central_vortex, num_vortices[0]);
 						appendData(&params,"Vort_angle",vort_angle);
@@ -400,11 +402,13 @@ int evolve( cufftDoubleComplex *gpuWfc,
 						FileIO::writeOutParam(buffer, params, "Params.dat");
 					}
 					else if(num_vortices[0] > num_vortices[1]){
-						printf("Number of vortices changed from %d to %d\n",num_vortices[1],num_vortices[0]);
+						printf("Number of vortices increased from %d to %d\n",num_vortices[1],num_vortices[0]);
 						Tracker::vortPos(vortexLocation, vortCoords, xDim,wfc);
+						Tracker::lsFit(vortCoords, wfc, num_vortices[0], xDim);
 					}
 					else{
 						Tracker::vortPos(vortexLocation, vortCoords, xDim,wfc);
+						Tracker::lsFit(vortCoords, wfc, num_vortices[0], xDim);
 						Tracker::vortArrange(vortCoords, vortCoordsP, num_vortices[0]);
 					}
 			/*		num_latt_max = Tracker::findOLMaxima(olMaxLocation, V_opt, 1e-4, xDim, x);
@@ -415,6 +419,7 @@ int evolve( cufftDoubleComplex *gpuWfc,
 						FileIO::writeOutInt2(buffer, "opt_max_arr", olCoords, num_latt_max, i);
 						free(olCoords);
 					}*/
+
 					FileIO::writeOutVortex(buffer, "vort_arr", vortCoords, num_vortices[0], i);
 					printf("Located %d vortices\n",num_vortices[0]);
 					printf("Sigma=%e\n",vortOLSigma);
@@ -635,9 +640,9 @@ void optLatSetup(struct Tracker::Vortex centre, double* V, struct Tracker::Vorte
 	for ( j=0; j<yDim; ++j ){
 		for ( i=0; i<xDim; ++i ){
 			v_opt[j*xDim + i] = intensity*(
-					    	  pow( abs( cos( k[0].x*( x[i] + x_shift ) + k[0].y*( y[j] + y_shift ) ) ), 2)
-					  	+ pow( abs( cos( k[1].x*( x[i] + x_shift ) + k[1].y*( y[j] + y_shift ) ) ), 2)
-					  	+ pow( abs( cos( k[2].x*( x[i] + x_shift ) + k[2].y*( y[j] + y_shift ) ) ), 2)
+					    	  pow( ( cos( k[0].x*( x[i] + x_shift ) + k[0].y*( y[j] + y_shift ) ) ), 2)
+					  	+ pow( ( cos( k[1].x*( x[i] + x_shift ) + k[1].y*( y[j] + y_shift ) ) ), 2)
+					  	+ pow( ( cos( k[2].x*( x[i] + x_shift ) + k[2].y*( y[j] + y_shift ) ) ), 2)
 			/*		    	  pow( abs( cos( k[0].x*( r_opt[i].x + x_shift ) + k[0].y*( r_opt[j].y + y_shift ) ) ), 2)
 					  	+ pow( abs( cos( k[1].x*( r_opt[i].x + x_shift ) + k[1].y*( r_opt[j].y + y_shift ) ) ), 2)
 					  	+ pow( abs( cos( k[2].x*( r_opt[i].x + x_shift ) + k[2].y*( r_opt[j].y + y_shift ) ) ), 2)
@@ -646,7 +651,6 @@ void optLatSetup(struct Tracker::Vortex centre, double* V, struct Tracker::Vorte
 			EV_opt[(j*xDim + i)].y=sin( -(V[(j*xDim + i)] + v_opt[j*xDim + i])*(dt/(2*HBAR)));
 		}
 	}
-	
 }
 
 /**

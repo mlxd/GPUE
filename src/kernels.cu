@@ -35,7 +35,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdio.h>
 
 
-__constant__ double gDenConst = 2.535425438831619e-59;//Evaluted in MATLAB: HBAR*(4.67e-9)*sqrt(8*HBAR*PI)*; 
+__constant__ double gDenConst = 6.6741e-40;//Evaluted in MATLAB: N*4*HBAR*HBAR*PI*(4.67e-9/mass)*sqrt(mass*(omegaZ)/(2*PI*HBAR))
 //inline __device__ unsigned int getGid3d3d(){
 
 __device__ unsigned int getGid3d3d(){
@@ -85,8 +85,7 @@ __host__ __device__ double2 complexMultiply(double2 in1, double2 in2){
 /*
 * Used to perform conj(in1)*in2; == < in1 | in2 >
 */
-inline __device__ double2 braKetMult(double2 in1, double2 in2)
-{
+inline __device__ double2 braKetMult(double2 in1, double2 in2){
 	return complexMultiply(conjugate(in1),in2);
 }
 
@@ -105,7 +104,7 @@ __global__ void cMultDensity(double2* in1, double2* in2, double2* out, double dt
 	double2 result;
 	double gDensity;
 	int tid = blockIdx.y*gridDim.x*blockDim.x + blockIdx.x*blockDim.x + threadIdx.x;
-	gDensity = N*complexMagnitudeSquared(in2[tid])*4*HBAR*HBAR*PI*(4.67e-9/mass)*sqrt(mass*(omegaZ)/(2*PI*HBAR));
+	gDensity = gDenConst*complexMagnitudeSquared(in2[tid]); // scaling of interaction strength doesn't work now
 
 	if(gstate == 0){
 		double tmp = in1[tid].x*exp(-gDensity*(dt/HBAR) );

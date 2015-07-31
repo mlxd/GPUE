@@ -33,7 +33,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "../include/minions.h"
 
-namespace Minions{ 
+namespace Minions{
+
 	double psi2(double2 in){
 		return in.x*in.x + in.y*in.y;
 	}
@@ -119,6 +120,21 @@ namespace Minions{
 		double2 c = conj(den);
 		return complexScale(complexMult(num,c),(1.0/complexMag2(den)));
 	}
+
+	void trans2x2(double *in, double *out){
+		out[0] = in[0];
+		out[1] = in[2];
+		out[2] = in[1];
+		out[3] = in[3];
+	}
+
+    void inv2x2(double *in, double *out){
+	    double det = 1.0/(in[0]*in[3] - in[1]*in[2]);
+	    out[0] = det*in[3];
+	    out[1] = -det*in[1];
+	    out[2] = -det*in[2];
+	    out[3] = det*in[0];
+    }
 }
 
 	/*

@@ -34,11 +34,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef SPLIT_OP_H
 #define SPLIT_OP_H
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
-#include <string.h>
-#include <time.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cmath>
+#include <string>
+#include <ctime>
 #include <cuda.h>
 #include <cuda_runtime.h>
 #include <cufft.h>

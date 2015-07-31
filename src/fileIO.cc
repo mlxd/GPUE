@@ -146,7 +146,7 @@ namespace FileIO{
 		int i;
 		fprintf (f, "#X,Y,WINDING,SIGN\n");
 		for (i = 0; i < length; i++) 
-			fprintf (f, "%d,%d,%d,%d\n",data[i].coords.x,data[i].coords.y,data[i].wind,data[i].sign);
+			fprintf (f, "%d,%e,%d,%e,%d,%d\n",data[i].coords.x,data[i].coordsD.x,data[i].coords.y,data[i].coordsD.y,data[i].wind,data[i].sign);
 		fclose (f);
 	}
 	

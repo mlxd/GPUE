@@ -50,9 +50,9 @@ namespace Tracker {
 		double min = 0.0;
 		double min_tmp = 0.0;
 		int index=0;
-		min = sqrt( pow(centre.coords.x - vArray[0].coords.x,2) + pow(centre.coords.y - vArray[0].coords.y,2));
+		min = sqrt( pow(centre.coordsD.x - vArray[0].coordsD.x,2) + pow(centre.coordsD.y - vArray[0].coordsD.y,2));
 		for (int j=1; j<length; ++j){
-			min_tmp	= sqrt( pow(centre.coords.x - vArray[j].coords.x,2) + pow(centre.coords.y - vArray[j].coords.y,2));
+			min_tmp	= sqrt( pow(centre.coordsD.x - vArray[j].coordsD.x,2) + pow(centre.coordsD.y - vArray[j].coordsD.y,2));
 			if(min > min_tmp && min_tmp > 1e-7){
 				min = min_tmp;
 				index = j;
@@ -149,7 +149,6 @@ namespace Tracker {
 									g[1] = Minions::complexScale( Minions::complexDiv( wfc[(i+1)*xDim + j], 	wfc[(i+1)*xDim + (j+1)] ), 	( Minions::complexMag( wfc[(i+1)*xDim + (j+1)])	/ Minions::complexMag( wfc[(i+1)*xDim + j] )));	
 									g[2] = Minions::complexScale( Minions::complexDiv( wfc[(i+1)*xDim + (j+1)],	wfc[i*xDim + (j+1)] ), 		( Minions::complexMag( wfc[i*xDim + (j+1)])		/ Minions::complexMag( wfc[(i+1)*xDim + (j+1)] )));		
 									g[3] = Minions::complexScale( Minions::complexDiv( wfc[i*xDim + (j+1)], 	wfc[i*xDim + j] ), 			( Minions::complexMag( wfc[i*xDim + j])			/ Minions::complexMag( wfc[i*xDim + (j+1)] )));
-
 					for (int k=0; k<4; ++k){
 						phiDelta[k] = atan2( g[k].y, g[k].x );
 						if(phiDelta[k] <= -PI){
@@ -253,7 +252,7 @@ namespace Tracker {
 			dist = 0x7FFFFFFF; //arbitrary big value
 			index = i;
 			for ( j = i; j < length ; ++j){
-				dist_t = ( (vCoordsP[i].coords.x - vCoordsC[j].coords.x)*(vCoordsP[i].coords.x - vCoordsC[j].coords.x) + (vCoordsP[i].coords.y - vCoordsC[j].coords.y)*(vCoordsP[i].coords.y - vCoordsC[j].coords.y) );
+				dist_t = ( (vCoordsP[i].coordsD.x - vCoordsC[j].coordsD.x)*(vCoordsP[i].coordsD.x - vCoordsC[j].coordsD.x) + (vCoordsP[i].coordsD.y - vCoordsC[j].coordsD.y)*(vCoordsP[i].coordsD.y - vCoordsC[j].coordsD.y) );
 				if(dist > dist_t ){
 					dist = dist_t;
 					index = j;
@@ -270,12 +269,12 @@ namespace Tracker {
 		int i, j, counter=0;
 		int valX, valY;
 		double valueTest, value = 0.0;
-		valX = (cArray)[0].coords.x - ((xDim/2)-1);
-		valY = (cArray)[0].coords.y - ((xDim/2)-1);
+		valX = (cArray)[0].coordsD.x - ((xDim/2)-1);
+		valY = (cArray)[0].coordsD.y - ((xDim/2)-1);
 		value = sqrt( valX*valX + valY*valY );//Calcs the sqrt(x^2+y^2) from central position. try to minimise this value
 		for ( i=1; i<length; ++i ){
-			valX = (cArray)[i].coords.x - ((xDim/2)-1);
-			valY = (cArray)[i].coords.y - ((xDim/2)-1);
+			valX = (cArray)[i].coordsD.x - ((xDim/2)-1);
+			valY = (cArray)[i].coordsD.y - ((xDim/2)-1);
 			valueTest = sqrt(valX*valX + valY*valY);
 			if(value > valueTest){ 
 				value = valueTest;
@@ -293,8 +292,8 @@ namespace Tracker {
 		double sign=1.0;
 		double minVal=1e300;//(pow(central.x - vortCoords[0].x,2) + pow(central.y - vortCoords[0].y,2));
 		for (int i=0; i < numVort; ++i){
-			if (minVal > (pow(central.coords.x - vortCoords[i].coords.x,2) + pow(central.coords.y - vortCoords[i].coords.y,2)) && abs(central.coords.x - vortCoords[i].coords.x) > 2e-6 && abs(central.coords.y - vortCoords[i].coords.y) > 2e-6){
-				minVal = (pow(central.coords.x - vortCoords[i].coords.x,2) + pow(central.coords.y - vortCoords[i].coords.y,2));
+			if (minVal > (pow(central.coordsD.x - vortCoords[i].coordsD.x,2) + pow(central.coordsD.y - vortCoords[i].coordsD.y,2)) && abs(central.coordsD.x - vortCoords[i].coordsD.x) > 2e-6 && abs(central.coordsD.y - vortCoords[i].coordsD.y) > 2e-6){
+				minVal = (pow(central.coordsD.x - vortCoords[i].coordsD.x,2) + pow(central.coordsD.y - vortCoords[i].coordsD.y,2));
 				location = i;
 			}
 		}
@@ -313,10 +312,40 @@ namespace Tracker {
 		double sigma = 0.0;
 		double dx = abs(x[1]-x[0]);
 		for (int i=0; i<numVort; ++i){
-			sigma += pow( abs( sqrt( (vArr[i].coords.x - opLatt[i].x)*(vArr[i].coords.x - opLatt[i].x) + (vArr[i].coords.y - opLatt[i].y)*(vArr[i].coords.y - opLatt[i].y) )*dx),2);
+			sigma += pow( abs( sqrt( (vArr[i].coordsD.x - opLatt[i].x)*(vArr[i].coordsD.x - opLatt[i].x) + (vArr[i].coordsD.y - opLatt[i].y)*(vArr[i].coordsD.y - opLatt[i].y) )*dx),2);
 		}
 		sigma /= numVort;
 		return sigma;
 	}
 
+	/**
+	 * Performs least squares fitting to get exact vortex core position.
+	 */
+    void lsFit(struct Tracker::Vortex *vortCoords, double2 *wfc, int numVort, int xDim){
+		double2 *wfc_grid = (double2*) malloc(sizeof(double2)*4);
+		double2 *res = (double2*) malloc(sizeof(double2)*3);
+		double2 X;
+		double det=0.0;
+		for(int ii=0; ii<numVort; ++ii){
+			vortCoords[ii].coordsD.x = 0.0; vortCoords[ii].coordsD.y = 0.0;
+
+			wfc_grid[0] = wfc[vortCoords[ii].coords.x*xDim + vortCoords[ii].coords.y];
+			wfc_grid[1] = wfc[(vortCoords[ii].coords.x + 1)*xDim + vortCoords[ii].coords.y];
+			wfc_grid[2] = wfc[vortCoords[ii].coords.x*xDim + (vortCoords[ii].coords.y + 1)];
+			wfc_grid[3] = wfc[(vortCoords[ii].coords.x + 1)*xDim + (vortCoords[ii].coords.y + 1)];
+
+			for(int jj=0; jj<3; ++jj) {
+				res[jj].x = lsq[jj][0]*wfc_grid[0].x + lsq[jj][1]*wfc_grid[1].x + lsq[jj][2]*wfc_grid[2].x + lsq[jj][3]*wfc_grid[3].x;
+				res[jj].y = lsq[jj][0]*wfc_grid[0].y + lsq[jj][1]*wfc_grid[1].y + lsq[jj][2]*wfc_grid[2].y + lsq[jj][3]*wfc_grid[3].y;
+			}
+
+			//Solve Ax=b here. A = res[0,1], b = - res[2]. Solution -> X
+			det = 1.0/(res[0].x*res[1].y - res[0].y*res[1].x);
+			X.x = det*(res[1].y*res[2].x - res[0].y*res[2].y);
+			X.y = det*(-res[1].x*res[2].x + res[0].x*res[2].y);
+
+			vortCoords[ii].coordsD.x = vortCoords[ii].coords.x - X.x;
+			vortCoords[ii].coordsD.y = vortCoords[ii].coords.y - X.y;
+		}
+    }
 }
