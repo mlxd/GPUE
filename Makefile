@@ -9,7 +9,7 @@ else
 CC			= /usr/local/cuda/bin/nvcc --ptxas-options=-v --compiler-options -Wall #-save-temps
 CUDA_LIB	= /usr/local/cuda/lib64
 CUDA_HEADER	= /usr/local/cuda/include
-CHOSTFLAGS	= -fopenmp
+CHOSTFLAGS	= #-fopenmp
 CFLAGS		= -g -O3 -std=c++11#-malign-double
 GPU_ARCH	= sm_30
 endif
