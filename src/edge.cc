@@ -74,7 +74,7 @@ Node* Edge::getNode(int idx){
 		return this->n1;
 	}
 	else{
-		return this->n1;
+		return this->n2;
 	}
 }
 

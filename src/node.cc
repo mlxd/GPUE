@@ -113,6 +113,12 @@ void Node::removeEdges(){
 	this->Node::getEdges().clear();
 }
 
+#include <iostream>
+
 Node* Node::getConnectedNode(Edge *e){
+	std::cout << "e->getNode(0)->getUid()" << e->getNode(0)->getUid() << std::endl;
+	std::cout << "e->getNode(1)->getUid()" << e->getNode(1)->getUid() << std::endl;
+	std::cout << "   this->Node::getUid()" << this->Node::getUid() << std::endl;
+	//exit(1);
 	return (e->getNode(0)->getUid() != this->Node::getUid()) ? e->getNode(0) :  e->getNode(1) ;
 }
