@@ -18,31 +18,32 @@ namespace LatticeGraph {
     class Lattice {
 
     private:
-	    std::vector <Node> vortices; //The nodes
+	    //std::vector <Node> vortices; //The nodes
+	    std::vector <std::shared_ptr <Node> > vortices; //The nodes
 
     public:
 	    Lattice();
 	    ~Lattice();
 
-	    Node &getElement(int idx);
+	    std::shared_ptr<Node> getElement(int idx);
 
 	    int getElementUidIdx(unsigned int uid); //get element index by uid
 
-	    Node &getElementUid(unsigned int uid); // gets element by uid. Assumes it exists.
+	    std::shared_ptr<Node> getElementUid(unsigned int uid); // gets element by uid. Assumes it exists.
 
-	    std::vector <Node> &getVortices(); //get vortices vector
+	    std::vector <std::shared_ptr <Node> > &getVortices(); //get vortices vector
 
-	    double getNodeDistance(Node &n1, Node &n2); //compare distances between nodes;
+	    double getNodeDistance(std::shared_ptr<Node> n1, std::shared_ptr<Node> n2); //compare distances between nodes;
 
-	    void setElement(int idx, Node &vtx);
+	    void setElement(int idx, std::shared_ptr<Node> n);
 
-	    void addNode(Node& vtx);
+	    void addNode(std::shared_ptr<Node> n);
 
-	    void removeNode(Node &n);
+	    void removeNode(std::shared_ptr<Node> n);
 
-	    void removeEdges(Node &n1);
+	    void removeEdges(std::shared_ptr<Node> n1);
 
-	    void removeEdge(Node &n1, Node &n2);
+	    void removeEdge(std::shared_ptr<Node> n1, std::shared_ptr<Node> n2);
 
 	    void removeNode(int idx);
 
@@ -50,7 +51,7 @@ namespace LatticeGraph {
 
 	    void genAdjMat(unsigned int *mat);  //generate adjacency matrix
 
-	    void addEdge(Edge &e, Node &n1, Node &n2);
+	    void addEdge(std::shared_ptr<Edge> e, std::shared_ptr<Node> n1, std::shared_ptr<Node> n2);
 
 	    void adjMatMtca(unsigned int *mat);
     };

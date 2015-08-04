@@ -19,7 +19,7 @@ namespace LatticeGraph {
     private:
 	    static unsigned int suid; //Incremented id for new
 
-	    Node *n1, *n2; //Points to the connected nodes
+	    std::shared_ptr<Node> n1, n2; //Points to the connected nodes
 
 	    int direction; //1 n1->n2, 0 undirected, -1 n2->n1
 
@@ -31,8 +31,8 @@ namespace LatticeGraph {
 	    Edge();
 	    ~Edge();
 
-	    Edge(Node &n1, Node &n2);
-	    Edge(Node &n1, Node &n2, int dir, double weight);
+	    Edge(std::shared_ptr<Node> n1, std::shared_ptr<Node> n2);
+	    Edge(std::shared_ptr<Node> n1, std::shared_ptr<Node> n2, int dir, double weight);
 
 	    unsigned int getUid();
 
@@ -40,13 +40,13 @@ namespace LatticeGraph {
 
 	    double getWeight();
 
-	    Node *getNode(int idx);
+	    std::shared_ptr<Node> getNode(int idx);
 
 	    void setDirection(int direction);
 
 	    void setWeight(double weight);
 
-	    void updateNode(int idx, Node *n_new);
+	    void updateNode(int idx, std::shared_ptr<Node> n_new);
     };
 
 }

@@ -7,7 +7,7 @@
 
 #include <cstdlib>
 #include <cmath>
-#include <algorithm>
+#include <memory>
 #include <vector>
 #include "edge.h"
 #include "tracker.h"
@@ -21,7 +21,7 @@ namespace LatticeGraph {
 
 	    Tracker::Vortex data;
 
-	    std::vector<Edge *> edges; //all connected edges
+	    std::vector<std::shared_ptr <Edge> > edges; //all connected edges
 
     public:
 	    unsigned int uid;
@@ -35,25 +35,25 @@ namespace LatticeGraph {
 
 	    Tracker::Vortex &getData();
 
-	    std::vector<Edge *> &getEdges(); //returns all connected edges
+	    std::vector<std::shared_ptr <Edge> > &getEdges(); //returns all connected edges
 
-	    Edge *getEdge(int idx); //returns edge at index idx
+	    std::shared_ptr<Edge> getEdge(int idx); //returns edge at index idx
 
 	    void setData(Tracker::Vortex &data);
 
-	    void addEdge(Node &n, int dir, double weight);
+	    void addEdge(std::shared_ptr<Node> n, int dir, double weight);
 
-	    void addEdge(Edge &e);
+	    void addEdge(std::shared_ptr<Edge> e);
 
-	    void removeEdge(Node &n); //remove edge connecting this to Node n
+	    void removeEdge(std::shared_ptr<Node> n); //remove edge connecting this to Node n
 
 	    void removeEdge(unsigned int uid); //remove edge at index idx
 
-	    void removeEdge(Edge &e); //remove edge at index idx
+	    void removeEdge(std::shared_ptr<Edge> e); //remove edge at index idx
 
 	    void removeEdges(); //remove all edges
 
-	    Node *getConnectedNode(Edge *e); //Return the node on the other side of the edge
+	    std::shared_ptr<Node> getConnectedNode(std::shared_ptr<Edge> e); //Return the node on the other side of the edge
 
 	    void getConnectedNodes(unsigned int &nodes); //get all connected nodes to this
     };

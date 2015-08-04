@@ -43,7 +43,7 @@ Lattice::~Lattice(){
 	this->getVortices().clear();
 }
 
-Node& Lattice::getElement(int idx){
+std::shared_ptr<Node> Lattice::getElement(int idx){
 	return getVortices().at(idx);
 }
 
@@ -52,7 +52,7 @@ Node& Lattice::getElement(int idx){
  */
 int Lattice::getElementUidIdx(unsigned int uid){
 	for (int ii=0; ii< getVortices().size(); ++ii){
-		if(this->Lattice::getElement(ii).getUid()== uid){
+		if(this->Lattice::getElement(ii)->getUid()== uid){
 			return ii;
 		}
 	}
@@ -62,59 +62,59 @@ int Lattice::getElementUidIdx(unsigned int uid){
 /***
  * Gets the the Node with UID uid. Assumes Node exists.
  */
-Node& Lattice::getElementUid(unsigned int uid){
+std::shared_ptr<Node> Lattice::getElementUid(unsigned int uid){
 	for (int ii=0; ii < this->Lattice::getVortices().size(); ++ii){
-		if(this->Lattice::getElement(ii).getUid()== uid){
+		if(this->Lattice::getElement(ii)->getUid()== uid){
 			return this->Lattice::getElement(ii);
 		}
 	}
 }
 
-void Lattice::setElement(int idx, Node &n){
+void Lattice::setElement(int idx, std::shared_ptr<Node> n){
 	this->Lattice::getVortices().at(idx) = n;
 }
 
-void Lattice::addNode(Node &n){
+void Lattice::addNode(std::shared_ptr<Node> n){
 	this->Lattice::getVortices().push_back(n);
 }
 
-void Lattice::removeNode(Node &n){
-	this->Lattice::removeNode(this->Lattice::getElementUid(n.getUid()));
+void Lattice::removeNode(std::shared_ptr<Node> n){
+	this->Lattice::removeNode(this->Lattice::getElementUid(n->getUid()));
 }
 
 void Lattice::removeNode(int idx){
-	Node *n = &this->Lattice::getElement(idx);
+	std::shared_ptr<Node> n = this->Lattice::getElement(idx);
 	this->Lattice::getVortices().erase(this->Lattice::getVortices().begin() + idx);
-	delete n;
 }
 
-void Lattice::addEdge(Edge& e, Node &n1, Node &n2){
-	n1.addEdge(e);
-	n2.addEdge(e);
+void Lattice::addEdge(std::shared_ptr<Edge> e, std::shared_ptr<Node> n1, std::shared_ptr<Node> n2){
+	n1->addEdge(e);
+	n2->addEdge(e);
 }
 
 void Lattice::createEdges(){
 	for(int ii=0; ii< this->Lattice::getVortices().size(); ++ii){
 		for(int jj=ii; ii< this->Lattice::getVortices().size(); ++jj){
 			if(Lattice::getNodeDistance(this->getElement(ii),this->getElement(jj))) {
-				Edge *e = new Edge ( this->getElement(ii), this->getElement(jj) );
-				this->Lattice::addEdge(*e,this->getElement(ii),this->getElement(jj));
+				std::shared_ptr<Edge> e(new Edge ( this->getElement(ii), this->getElement(jj) ));
+				this->Lattice::addEdge(e,this->getElement(ii),this->getElement(jj));
 				e = NULL;
 			}
 		}
 	}
 }
 
-std::vector< Node >& Lattice::getVortices(){
+std::vector< std::shared_ptr<Node> >& Lattice::getVortices(){
 	return this->vortices;
 }
 
-void Lattice::removeEdge(Node &n1, Node &n2){
-	n1.removeEdge(n2);
+void Lattice::removeEdge(std::shared_ptr<Node> n1, std::shared_ptr<Node> n2){
+
+	n1->removeEdge(n2);
 }
 
-void Lattice::removeEdges(Node &n1){
-	n1.removeEdges();
+void Lattice::removeEdges(std::shared_ptr<Node> n1){
+	n1->removeEdges();
 }
 
 /**
@@ -124,12 +124,12 @@ void Lattice::removeEdges(Node &n1){
 void Lattice::genAdjMat(unsigned int *mat){
 	int idx1, idx2, idx;
 	idx1 = 0; idx2 = 0; idx=0;
-	for(Node n : this->Lattice::getVortices()){
-		idx1=this->getElementUidIdx(n.getUid());
-		for(Edge *e : n.getEdges()){
-			idx2 = this->getElementUidIdx(n.getConnectedNode(e)->getUid());
+	for(std::shared_ptr<Node> n : this->Lattice::getVortices()){
+		idx1=this->getElementUidIdx(n->getUid());
+		for(std::shared_ptr<Edge> e : n->getEdges()){
+			idx2 = this->getElementUidIdx(n->getConnectedNode(e)->getUid());
 			idx = idx1*this->Lattice::getVortices().size() + idx2;
-			std::cout << "IDX1=" << idx1 << "  IDX2=" << n.getConnectedNode(e)->getUid() << std::endl;
+			std::cout << "IDX1=" << idx1 << "  IDX2=" << n->getConnectedNode(e)->getUid() << std::endl;
 			if(idx1 != idx2){
 				mat[idx] = 1;
 			}
@@ -160,6 +160,6 @@ void Lattice::adjMatMtca(unsigned int *mat){
 	std::cout << "}" << std::endl;
 }
 
-double Lattice::getNodeDistance(Node &n1,Node &n2){
-	return sqrt(n1.getData().coords.x - n2.getData().coords.x) + (n1.getData().coords.y - n2.getData().coords.y);
+double Lattice::getNodeDistance(std::shared_ptr<Node> n1, std::shared_ptr<Node> n2){
+	return sqrt(n1->getData().coords.x - n2->getData().coords.x) + (n1->getData().coords.y - n2->getData().coords.y);
 }

@@ -43,16 +43,16 @@ Edge::~Edge(){
 	this->n2 = NULL;
 }
 
-Edge::Edge(Node &n1, Node &n2) : uid(++suid){
-	this->n1 = &n1;
-	this->n2 = &n2;
+Edge::Edge(std::shared_ptr<Node> n1, std::shared_ptr<Node> n2) : uid(++suid){
+	this->n1 = n1;
+	this->n2 = n2;
 	this->direction = 0;
 	this->weight = 0;
 }
 
-Edge::Edge(Node &n1, Node &n2, int dir, double weight) : uid(++suid){
-	this->n1 = &n1;
-	this->n2 = &n2;
+Edge::Edge(std::shared_ptr<Node> n1, std::shared_ptr<Node> n2, int dir, double weight) : uid(++suid){
+	this->n1 = n1;
+	this->n2 = n2;
 }
 
 /***
@@ -69,7 +69,7 @@ int Edge::getDirection(){
 /***
  * Get Node at index idx.
  */
-Node* Edge::getNode(int idx){
+std::shared_ptr<Node> Edge::getNode(int idx){
 	if(idx>0){
 		return this->n1;
 	}
@@ -95,7 +95,7 @@ void Edge::setWeight(double weight){
 /***
  * Replaces Node n1 or n2 with new Node n_new.
  */
-void Edge::updateNode(int idx, Node *n_new ){
+void Edge::updateNode(int idx, std::shared_ptr<Node> n_new ){
 	if(idx>0){
 		this->n1 = n_new;
 	}

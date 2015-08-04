@@ -16,8 +16,8 @@ unsigned int Node::suid = 0;
 int main(){
 	Lattice *l = new Lattice();
 
-	Node *n;//
-	Edge *e;
+	std::shared_ptr<Node> n;//
+	std::shared_ptr<Edge> e;
 
 	//shared_ptr<Node> n( new int );
 
@@ -25,98 +25,98 @@ int main(){
 	for(int i=0; i < NUM_VORT; ++i) {
 		v[i].coords.x = (i + 1) * NUM_VORT;
 		v[i].coords.y = (i + 1) * NUM_VORT;
-		n = new Node(v[i]);
-		l->Lattice::addNode(*n);
+		n.reset(new Node(v[i]));
+		l->Lattice::addNode(n);
 		//std::cout << "UID=" << l->getElement(i).getUid() << std::endl;
 	}
 	n=NULL;
 
-	e = new Edge(l->getElement(0),l->getElement(1),0,0 );
-	l->addEdge(*e,l->getElement(0),l->getElement(1));
+	e.reset(new Edge(l->getElement(0),l->getElement(1),0,0 ));
+	l->addEdge(e,l->getElement(0),l->getElement(1));
 
-	e = new Edge(l->getElement(0),l->getElement(2),0,0 );
-	l->addEdge(*e,l->getElement(0),l->getElement(2));
+	e.reset(new Edge(l->getElement(0),l->getElement(2),0,0 ));
+	l->addEdge(e,l->getElement(0),l->getElement(2));
 
-	e = new Edge(l->getElement(0),l->getElement(3),0,0 );
-	l->addEdge(*e,l->getElement(0),l->getElement(3));
+	e.reset( new Edge(l->getElement(0),l->getElement(3),0,0 ));
+	l->addEdge(e,l->getElement(0),l->getElement(3));
 
-	e = new Edge(l->getElement(0),l->getElement(4),0,0 );
-	l->addEdge(*e,l->getElement(0),l->getElement(4));
+	e.reset( new Edge(l->getElement(0),l->getElement(4),0,0 ));
+	l->addEdge(e,l->getElement(0),l->getElement(4));
 
-	e = new Edge(l->getElement(0),l->getElement(5),0,0 );
-	l->addEdge(*e,l->getElement(0),l->getElement(5));
+	e.reset( new Edge(l->getElement(0),l->getElement(5),0,0 ));
+	l->addEdge(e,l->getElement(0),l->getElement(5));
 
-	e = new Edge(l->getElement(0),l->getElement(6),0,0 );
-	l->addEdge(*e,l->getElement(0),l->getElement(6));
-
-
-
-
-	e = new Edge(l->getElement(7),l->getElement(8),0,0 );
-	l->addEdge(*e,l->getElement(7),l->getElement(8));
-
-	e = new Edge(l->getElement(7),l->getElement(9),0,0 );
-	l->addEdge(*e,l->getElement(7),l->getElement(9));
-
-	e = new Edge(l->getElement(7),l->getElement(10),0,0 );
-	l->addEdge(*e,l->getElement(7),l->getElement(10));
-
-	e = new Edge(l->getElement(7),l->getElement(11),0,0 );
-	l->addEdge(*e,l->getElement(7),l->getElement(11));
-
-	e = new Edge(l->getElement(7),l->getElement(12),0,0 );
-	l->addEdge(*e,l->getElement(7),l->getElement(12));
-
-	e = new Edge(l->getElement(7),l->getElement(3),0,0 );
-	l->addEdge(*e,l->getElement(7),l->getElement(3));
+	e.reset( new Edge(l->getElement(0),l->getElement(6),0,0 ));
+	l->addEdge(e,l->getElement(0),l->getElement(6));
 
 
 
 
-	e = new Edge(l->getElement(1),l->getElement(2),0,0 );
-	l->addEdge(*e,l->getElement(1),l->getElement(2));
+	e.reset( new Edge(l->getElement(7),l->getElement(8),0,0 ));
+	l->addEdge(e,l->getElement(7),l->getElement(8));
 
-	e = new Edge(l->getElement(2),l->getElement(3),0,0 );
-	l->addEdge(*e,l->getElement(2),l->getElement(3));
+	e.reset( new Edge(l->getElement(7),l->getElement(9),0,0 ));
+	l->addEdge(e,l->getElement(7),l->getElement(9));
 
-	e = new Edge(l->getElement(3),l->getElement(4),0,0 );
-	l->addEdge(*e,l->getElement(3),l->getElement(4));
+	e.reset( new Edge(l->getElement(7),l->getElement(10),0,0 ));
+	l->addEdge(e,l->getElement(7),l->getElement(10));
 
-	e = new Edge(l->getElement(4),l->getElement(5),0,0 );
-	l->addEdge(*e,l->getElement(4),l->getElement(5));
+	e.reset( new Edge(l->getElement(7),l->getElement(11),0,0 ));
+	l->addEdge(e,l->getElement(7),l->getElement(11));
 
-	e = new Edge(l->getElement(5),l->getElement(6),0,0 );
-	l->addEdge(*e,l->getElement(5),l->getElement(6));
+	e.reset( new Edge(l->getElement(7),l->getElement(12),0,0 ));
+	l->addEdge(e,l->getElement(7),l->getElement(12));
 
-	e = new Edge(l->getElement(6),l->getElement(1),0,0 );
-	l->addEdge(*e,l->getElement(6),l->getElement(1));
-
-
-
-	e = new Edge(l->getElement(3),l->getElement(8),0,0 );
-	l->addEdge(*e,l->getElement(3),l->getElement(8));
-
-	e = new Edge(l->getElement(3),l->getElement(12),0,0 );
-	l->addEdge(*e,l->getElement(3),l->getElement(12));
+	e.reset( new Edge(l->getElement(7),l->getElement(3),0,0 ));
+	l->addEdge(e,l->getElement(7),l->getElement(3));
 
 
-	e = new Edge(l->getElement(2),l->getElement(8),0,0 );
-	l->addEdge(*e,l->getElement(2),l->getElement(8));
 
-	e = new Edge(l->getElement(8),l->getElement(9),0,0 );
-	l->addEdge(*e,l->getElement(8),l->getElement(9));
 
-	e = new Edge(l->getElement(9),l->getElement(10),0,0 );
-	l->addEdge(*e,l->getElement(9),l->getElement(10));
+	e.reset( new Edge(l->getElement(1),l->getElement(2),0,0 ));
+	l->addEdge(e,l->getElement(1),l->getElement(2));
 
-	e = new Edge(l->getElement(10),l->getElement(11),0,0 );
-	l->addEdge(*e,l->getElement(10),l->getElement(11));
+	e.reset( new Edge(l->getElement(2),l->getElement(3),0,0 ));
+	l->addEdge(e,l->getElement(2),l->getElement(3));
 
-	e = new Edge(l->getElement(11),l->getElement(12),0,0 );
-	l->addEdge(*e,l->getElement(11),l->getElement(12));
+	e.reset( new Edge(l->getElement(3),l->getElement(4),0,0 ));
+	l->addEdge(e,l->getElement(3),l->getElement(4));
 
-	e = new Edge(l->getElement(12),l->getElement(4),0,0 );
-	l->addEdge(*e,l->getElement(12),l->getElement(4));
+	e.reset( new Edge(l->getElement(4),l->getElement(5),0,0 ));
+	l->addEdge(e,l->getElement(4),l->getElement(5));
+
+	e.reset( new Edge(l->getElement(5),l->getElement(6),0,0 ));
+	l->addEdge(e,l->getElement(5),l->getElement(6));
+
+	e.reset( new Edge(l->getElement(6),l->getElement(1),0,0 ));
+	l->addEdge(e,l->getElement(6),l->getElement(1));
+
+
+
+	e.reset( new Edge(l->getElement(3),l->getElement(8),0,0 ));
+	l->addEdge(e,l->getElement(3),l->getElement(8));
+
+	e.reset( new Edge(l->getElement(3),l->getElement(12),0,0 ));
+	l->addEdge(e,l->getElement(3),l->getElement(12));
+
+
+	e.reset( new Edge(l->getElement(2),l->getElement(8),0,0 ));
+	l->addEdge(e,l->getElement(2),l->getElement(8));
+
+	e.reset( new Edge(l->getElement(8),l->getElement(9),0,0 ));
+	l->addEdge(e,l->getElement(8),l->getElement(9));
+
+	e.reset( new Edge(l->getElement(9),l->getElement(10),0,0 ));
+	l->addEdge(e,l->getElement(9),l->getElement(10));
+
+	e.reset( new Edge(l->getElement(10),l->getElement(11),0,0 ));
+	l->addEdge(e,l->getElement(10),l->getElement(11));
+
+	e.reset( new Edge(l->getElement(11),l->getElement(12),0,0 ));
+	l->addEdge(e,l->getElement(11),l->getElement(12));
+
+	e.reset( new Edge(l->getElement(12),l->getElement(4),0,0 ));
+	l->addEdge(e,l->getElement(12),l->getElement(4));
 
 /*
 	e1 = new Edge(l->getElement(0),l->getElement(1),0,0 );

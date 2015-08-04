@@ -56,11 +56,11 @@ Tracker::Vortex& Node::getData(){
 	return this->data;
 }
 
-std::vector<Edge*>& Node::getEdges(){
+std::vector<std::shared_ptr <Edge> >& Node::getEdges(){
 	return this->edges;
 }
 
-Edge* Node::getEdge(int idx){
+std::shared_ptr<Edge> Node::getEdge(int idx){
 	return this->edges.at(idx);
 }
 
@@ -68,20 +68,20 @@ void Node::setData(Tracker::Vortex& data){
 	this->data = data;
 }
 
-void Node::addEdge(Edge &e){
-	this->edges.push_back(&e);
+void Node::addEdge(std::shared_ptr<Edge> e){
+	this->edges.push_back(e);
 }
 
 void Node::removeEdge(unsigned int uid){
-	Node *n;
+	std::shared_ptr<Node> n;
 	for (int ii=0; ii < this->Node::edges.size(); ++ii){
 		if(this->Node::getEdge(ii)->getUid() == uid){
 			n = this->Node::getConnectedNode(this->Node::getEdge(ii));
 			for(int jj=0; jj<n->getEdges().size(); ++jj){
 				if(n->getEdge(jj)->getUid() == uid) {
-					Edge *e = n->getEdge(jj);
+					std::shared_ptr<Edge> e = n->getEdge(jj);
 					n->getEdges().erase(n->getEdges().begin() + jj);
-					delete e;
+					//delete e;
 					break;
 				}
 			}
@@ -91,9 +91,9 @@ void Node::removeEdge(unsigned int uid){
 	}
 }
 
-void Node::removeEdge(Node & n) {
-	for(Edge *e1 : this->Node::getEdges()){
-		for(Edge *e2 : n.getEdges()){
+void Node::removeEdge(std::shared_ptr<Node> n) {
+	for(std::shared_ptr<Edge> e1 : this->Node::getEdges()){
+		for(std::shared_ptr<Edge> e2 : n->getEdges()){
 			if (Node::getConnectedNode(e1)->getUid() == e2->getUid()){
 				Node::removeEdge(e2->getUid());
 				return;
@@ -102,20 +102,20 @@ void Node::removeEdge(Node & n) {
 	}
 }
 
-void Node::removeEdge(Edge &edge){
-	Node::removeEdge(edge.getUid());
+void Node::removeEdge(std::shared_ptr<Edge> edge){
+	Node::removeEdge(edge->getUid());
 }
 
 void Node::removeEdges(){
 	for(int ii=0; ii<this->getEdges().size(); ++ii){
-		this->Node::removeEdge(*this->Node::getEdge(ii));
+		this->Node::removeEdge(this->Node::getEdge(ii));
 	}
 	this->Node::getEdges().clear();
 }
 
 #include <iostream>
 
-Node* Node::getConnectedNode(Edge *e){
+std::shared_ptr<Node> Node::getConnectedNode(std::shared_ptr<Edge> e){
 	std::cout << "e->getNode(0)->getUid()" << e->getNode(0)->getUid() << std::endl;
 	std::cout << "e->getNode(1)->getUid()" << e->getNode(1)->getUid() << std::endl;
 	std::cout << "   this->Node::getUid()" << this->Node::getUid() << std::endl;
