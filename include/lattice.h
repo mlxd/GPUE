@@ -47,7 +47,7 @@ namespace LatticeGraph {
 
 	    void removeNode(int idx);
 
-	    void createEdges(); //Check all nodes and see if an edge can be created between pairs
+	    void createEdges(unsigned int radius); //Check all nodes and see if an edge can be created between pairs
 
 	    void genAdjMat(unsigned int *mat);  //generate adjacency matrix
 

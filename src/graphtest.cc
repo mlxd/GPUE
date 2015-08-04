@@ -2,7 +2,7 @@
 // Created by Lee James O'Riordan on 23/07/15.
 //
 
-#define NUM_VORT 13
+#define NUM_VORT 3
 
 #include "../include/lattice.h"
 #include "../include/node.h"
@@ -30,16 +30,23 @@ int main(){
 		//std::cout << "UID=" << l->getElement(i).getUid() << std::endl;
 	}
 	n=NULL;
-
+/*
 	e.reset(new Edge(l->getElement(0),l->getElement(1),0,0 ));
 	l->addEdge(e,l->getElement(0),l->getElement(1));
 
 	e.reset(new Edge(l->getElement(0),l->getElement(2),0,0 ));
 	l->addEdge(e,l->getElement(0),l->getElement(2));
 
-	e.reset( new Edge(l->getElement(0),l->getElement(3),0,0 ));
-	l->addEdge(e,l->getElement(0),l->getElement(3));
+	e.reset( new Edge(l->getElement(1),l->getElement(2),0,0 ));
+	l->addEdge(e,l->getElement(1),l->getElement(2));
 
+	//l->removeEdge(l->getElement(0),l->getElement(1));
+	l->removeEdge(l->getElement(1),l->getElement(2));
+*/
+
+	l->createEdges(9);
+
+	/*
 	e.reset( new Edge(l->getElement(0),l->getElement(4),0,0 ));
 	l->addEdge(e,l->getElement(0),l->getElement(4));
 
@@ -117,6 +124,11 @@ int main(){
 
 	e.reset( new Edge(l->getElement(12),l->getElement(4),0,0 ));
 	l->addEdge(e,l->getElement(12),l->getElement(4));
+
+
+	 */
+
+	//l->removeEdge(l->getElementUid(12),l->getElementUid(4));
 
 /*
 	e1 = new Edge(l->getElement(0),l->getElement(1),0,0 );

@@ -95,7 +95,8 @@ void Node::removeEdge(std::shared_ptr<Node> n) {
 	for(std::shared_ptr<Edge> e1 : this->Node::getEdges()){
 		for(std::shared_ptr<Edge> e2 : n->getEdges()){
 			if (Node::getConnectedNode(e1)->getUid() == e2->getUid()){
-				Node::removeEdge(e2->getUid());
+				this->Node::removeEdge(e2->getUid());
+				n->Node::removeEdge(e2->getUid());
 				return;
 			}
 		}
@@ -116,9 +117,9 @@ void Node::removeEdges(){
 #include <iostream>
 
 std::shared_ptr<Node> Node::getConnectedNode(std::shared_ptr<Edge> e){
-	std::cout << "e->getNode(0)->getUid()" << e->getNode(0)->getUid() << std::endl;
-	std::cout << "e->getNode(1)->getUid()" << e->getNode(1)->getUid() << std::endl;
-	std::cout << "   this->Node::getUid()" << this->Node::getUid() << std::endl;
+	//std::cout << "e->getNode(0)->getUid()" << e->getNode(0)->getUid() << std::endl;
+	//std::cout << "e->getNode(1)->getUid()" << e->getNode(1)->getUid() << std::endl;
+	//std::cout << "   this->Node::getUid()" << this->Node::getUid() << std::endl;
 	//exit(1);
 	return (e->getNode(0)->getUid() != this->Node::getUid()) ? e->getNode(0) :  e->getNode(1) ;
 }
