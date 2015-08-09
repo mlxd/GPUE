@@ -31,22 +31,32 @@ NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+//######################################################################################################################
+
 #include "../include/node.h"
+#include <memory>
+#include <iostream>
 
 using namespace LatticeGraph;
+
+//######################################################################################################################
+//####################################    Ceiling Cat & Basement Cat     ###############################################
+//######################################################################################################################
 
 Node::Node():uid(++suid){
 }
 
 Node::~Node(){
-	//Need to delete all edges connecting this node + others
-	//this->Node::removeEdges(); //May be necessary, but for-each loop fail with it
-	//delete this;
+	this->removeEdges();
 }
 
 Node::Node(Tracker::Vortex& data):uid(++suid){
 	this->data = data;
 }
+
+//######################################################################################################################
+//####################################            Get stuff              ###############################################
+//######################################################################################################################
 
 unsigned int Node::getUid(){
 	return uid;
@@ -56,32 +66,46 @@ Tracker::Vortex& Node::getData(){
 	return this->data;
 }
 
-std::vector<std::shared_ptr <Edge> >& Node::getEdges(){
+std::vector<std::weak_ptr <Edge> >& Node::getEdges(){
 	return this->edges;
 }
 
-std::shared_ptr<Edge> Node::getEdge(int idx){
+std::weak_ptr<Edge> Node::getEdge(int idx) {
 	return this->edges.at(idx);
 }
+
+std::shared_ptr<Node> Node::getConnectedNode(std::shared_ptr<Edge> e){
+	//std::cout << "e->getNode(0)->getUid()" << e->getNode(0)->getUid() << std::endl;
+	//std::cout << "e->getNode(1)->getUid()" << e->getNode(1)->getUid() << std::endl;
+	//std::cout << "   this->Node::getUid()" << this->Node::getUid() << std::endl;
+	//exit(1);
+	return (e->getVortex(0).lock()->getUid() != this->Node::getUid()) ? e->getVortex(0).lock() :  e->getVortex(1).lock() ;
+}
+
+//######################################################################################################################
+//####################################             Set stuff             ###############################################
+//######################################################################################################################
 
 void Node::setData(Tracker::Vortex& data){
 	this->data = data;
 }
 
-void Node::addEdge(std::shared_ptr<Edge> e){
-	this->edges.push_back(e);
-}
+//######################################################################################################################
+//####################################             +/- stuff             ###############################################
+//######################################################################################################################
 
+void Node::addEdge(std::weak_ptr<Edge> e){
+	this->edges.push_back(std::move(e));
+}
+/*
 void Node::removeEdge(unsigned int uid){
 	std::shared_ptr<Node> n;
 	for (int ii=0; ii < this->Node::edges.size(); ++ii){
-		if(this->Node::getEdge(ii)->getUid() == uid){
-			n = this->Node::getConnectedNode(this->Node::getEdge(ii));
+		if(this->Node::getEdge(ii).lock()->getUid() == uid){
+			n = this->Node::getConnectedNode(this->Node::getEdge(ii).lock());
 			for(int jj=0; jj<n->getEdges().size(); ++jj){
-				if(n->getEdge(jj)->getUid() == uid) {
-					std::shared_ptr<Edge> e = n->getEdge(jj);
+				if(n->getEdge(jj).lock()->getUid() == uid){
 					n->getEdges().erase(n->getEdges().begin() + jj);
-					//delete e;
 					break;
 				}
 			}
@@ -89,22 +113,31 @@ void Node::removeEdge(unsigned int uid){
 			break;
 		}
 	}
+}*/
+
+void Node::removeEdge(unsigned int uid){
+	for (int ii=0; ii < this->Node::edges.size(); ++ii){
+		if(this->Node::getEdge(ii).lock()->getUid() == uid){
+			this->Node::getEdges().erase(this->Node::getEdges().begin()+ii);
+			break;
+		}
+	}
 }
 
 void Node::removeEdge(std::shared_ptr<Node> n) {
-	for(std::shared_ptr<Edge> e1 : this->Node::getEdges()){
-		for(std::shared_ptr<Edge> e2 : n->getEdges()){
-			if (Node::getConnectedNode(e1)->getUid() == e2->getUid()){
-				this->Node::removeEdge(e2->getUid());
-				n->Node::removeEdge(e2->getUid());
+	for(std::weak_ptr<Edge> e1 : this->Node::getEdges()){
+		for(std::weak_ptr<Edge> e2 : n->getEdges()){
+			if (Node::getConnectedNode(e1.lock())->getUid() == e2.lock()->getUid()){
+				this->Node::removeEdge(e2.lock()->getUid());
+				//n->Node::removeEdge(e2.lock()->getUid());
 				return;
 			}
 		}
 	}
 }
 
-void Node::removeEdge(std::shared_ptr<Edge> edge){
-	Node::removeEdge(edge->getUid());
+void Node::removeEdge(std::weak_ptr<Edge> edge){
+	this->Node::removeEdge(edge.lock()->getUid());
 }
 
 void Node::removeEdges(){
@@ -114,12 +147,4 @@ void Node::removeEdges(){
 	this->Node::getEdges().clear();
 }
 
-#include <iostream>
-
-std::shared_ptr<Node> Node::getConnectedNode(std::shared_ptr<Edge> e){
-	//std::cout << "e->getNode(0)->getUid()" << e->getNode(0)->getUid() << std::endl;
-	//std::cout << "e->getNode(1)->getUid()" << e->getNode(1)->getUid() << std::endl;
-	//std::cout << "   this->Node::getUid()" << this->Node::getUid() << std::endl;
-	//exit(1);
-	return (e->getNode(0)->getUid() != this->Node::getUid()) ? e->getNode(0) :  e->getNode(1) ;
-}
+//######################################################################################################################

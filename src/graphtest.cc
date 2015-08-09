@@ -26,26 +26,28 @@ int main(){
 		v[i].coords.x = (i + 1) * NUM_VORT;
 		v[i].coords.y = (i + 1) * NUM_VORT;
 		n.reset(new Node(v[i]));
-		l->Lattice::addNode(n);
+		l->Lattice::addVortex(n);
 		//std::cout << "UID=" << l->getElement(i).getUid() << std::endl;
 	}
 	n=NULL;
-/*
-	e.reset(new Edge(l->getElement(0),l->getElement(1),0,0 ));
-	l->addEdge(e,l->getElement(0),l->getElement(1));
 
-	e.reset(new Edge(l->getElement(0),l->getElement(2),0,0 ));
-	l->addEdge(e,l->getElement(0),l->getElement(2));
+	e.reset(new Edge(l->getVortexIdx(0),l->getVortexIdx(1),0,0 ));
+	l->addEdge(e);
+	//l->addEdge(e,l->getElement(0),l->getElement(1));
 
-	e.reset( new Edge(l->getElement(1),l->getElement(2),0,0 ));
-	l->addEdge(e,l->getElement(1),l->getElement(2));
+	e.reset(new Edge(l->getVortexIdx(0),l->getVortexIdx(2),0,0 ));
+	l->addEdge(e);
 
-	//l->removeEdge(l->getElement(0),l->getElement(1));
-	l->removeEdge(l->getElement(1),l->getElement(2));
-*/
+	e.reset( new Edge(l->getVortexIdx(1),l->getVortexIdx(2),0,0 ));
+	l->addEdge(e);
 
-	l->createEdges(9);
+	l->removeEdge(l->getVortexUid(1),l->getVortexUid(2));
+	l->removeEdge(l->getVortexUid(1),l->getVortexUid(3));
+	//l->removeEdge(l->getElement(1),l->getElement(2));
 
+	//l->createEdges(9);
+	//l->removeEdge(l->getElementUid(1),l->getElementUid(2));
+	//l->removeNode(0);
 	/*
 	e.reset( new Edge(l->getElement(0),l->getElement(4),0,0 ));
 	l->addEdge(e,l->getElement(0),l->getElement(4));
