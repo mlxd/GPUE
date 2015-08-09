@@ -72,8 +72,9 @@ namespace LatticeGraph {
 	    void addEdge(std::weak_ptr<Edge> e);
 
 	    void removeEdge(std::shared_ptr<Node> n); //remove edge connecting this to Node n
-	    void removeEdge(unsigned int uid); //remove edge with UID uid
-	    void removeEdge(std::weak_ptr<Edge> e); //remove edge at index idx
+	    void removeEdgeUid(unsigned int uid); //remove edge with UID uid
+	    void removeEdgeIdx(unsigned int idx); //remove edge with index idx
+	    void removeEdge(std::weak_ptr<Edge> e); //remove edge e
 	    void removeEdges(); //remove all edges
     };
 }

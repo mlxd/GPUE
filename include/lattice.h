@@ -102,10 +102,12 @@ namespace LatticeGraph {
 	     * Remove vortex/edge from the lattice
 	     */
 	    void removeVortex(std::shared_ptr<Node> n);
-	    void removeVortex(unsigned int idx);
+	    void removeVortexIdx(unsigned int idx);
+	    void removeVortexUid(unsigned int idx);
 	    void removeEdge(std::shared_ptr<Node> n1, std::shared_ptr<Node> n2);
 	    void removeEdge(std::shared_ptr<Edge> e);
-	    void removeEdge(unsigned int uid);
+	    void removeEdgeUid(unsigned int uid);
+	    void removeEdgeIdx(unsigned int idx);
 	    void removeEdges(std::shared_ptr<Node> n1);
 
 	    /**

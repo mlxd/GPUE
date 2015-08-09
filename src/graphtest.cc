@@ -41,8 +41,13 @@ int main(){
 	e.reset( new Edge(l->getVortexIdx(1),l->getVortexIdx(2),0,0 ));
 	l->addEdge(e);
 
-	l->removeEdge(l->getVortexUid(1),l->getVortexUid(2));
-	l->removeEdge(l->getVortexUid(1),l->getVortexUid(3));
+	l->removeEdgeUid(1);
+	l->removeEdgeUid(2);
+	l->removeVortexUid(2);
+	l->removeVortexUid(2);
+	//l->removeEdge(l->getVortexUid(1),l->getVortexUid(2));
+	//l->removeVortexIdx(0);
+	//l->removeEdge(l->getVortexUid(1),l->getVortexUid(3));
 	//l->removeEdge(l->getElement(1),l->getElement(2));
 
 	//l->createEdges(9);

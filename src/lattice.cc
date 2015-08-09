@@ -83,7 +83,7 @@ std::shared_ptr<Node> Lattice::getVortexUid(unsigned int uid){
 			return n;
 		}
 	}
-	return NULL;
+	return std::shared_ptr<Node>();
 }
 
 double Lattice::getVortexDistance(std::shared_ptr<Node> n1, std::shared_ptr<Node> n2){
@@ -142,7 +142,6 @@ void Lattice::setEdge(unsigned int idx, std::shared_ptr<Edge> e){
 void Lattice::createEdges(unsigned int radius){
 	std::shared_ptr<Edge> e;
 	for(int ii=0; ii< this->Lattice::getVortices().size(); ++ii){
-		//std::cout << "ii=" << ii << "   ";
 		std::cout << "Got here ii " << ii << std::endl;
 		for(int jj=ii+1; jj < this->Lattice::getVortices().size(); ++jj){
 			if(Lattice::getVortexDistance(this->getVortexIdx(ii),this->getVortexIdx(jj)) < radius ) {
@@ -175,31 +174,69 @@ void Lattice::addEdge(std::shared_ptr<Edge> e, std::shared_ptr<Node> n1, std::sh
 //######################################################################################################################
 
 void Lattice::removeVortex(std::shared_ptr<Node> n){
-	this->Lattice::removeVortex(this->Lattice::getVortexIdxUid(n->getUid()));
+	for(std::weak_ptr<Edge> e : n->getEdges()){
+		if(e.lock()){
+			std::cout << "UID: Removing Vortex{" << n->getUid() <<"}." << std::endl;
+			this->removeEdge(e.lock());
+			this->Lattice::getVortices().erase(this->Lattice::getVortices().begin() + this->getVortexIdxUid(n->getUid()));
+		}
+		else{
+			std::cout << "Cannot remove UID:Edge{"<< e.lock()->getUid() << "}, does not exist." << std::endl;
+		}
+	}
 }
 
-void Lattice::removeVortex(unsigned int idx){
-	this->Lattice::getVortices().erase(this->Lattice::getVortices().begin() + idx);
+void Lattice::removeVortexUid(unsigned int uid){
+	auto vtx = this->getVortexUid(uid);
+	if(vtx){
+		this->Lattice::removeVortex(vtx);
+	}
+	else{
+		std::cout << "Cannot remove UID:Vortex{"<< uid << "}, does not exist." << std::endl;
+	}
 }
+
+void Lattice::removeVortexIdx(unsigned int idx){
+	auto vtx = this->getVortexIdx(idx);
+	if(vtx){
+		this->Lattice::removeVortex(vtx);
+	}
+	else{
+		std::cout << "Cannot remove IDX:Vortex["<< idx << "], does not exist." << std::endl;
+	}
+}
+
 
 void Lattice::removeEdge(std::shared_ptr<Edge> e){
-	e->getVortex(0).lock()->removeEdge(e->getUid());
-	e->getVortex(1).lock()->removeEdge(e->getUid());
+	std::cout << "Removing Edge{" << e->getUid() <<"} connecting Node{" << e->getVortex(0).lock()->getUid() << "} and Node{" << e->getVortex(1).lock()->getUid() << "}." << std::endl;
+	e->getVortex(0).lock()->removeEdgeUid(e->getUid());
+	e->getVortex(1).lock()->removeEdgeUid(e->getUid());
 	this->Lattice::getEdges().erase(this->Lattice::getEdges().begin() + this->Lattice::getEdgeIdxUid(e->getUid()));
 }
 
-void Lattice::removeEdge(unsigned int idx){
-	std::shared_ptr<Edge> e = this->getEdges().at(idx);
-	e->getVortex(0).lock()->removeEdge(e->getUid());
-	e->getVortex(1).lock()->removeEdge(e->getUid());
-	this->Lattice::getEdges().erase(this->Lattice::getEdges().begin() + idx);
+void Lattice::removeEdgeIdx(unsigned int idx){
+	std::weak_ptr<Edge> e = this->getEdgeIdx(idx);
+	if (auto el = e.lock()) {
+		this->Lattice::removeEdge(el);
+	}
+	else{
+		std::cout << "Cannot remove IDX:Edge[" << idx << "], does not exist." << std::endl;
+	}
+}
+
+void Lattice::removeEdgeUid(unsigned int uid) {
+	std::weak_ptr<Edge> e = this->getEdgeUid(uid);
+	if (auto el = e.lock()) {
+		this->Lattice::removeEdge(el);
+	}
+	else{
+		std::cout << "Cannot remove UID:Edge{" << uid << "}, does not exist." << std::endl;
+	}
 }
 
 void Lattice::removeEdge(std::shared_ptr<Node> n1, std::shared_ptr<Node> n2){
 	std::weak_ptr<Edge> e = this->Lattice::isConnected(n1,n2);
-	if(e.lock() != NULL ){
-		n1->removeEdge(e.lock()->getUid());
-		n2->removeEdge(e.lock()->getUid());
+	if(e.lock()){
 		this->Lattice::removeEdge(e.lock());
 	}
 	else{

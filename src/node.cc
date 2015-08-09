@@ -115,7 +115,7 @@ void Node::removeEdge(unsigned int uid){
 	}
 }*/
 
-void Node::removeEdge(unsigned int uid){
+void Node::removeEdgeUid(unsigned int uid){
 	for (int ii=0; ii < this->Node::edges.size(); ++ii){
 		if(this->Node::getEdge(ii).lock()->getUid() == uid){
 			this->Node::getEdges().erase(this->Node::getEdges().begin()+ii);
@@ -124,12 +124,15 @@ void Node::removeEdge(unsigned int uid){
 	}
 }
 
+void Node::removeEdgeIdx(unsigned int idx){
+	this->Node::getEdges().erase(this->Node::getEdges().begin()+idx);
+}
+
 void Node::removeEdge(std::shared_ptr<Node> n) {
 	for(std::weak_ptr<Edge> e1 : this->Node::getEdges()){
 		for(std::weak_ptr<Edge> e2 : n->getEdges()){
 			if (Node::getConnectedNode(e1.lock())->getUid() == e2.lock()->getUid()){
-				this->Node::removeEdge(e2.lock()->getUid());
-				//n->Node::removeEdge(e2.lock()->getUid());
+				this->Node::removeEdgeUid(e2.lock()->getUid());
 				return;
 			}
 		}
@@ -137,7 +140,7 @@ void Node::removeEdge(std::shared_ptr<Node> n) {
 }
 
 void Node::removeEdge(std::weak_ptr<Edge> edge){
-	this->Node::removeEdge(edge.lock()->getUid());
+	this->Node::removeEdgeUid(edge.lock()->getUid());
 }
 
 void Node::removeEdges(){

@@ -44,9 +44,9 @@ using namespace LatticeGraph;
 //######################################################################################################################
 
 Edge::~Edge(){
-	std::cout << "Removing edge UID " << this->getUid() << " from Node " << this->n1.lock()->getUid() << " and Node " << this->n2.lock()->getUid() << std::endl;
-	this->n1.lock()->removeEdge(this->getUid());
-	this->n2.lock()->removeEdge(this->getUid());
+	//std::cout << "Removing edge UID " << this->getUid() << " from Node " << this->n1.lock()->getUid() << " and Node " << this->n2.lock()->getUid() << std::endl;
+	//this->n1.lock()->removeEdge(this->getUid());
+	//this->n2.lock()->removeEdge(this->getUid());
 }
 
 Edge::Edge() : uid(++suid){
@@ -86,7 +86,13 @@ int Edge::getDirection(){
  * Get Node at index idx.
  */
 std::weak_ptr<Node> Edge::getVortex(int idx){
-	return (idx==0) ? n1 : n2;
+	try{
+		return (idx==0) ? n1 : n2;
+	}
+	catch(std::exception e){
+		return std::weak_ptr<Node>();
+	}
+
 }
 /***
  * Get weight of edge.
