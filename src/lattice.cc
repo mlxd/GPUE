@@ -91,6 +91,11 @@ double Lattice::getVortexDistance(std::shared_ptr<Node> n1, std::shared_ptr<Node
 	            +  pow(n1->getData().coords.y - n2->getData().coords.y,2));
 }
 
+double Lattice::getVortexDistanceD(std::shared_ptr<Node> n1, std::shared_ptr<Node> n2){
+	return sqrt(pow(n1->getData().coordsD.x - n2->getData().coordsD.x,2)
+	            +  pow(n1->getData().coordsD.y - n2->getData().coordsD.y,2));
+}
+
 std::shared_ptr<Edge> Lattice::getEdgeIdx(unsigned int idx){
 	return getEdges().at(idx);
 }
@@ -139,19 +144,40 @@ void Lattice::setEdge(unsigned int idx, std::shared_ptr<Edge> e){
 //####################################              + stuff              ###############################################
 //######################################################################################################################
 
+
 void Lattice::createEdges(unsigned int radius){
 	std::shared_ptr<Edge> e;
+	double dist = 0.0;
 	for(int ii=0; ii< this->Lattice::getVortices().size(); ++ii){
-		std::cout << "Got here ii " << ii << std::endl;
+		//std::cout << "Got here ii " << ii << std::endl;
 		for(int jj=ii+1; jj < this->Lattice::getVortices().size(); ++jj){
-			if(Lattice::getVortexDistance(this->getVortexIdx(ii),this->getVortexIdx(jj)) < radius ) {
-				std::cout << "Got here jj " << jj << std::endl;
+			dist = Lattice::getVortexDistance(this->getVortexIdx(ii),this->getVortexIdx(jj));
+			if(dist < radius ) {
+				//std::cout << "Got here jj " << jj << std::endl;
 				e.reset(new Edge ( this->getVortexIdx(ii), this->getVortexIdx(jj) ));
+				e->setWeight(dist);
 				this->Lattice::addEdge(e,this->getVortexIdx(ii),this->getVortexIdx(jj));
 			}
 		}
 	}
 }
+void Lattice::createEdges(double radius){
+	std::shared_ptr<Edge> e;
+	double dist = 0.0;
+	for(int ii=0; ii< this->Lattice::getVortices().size(); ++ii){
+		//std::cout << "Got here ii " << ii << std::endl;
+		for(int jj=ii+1; jj < this->Lattice::getVortices().size(); ++jj){
+			dist = Lattice::getVortexDistance(this->getVortexIdx(ii),this->getVortexIdx(jj));
+			if( dist < radius ) {
+				//std::cout << "Got here jj " << jj << std::endl;
+				e.reset(new Edge ( this->getVortexIdx(ii), this->getVortexIdx(jj) ));
+				e->setWeight(dist);
+				this->Lattice::addEdge(e,this->getVortexIdx(ii),this->getVortexIdx(jj));
+			}
+		}
+	}
+}
+
 
 void Lattice::addVortex(std::shared_ptr<Node> n){
 	this->Lattice::getVortices().push_back((n));
@@ -162,7 +188,7 @@ void Lattice::addEdge(std::shared_ptr<Edge> e){
 }
 
 void Lattice::addEdge(std::shared_ptr<Edge> e, std::shared_ptr<Node> n1, std::shared_ptr<Node> n2){
-	this->Lattice::getEdges().push_back((e));
+	this->Lattice::getEdges().push_back(e);
 	std::weak_ptr<Edge> e1 = e;
 	std::weak_ptr<Edge> e2 = e;
 	n1->addEdge(e1);
@@ -249,12 +275,23 @@ void Lattice::removeEdges(std::shared_ptr<Node> n1){
 	//n1->removeEdges();
 }
 
+
+void Lattice::createVortex(double posx, double posy, int winding){
+
+}
+
+void Lattice::destroyVortex(unsigned int uid){
+	this->Lattice::getVortexUid(uid);
+}
+
+
+
 //######################################################################################################################
 //####################################         Generate stuff            ###############################################
 //######################################################################################################################
 
 /**
- * Problem with nodes not returning the correct connection.
+ * Create adjacency matrix
  */
 void Lattice::genAdjMat(unsigned int *mat){
 	int idx1, idx2, idx;
@@ -263,10 +300,25 @@ void Lattice::genAdjMat(unsigned int *mat){
 		idx1=this->getVortexIdxUid(n->getUid());
 		for(std::weak_ptr<Edge> e : n->getEdges()){
 			idx2 = this->getVortexIdxUid(n->getConnectedNode(e.lock())->getUid());
-			std::cout << "this=" << n->getUid() << "   connected=" << n->getConnectedNode(e.lock())->getUid() << std::endl;
+			//std::cout << "this=" << n->getUid() << "   connected=" << n->getConnectedNode(e.lock())->getUid() << std::endl;
 			idx = idx1*this->Lattice::getVortices().size() + idx2;
-			std::cout << "idx1=" << idx1 << "   idx2=" << idx2 << " idx=" << idx << "\n" << std::endl;
+			//std::cout << "idx1=" << idx1 << "   idx2=" << idx2 << " idx=" << idx << "\n" << std::endl;
 			mat[idx] = 1;
+		}
+	}
+}
+
+void Lattice::genAdjMat(double *mat){
+	int idx1, idx2, idx;
+	idx1 = 0; idx2 = 0; idx=0;
+	for(std::shared_ptr<Node> n : this->Lattice::getVortices()){
+		idx1=this->getVortexIdxUid(n->getUid());
+		for(std::weak_ptr<Edge> e : n->getEdges()){
+			idx2 = this->getVortexIdxUid(n->getConnectedNode(e.lock())->getUid());
+			//std::cout << "this=" << n->getUid() << "   connected=" << n->getConnectedNode(e.lock())->getUid() << std::endl;
+			idx = idx1*this->Lattice::getVortices().size() + idx2;
+			//std::cout << "idx1=" << idx1 << "   idx2=" << idx2 << " idx=" << idx << "\n" << std::endl;
+			mat[idx] = this->Lattice::getVortexDistance(n, this->getVortexIdx(idx2));
 		}
 	}
 }
@@ -278,16 +330,34 @@ void Lattice::genAdjMat(unsigned int *mat){
 void Lattice::adjMatMtca(unsigned int *mat){
 	unsigned int size = this->Lattice::getVortices().size();
 	std::cout << "{";
-	for(int i = 0; i < size; ++i){
+	for(int ii = 0; ii < size; ++ii){
 		std::cout << "{";
-		for(int j = 0; j < size; ++j){
-			std::cout << mat[i*size + j];
-			if(j<size-1)
+		for(int jj = 0; jj < size; ++jj){
+			std::cout << mat[ii*size + jj];
+			if(jj<size-1)
 				std::cout <<",";
 			else
 				std::cout << "}";
 		}
-		if(i<size-1)
+		if(ii<size-1)
+			std::cout <<",";
+		std::cout << std::endl;
+	}
+	std::cout << "}" << std::endl;
+}
+void Lattice::adjMatMtca(double *mat){
+	unsigned int size = this->Lattice::getVortices().size();
+	std::cout << "{";
+	for(int ii = 0; ii < size; ++ii){
+		std::cout << "{";
+		for(int jj = 0; jj < size; ++jj){
+			std::cout << mat[ii*size + jj];
+			if(jj<size-1)
+				std::cout <<",";
+			else
+				std::cout << "}";
+		}
+		if(ii<size-1)
 			std::cout <<",";
 		std::cout << std::endl;
 	}
@@ -309,3 +379,19 @@ std::weak_ptr<Edge> Lattice::isConnected(std::shared_ptr<Node> n1, std::shared_p
 	}
 	return std::weak_ptr<Edge> ();
 }
+
+//######################################################################################################################
+//####################################          Modify stuff             ###############################################
+//######################################################################################################################
+
+void Lattice::swapIdxUid(unsigned int uid1, unsigned int uid2) {
+	Lattice::swapIdx(this->getVortexIdxUid(uid1),this->getVortexIdxUid(uid2));
+}
+void Lattice::swapIdx(unsigned int idx1, unsigned int idx2) {
+	std::swap(this->getVortices().at(idx1),this->getVortices().at(idx2));
+}
+//void Lattice::swapVort(std::shared_ptr<Node> v1, std::shared_ptr<Node> v2) {
+
+//}
+
+//######################################################################################################################

@@ -38,7 +38,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 __constant__ double gDenConst = 6.6741e-40;//Evaluted in MATLAB: N*4*HBAR*HBAR*PI*(4.67e-9/mass)*sqrt(mass*(omegaZ)/(2*PI*HBAR))
 //inline __device__ unsigned int getGid3d3d(){
 
-__device__ unsigned int getGid3d3d(){
+inline __device__ unsigned int getGid3d3d(){
 	return blockDim.x * ( ( blockDim.y * ( ( blockIdx.z * blockDim.z + threadIdx.z ) + blockIdx.y ) + threadIdx.y ) + blockIdx.x ) + threadIdx.x;
 }
 
@@ -93,38 +93,64 @@ inline __device__ double2 braKetMult(double2 in1, double2 in2){
  * Performs complex multiplication of in1 and in2, giving result as out. 
  */
 __global__ void cMult(double2* in1, double2* in2, double2* out){
+	unsigned int gid = getGid3d3d();
+	double2 result;
+	double2 tin1 = in1[gid];
+	double2 tin2 = in2[gid];
+	result.x = (tin1.x*tin2.x - tin1.y*tin2.y);
+	result.y = (tin1.x*tin2.y + tin1.y*tin2.x);
+	out[gid] = result;
+}/*
+__global__ void cMult(double2* in1, double2* in2, double2* out){
 	double2 result;
 	unsigned int gid = getGid3d3d();
-	result.x = (in1[gid].x*in2[gid].x - in1[gid].y*in2[gid].y);
-	result.y = (in1[gid].x*in2[gid].y + in1[gid].y*in2[gid].x);
+	int tid = getTid3d3d();
+	extern __shared__ double2 sin1[];
+	extern __shared__ double2 sin2[];
+	sin1[tid] = in1[gid];
+	sin2[tid] = in2[gid];
+
+	result.x = (sin1[tid].x*sin2[tid].x - sin1[tid].y*sin2[tid].y);
+	result.y = (sin1[tid].x*sin2[tid].y + sin1[tid].y*sin2[tid].x);
+	__syncthreads();
+	out[gid] = result;
+}*/
+
+__global__ void cMultPhi(double2* in1, double* in2, double2* out){
+	double2 result;
+	unsigned int gid = getGid3d3d();
+	result.x = cos(in2[gid])*in1[gid].x - in1[gid].y*sin(in2[gid]);
+	result.y = in1[gid].x*sin(in2[gid]) + in1[gid].y*cos(in2[gid]);
 	out[gid] = result;
 }
 
 __global__ void cMultDensity(double2* in1, double2* in2, double2* out, double dt, double mass,double omegaZ, int gstate, int N){
 	double2 result;
 	double gDensity;
-	int tid = blockIdx.y*gridDim.x*blockDim.x + blockIdx.x*blockDim.x + threadIdx.x;
-	gDensity = gDenConst*complexMagnitudeSquared(in2[tid]); // scaling of interaction strength doesn't work now
+	int gid = blockIdx.y*gridDim.x*blockDim.x + blockIdx.x*blockDim.x + threadIdx.x;
+	double2 tin1 = in1[gid];
+	double2 tin2 = in2[gid];
+	gDensity = gDenConst*complexMagnitudeSquared(in2[gid])*(dt/HBAR); // scaling of interaction strength doesn't work now
 
 	if(gstate == 0){
-		double tmp = in1[tid].x*exp(-gDensity*(dt/HBAR) );
-		result.x = (tmp)*in2[tid].x - (in1[tid].y)*in2[tid].y;
-		result.y = (tmp)*in2[tid].y + (in1[tid].y)*in2[tid].x;
+		double tmp = in1[gid].x*exp(-gDensity);
+		result.x = (tmp)*tin2.x - (tin1.y)*tin2.y;
+		result.y = (tmp)*tin2.y + (tin1.y)*tin2.x;
 	}
 	else{
 		double2 tmp;
-		tmp.x = in1[tid].x*cos(-gDensity*(dt/HBAR)) - in1[tid].y*sin(-gDensity*(dt/HBAR));
-		tmp.y = in1[tid].y*cos(-gDensity*(dt/HBAR)) + in1[tid].x*sin(-gDensity*(dt/HBAR));
+		tmp.x = tin1.x*cos(-gDensity) - tin1.y*sin(-gDensity);
+		tmp.y = tin1.y*cos(-gDensity) + tin1.x*sin(-gDensity);
 		
-		result.x = (tmp.x)*in2[tid].x - (tmp.y)*in2[tid].y;
-		result.y = (tmp.x)*in2[tid].y + (tmp.y)*in2[tid].x;
+		result.x = (tmp.x)*tin2.x - (tmp.y)*tin2.y;
+		result.y = (tmp.x)*tin2.y + (tmp.y)*tin2.x;
 	}
-	out[tid] = result;
+	out[gid] = result;
 }
 
 /**
  * Divides both components of vector type "in", by the value "factor".
- * Results given with "out"
+ * Results given with "out". Cheating instead to using a precomputed divisor and multiplying for speed.
  */
 __global__ void scalarDiv(double2* in, double factor, double2* out){
 	double2 result;

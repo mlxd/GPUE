@@ -50,7 +50,7 @@ Node::~Node(){
 	this->removeEdges();
 }
 
-Node::Node(Tracker::Vortex& data):uid(++suid){
+Node::Node(Vtx::Vortex& data):uid(++suid){
 	this->data = data;
 }
 
@@ -62,7 +62,7 @@ unsigned int Node::getUid(){
 	return uid;
 }
 
-Tracker::Vortex& Node::getData(){
+Vtx::Vortex& Node::getData(){
 	return this->data;
 }
 
@@ -75,10 +75,6 @@ std::weak_ptr<Edge> Node::getEdge(int idx) {
 }
 
 std::shared_ptr<Node> Node::getConnectedNode(std::shared_ptr<Edge> e){
-	//std::cout << "e->getNode(0)->getUid()" << e->getNode(0)->getUid() << std::endl;
-	//std::cout << "e->getNode(1)->getUid()" << e->getNode(1)->getUid() << std::endl;
-	//std::cout << "   this->Node::getUid()" << this->Node::getUid() << std::endl;
-	//exit(1);
 	return (e->getVortex(0).lock()->getUid() != this->Node::getUid()) ? e->getVortex(0).lock() :  e->getVortex(1).lock() ;
 }
 
@@ -86,7 +82,7 @@ std::shared_ptr<Node> Node::getConnectedNode(std::shared_ptr<Edge> e){
 //####################################             Set stuff             ###############################################
 //######################################################################################################################
 
-void Node::setData(Tracker::Vortex& data){
+void Node::setData(Vtx::Vortex& data){
 	this->data = data;
 }
 
@@ -95,25 +91,8 @@ void Node::setData(Tracker::Vortex& data){
 //######################################################################################################################
 
 void Node::addEdge(std::weak_ptr<Edge> e){
-	this->edges.push_back(std::move(e));
+	this->edges.push_back(e);
 }
-/*
-void Node::removeEdge(unsigned int uid){
-	std::shared_ptr<Node> n;
-	for (int ii=0; ii < this->Node::edges.size(); ++ii){
-		if(this->Node::getEdge(ii).lock()->getUid() == uid){
-			n = this->Node::getConnectedNode(this->Node::getEdge(ii).lock());
-			for(int jj=0; jj<n->getEdges().size(); ++jj){
-				if(n->getEdge(jj).lock()->getUid() == uid){
-					n->getEdges().erase(n->getEdges().begin() + jj);
-					break;
-				}
-			}
-			this->Node::getEdges().erase(this->Node::getEdges().begin()+ii);
-			break;
-		}
-	}
-}*/
 
 void Node::removeEdgeUid(unsigned int uid){
 	for (int ii=0; ii < this->Node::edges.size(); ++ii){

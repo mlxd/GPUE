@@ -139,14 +139,14 @@ namespace FileIO{
 	/*
 	 * Writes out tracked vortex data.
 	 */
-	void writeOutVortex(char* buffer, char *file, struct Tracker::Vortex *data, int length, int step){
+	void writeOutVortex(char* buffer, char *file, struct Vtx::Vortex *data, int length, int step){
 		FILE *f;
 		sprintf (buffer, "%s_%d", file, step);
 		f = fopen (buffer,"w");
 		int i;
-		fprintf (f, "#X,Y,WINDING,SIGN\n");
+		fprintf (f, "#X,Y,WINDING\n");
 		for (i = 0; i < length; i++) 
-			fprintf (f, "%d,%e,%d,%e,%d,%d\n",data[i].coords.x,data[i].coordsD.x,data[i].coords.y,data[i].coordsD.y,data[i].wind,data[i].sign);
+			fprintf (f, "%d,%e,%d,%e,%d\n",data[i].coords.x,data[i].coordsD.x,data[i].coords.y,data[i].coordsD.y,data[i].wind);
 		fclose (f);
 	}
 	
@@ -159,4 +159,64 @@ namespace FileIO{
 		fclose(f); 
 		return 0;
 	}
+
+	/*
+	 * Outputs the adjacency matrix to a file
+	 */
+    void writeOutAdjMat(char* buffer, char *file, int *mat, unsigned int *uids, int dim, int step){
+	    FILE *f;
+	    sprintf (buffer, "%s_%d", file, step);
+	    f = fopen (buffer,"w");
+		fprintf (f, "(*");
+		for(int ii = 0; ii<dim; ++ii){
+			fprintf (f, "%d",uids[ii]);
+		}
+		fprintf (f, "*)\n");
+	    fprintf (f, "{\n");
+	    for(int ii = 0; ii < dim; ++ii){
+		    fprintf (f, "{");
+		    for(int jj = 0; jj < dim; ++jj){
+			    fprintf (f, "%e",mat[ii*dim + jj]);
+			    if(jj<dim-1)
+				    fprintf (f, ",");
+			    else
+				    fprintf (f, "}");
+		    }
+		    if(ii<dim-1)
+			    fprintf (f, ",");
+		    fprintf (f, "\n");
+	    }
+	    fprintf (f, "}\n");
+		fclose(f);
+    }
+    void writeOutAdjMat(char* buffer, char *file, double *mat, unsigned int *uids, int dim, int step){
+	    FILE *f;
+	    sprintf (buffer, "%s_%d", file, step);
+	    f = fopen (buffer,"w");
+	    fprintf (f, "(*");
+	    for(int ii = 0; ii<dim; ++ii){
+		    fprintf (f, "%d",uids[ii]);
+		    if(ii!=dim-1)
+			    fprintf (f, ",",uids[ii]);
+
+	    }
+	    fprintf (f, "*)\n");
+	    fprintf (f, "{\n");
+	    for(int ii = 0; ii < dim; ++ii){
+		    fprintf (f, "{");
+		    for(int jj = 0; jj < dim; ++jj){
+			    fprintf (f, "%e",mat[ii*dim + jj]);
+
+			    if(jj<dim-1)
+				    fprintf (f, ",");
+			    else
+				    fprintf (f, "}");
+		    }
+		    if(ii<dim-1)
+			    fprintf (f, ",");
+		    fprintf (f, "\n");
+	    }
+	    fprintf (f, "}\n");
+	    fclose(f);
+    }
 }

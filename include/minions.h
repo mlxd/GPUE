@@ -55,7 +55,7 @@ namespace Minions{
 	double fInvSqRt(double);
 	//float fInvSqRt(float);
 
-	void coordSwap(struct Tracker::Vortex *vCoords, int src, int dest);
+	void coordSwap(struct Vtx::Vortex *vCoords, int src, int dest);
 	 double complexMag(double2 in);
 	 double complexMag2(double2 in);
 	double2 complexMult(double2 in1, double2 in2);

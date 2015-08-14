@@ -47,7 +47,7 @@ namespace LatticeGraph {
 
     private:
 	    static unsigned int suid;
-	    Tracker::Vortex data;
+	    Vtx::Vortex data;
 	    std::vector<std::weak_ptr <Edge> > edges; //all connected edges
 
     public:
@@ -56,17 +56,18 @@ namespace LatticeGraph {
 	    Node();
 	    ~Node();
 
-	    Node(Tracker::Vortex &data);
+	    Node(Vtx::Vortex &data);
 
 	    unsigned int getUid();
-	    Tracker::Vortex &getData();
+	    unsigned int& getSuid();
+	    Vtx::Vortex &getData();
 	    std::vector<std::weak_ptr <Edge> > &getEdges(); //returns all connected edges
 	    std::weak_ptr<Edge> getEdge(int idx); //returns edge at index idx
 
 	    std::shared_ptr<Node> getConnectedNode(std::shared_ptr<Edge> e); //Return the node on the other side of the edge
 	    void getConnectedNodes(unsigned int &nodes); //get all connected nodes to this
 
-	    void setData(Tracker::Vortex &data);
+	    void setData(Vtx::Vortex &data);
 
 	    //void addEdge(std::shared_ptr<Node> n, int dir, double weight);
 	    void addEdge(std::weak_ptr<Edge> e);

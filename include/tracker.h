@@ -41,6 +41,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include<stdio.h>
 #include<cuda.h>
 #include<cuda_runtime.h>
+#include "vort.h"
 //#include<complex.h>
 
 /** See the source file for info on functions.**/
@@ -51,12 +52,7 @@ namespace Tracker {
 	 * sign indicates direction of vortex rotation.
 	 * wind indicates the unit charge of the vortex.
 	 */
-    struct Vortex {
-	    int2 coords;
-	    double2 coordsD;
-	    int sign;
-	    int wind;
-    };
+
 
     /**
 	 * Values from solving Ax=b for vortex least squares core finder.
@@ -69,17 +65,17 @@ namespace Tracker {
 	 */
     int findVortex(int *, double2 *, double, int, double *, int);
 
-    void vortPos(int *marker, struct Vortex *vLocation, int xDim, double2 *wfc);
+    void vortPos(int *marker, struct Vtx::Vortex *vLocation, int xDim, double2 *wfc);
 
     void olPos(int *marker, int2 *vLocation, int xDim);
 
-    struct Vortex *vortPosDelta(int *cMarker, int2 *pMarker, double *x, double tolerance, int numVortices, int xDim);
+    struct Vtx::Vortex *vortPosDelta(int *cMarker, int2 *pMarker, double *x, double tolerance, int numVortices, int xDim);
 
-    struct Vortex vortCentre(struct Vortex *cArray, int length, int xDim);
+    struct Vtx::Vortex vortCentre(struct Vtx::Vortex *cArray, int length, int xDim);
 
-    double vortAngle(struct Vortex *vortCoords, struct Vortex central, int numVort);
+    double vortAngle(struct Vtx::Vortex *vortCoords, struct Vtx::Vortex central, int numVort);
 
-    double vortSepAvg(struct Vortex *vArray, struct Vortex centre, int length);
+    double vortSepAvg(struct Vtx::Vortex *vArray, struct Vtx::Vortex centre, int length);
 
     double sigVOL(int2 *vArr, int2 *opLatt, double *x, int numVort);
 
@@ -88,11 +84,11 @@ namespace Tracker {
 	 */
     int findOLMaxima(int *marker, double *V, double radius, int xDim, double *x);
 
-    void vortArrange(struct Vortex *vCoordsC, struct Vortex *vCoordsP, int length);
+    void vortArrange(struct Vtx::Vortex *vCoordsC, struct Vtx::Vortex *vCoordsP, int length);
 
     int phaseTest(int2 vLoc, double2 *wfc, int xDim);
 
-    void lsFit(struct Tracker::Vortex *vortCoords, double2 *wfc, int numVort, int xDim);
+    void lsFit(struct Vtx::Vortex *vortCoords, double2 *wfc, int numVort, int xDim);
 
 }
 

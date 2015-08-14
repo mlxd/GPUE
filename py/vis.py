@@ -31,7 +31,7 @@ NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 '''
 import os
-CPUs = os.environ['SLURM_JOB_CPUS_PER_NODE']
+CPUs = 4# os.environ['SLURM_JOB_CPUS_PER_NODE']
 print "Number of cores: " + str(CPUs)
 from numpy import genfromtxt
 import math as m
@@ -52,8 +52,6 @@ import random as r
 from decimal import *
 import stats
 import hist3d
-import mpld3
-from mpld3 import plugins
 
 getcontext().prec = 4
 c = ConfigParser.ConfigParser()

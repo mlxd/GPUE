@@ -82,8 +82,8 @@ namespace Minions{
 		return calc;
 	}
 
-	 void coordSwap(struct Tracker::Vortex *vCoords, int src, int dest){
-		struct Tracker::Vortex d = vCoords[dest];
+	 void coordSwap(struct Vtx::Vortex *vCoords, int src, int dest){
+		struct Vtx::Vortex d = vCoords[dest];
 		vCoords[dest] = vCoords[src];
 		vCoords[src] = d;
 	}

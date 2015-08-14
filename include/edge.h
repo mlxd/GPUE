@@ -45,6 +45,7 @@ namespace LatticeGraph {
     class Node;
     class Edge {
 
+
     private:
 	    static unsigned int suid; //Incremented id for new
 
@@ -64,6 +65,7 @@ namespace LatticeGraph {
 	    Edge(std::weak_ptr<Node> n1, std::weak_ptr<Node> n2, int dir, double weight);
 
 	    unsigned int getUid();
+	    unsigned int& getSuid();
 	    int getDirection(); //Return nodes in order of flow
 	    double getWeight();
 	    std::weak_ptr<Node> getVortex(int idx);
@@ -74,6 +76,11 @@ namespace LatticeGraph {
 	    void updateVortex(int idx, std::weak_ptr<Node> n_new);
 
 	    bool isMember(std::weak_ptr<Node> n);
+
+
+	    bool operator < (std::shared_ptr<Edge> e) const{
+		    return uid < e->getUid();
+	    }
     };
 
 }

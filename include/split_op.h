@@ -83,6 +83,7 @@ double *Energy, *Energy_gpu, *r, *Phi, *V, *V_opt, *K, *xPy, *yPx, *xPy_gpu, *yP
 
 /* CUDA data buffers for FFT */
 cufftDoubleComplex *wfc_gpu, *K_gpu, *V_gpu, *par_sum;
+double *Phi_gpu;
 
 /* CUDA streams */
 cudaStream_t streamA, streamB, streamC, streamD;
@@ -105,9 +106,10 @@ double l;
 int isError(int, char*); //Checks to see if an error has occurred. 
 
 void parSum(double2* , double2* , int , int , int );
-void optLatSetup(struct Tracker::Vortex centre, double* V, struct Tracker::Vortex *vArray, int num_vortices, double theta_opt, double intensity, double* v_opt, double *x, double *y);
+void optLatSetup(struct Vtx::Vortex centre, double* V, struct Vtx::Vortex *vArray, int num_vortices, double theta_opt, double intensity, double* v_opt, double *x, double *y);
 
 double energy_angmom(double* Energy, double* Energy_gpu, double2 *V_op, double2 *K_op, double dx, double dy, double2 *gpuWfc, int gState);
+
 #endif
 
 

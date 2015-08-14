@@ -10,7 +10,7 @@ CC			= /usr/local/cuda/bin/nvcc --ptxas-options=-v --compiler-options -Wall #-sa
 CUDA_LIB	= /usr/local/cuda/lib64
 CUDA_HEADER	= /usr/local/cuda/include
 CHOSTFLAGS	= #-fopenmp
-CFLAGS		= -g -std=c++11#-malign-double
+CFLAGS		= -g -std=c++11 -Xcompiler '-std=c++11'#-malign-double
 GPU_ARCH	= sm_30
 endif
 
@@ -20,9 +20,9 @@ INCFLAGS	= -I$(CUDA_HEADER) -I/opt/builds/include
 LDFLAGS		= -L$(CUDA_LIB) -L/opt/builds/lib 
 EXECS		= gpue # BINARY NAME HERE
 
-gpue: fileIO.o kernels.o split_op.o tracker.o minions.o ds.o 
+gpue: fileIO.o kernels.o split_op.o tracker.o minions.o ds.o edge.o node.o lattice.o manip.o vort.o
 #node.o edge.o lattice.o
-	g++ *.o $(INCFLAGS) $(CFLAGS) $(LDFLAGS) $(CHOSTFLAGS) -lm -lcufft -lcudart -o gpue 
+	$(CC) *.o $(INCFLAGS) $(CFLAGS) $(LDFLAGS) $(CHOSTFLAGS) -lm -lcufft -lcudart -o gpue 
 	#rm -rf ./*.o
 
 split_op.o: ./src/split_op.cu ./include/split_op.h ./include/kernels.h ./include/constants.h ./include/fileIO.h ./include/minions.h Makefile
@@ -52,7 +52,13 @@ edge.o: ./src/edge.cc ./include/edge.h
 lattice.o: ./src/lattice.cc ./include/lattice.h
 	$(CC) -c ./src/lattice.cc -o $@ $(INCFLAGS) $(CFLAGS) $(LDFLAGS) $(CHOSTFLAGS)
 
-graphtest.o: ./src/graphtest.cc ./include/latticegraph.hh
+manip.o: ./src/manip.cu ./include/manip.h
+	$(CC) -c ./src/manip.cu -o $@ $(INCFLAGS) $(CFLAGS) $(LDFLAGS) $(CHOSTFLAGS)
+
+vort.o: ./src/vort.cc ./include/vort.h
+	$(CC) -c ./src/vort.cc -o $@ $(INCFLAGS) $(CFLAGS) $(LDFLAGS) $(CHOSTFLAGS)
+
+graphtest.o: ./src/graphtest.cc 
 	$(CC) -c ./src/graphtest.cc -o $@ $(INCFLAGS) $(CFLAGS) $(LDFLAGS) $(CHOSTFLAGS)
 
 gtest:  edge.o node.o lattice.o graphtest.o

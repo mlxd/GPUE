@@ -43,6 +43,7 @@ __device__ unsigned int getTid3d3d();
 __device__ double complexMagnitudeSquared(double2);
 __device__ double complexMagnitudeSquared(double2);
 __global__ void cMult(cufftDoubleComplex*, cufftDoubleComplex*, cufftDoubleComplex*);
+__global__ void cMultPhi(cufftDoubleComplex*, double*, cufftDoubleComplex*);
 __global__ void pinVortex(cufftDoubleComplex*, cufftDoubleComplex*, cufftDoubleComplex*);
 __global__ void cMultDensity(double2*, double2*, double2*, double, double,double, int, int);
 __global__ void scalarDiv(double2*, double, double2*);

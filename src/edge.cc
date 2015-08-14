@@ -76,6 +76,7 @@ Edge::Edge(std::weak_ptr<Node> n1, std::weak_ptr<Node> n2, int dir, double weigh
 unsigned int Edge::getUid(){
 	return uid;
 }
+
 /***
  * Returns direction of Edge.
  */
@@ -92,8 +93,8 @@ std::weak_ptr<Node> Edge::getVortex(int idx){
 	catch(std::exception e){
 		return std::weak_ptr<Node>();
 	}
-
 }
+
 /***
  * Get weight of edge.
  */
@@ -137,6 +138,9 @@ void Edge::updateVortex(int idx, std::weak_ptr<Node> n_new ){
 //######################################################################################################################
 //####################################           Check stuff             ###############################################
 //######################################################################################################################
+
 bool Edge::isMember(std::weak_ptr<Node> n){
 	return ( this->n1.lock()->getUid() == n.lock()->getUid() ||  this->n2.lock()->getUid() == n.lock()->getUid() ) ? true : false;
 }
+
+//######################################################################################################################

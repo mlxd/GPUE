@@ -35,16 +35,28 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define FILEIO_H
 #include "../include/ds.h"
 #include "../include/tracker.h"
+#include <vector>
 
 /** Check source file for information on functions **/
-namespace FileIO{
-	double2* readIn(char*, char*, int, int);
-	void writeOut(char*, char*, double2*, int, int );
-	void writeOutDouble(char*, char*, double*, int, int);
-	void writeOutInt(char*, char*, int*, int, int);
-	void writeOutInt2(char*, char*, int2*, int, int);
-	void writeOutVortex(char*, char*, struct Tracker::Vortex*, int, int);
-	void writeOutParam(char*, Array, char*);
-	int readState(char*);
+namespace FileIO {
+    double2 *readIn(char *, char *, int, int);
+
+    void writeOut(char *, char *, double2 *, int, int);
+
+    void writeOutDouble(char *, char *, double *, int, int);
+
+    void writeOutInt(char *, char *, int *, int, int);
+
+    void writeOutInt2(char *, char *, int2 *, int, int);
+
+    void writeOutVortex(char *, char *, struct Vtx::Vortex *, int, int);
+
+    void writeOutParam(char *, Array, char *);
+
+    int readState(char *);
+
+    void writeOutAdjMat(char *buffer, char *file, int *mat, unsigned int *uids, int dim, int step);
+
+    void writeOutAdjMat(char *buffer, char *file, double *mat, unsigned int *uids, int dim, int step);
 }
 #endif

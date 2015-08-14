@@ -39,10 +39,21 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../include/minions.h"
 #include "../include/ds.h"
 
+#include "../include/lattice.h"
+#include "../include/node.h"
+#include "../include/edge.h"
+#include "../include/manip.h"
+#include "../include/vort.h"
+#include <iostream>
+
+unsigned int LatticeGraph::Edge::suid = 0;
+unsigned int LatticeGraph::Node::suid = 0;
+
 char buffer[100];
 int verbose;
 int device;
 int kick_it;
+int graph=0;
 double gammaY;
 double omega;
 double timeTotal;
@@ -191,6 +202,7 @@ int initialise(double omegaX, double omegaY, int N){
 	/* Initialise wfc, EKp, and EVr buffers on GPU */
 	cudaMalloc((void**) &Energy_gpu, sizeof(double) * gSize);
 	cudaMalloc((void**) &wfc_gpu, sizeof(cufftDoubleComplex) * gSize);
+	cudaMalloc((void**) &Phi_gpu, sizeof(double) * gSize);
 	cudaMalloc((void**) &K_gpu, sizeof(cufftDoubleComplex) * gSize);
 	cudaMalloc((void**) &V_gpu, sizeof(cufftDoubleComplex) * gSize);
 	cudaMalloc((void**) &xPy_gpu, sizeof(cufftDoubleComplex) * gSize);
@@ -308,7 +320,7 @@ int evolve( cufftDoubleComplex *gpuWfc,
 	double Dt;
 	if(gstate==0){
 		Dt = gdt;
-		printf("Timestep for grounstate solver set as: %E\n",Dt);
+		printf("Timestep for groundstate solver set as: %E\n",Dt);
 	}
 	else{
 		Dt = dt;
@@ -341,12 +353,17 @@ int evolve( cufftDoubleComplex *gpuWfc,
 	int* vortexLocation; //binary matrix of size xDim*yDim, 1 for vortex at specified index, 0 otherwise
 	int* olMaxLocation = (int*) calloc(xDim*yDim,sizeof(int));
 
-	struct Tracker::Vortex central_vortex; //vortex closest to the central position
+	struct Vtx::Vortex central_vortex; //vortex closest to the central position
 	double vort_angle; //Angle of vortex lattice. Add to optical lattice for alignment.
-	struct Tracker::Vortex *vortCoords = NULL; //array of vortex coordinates from vortexLocation 1's
-	struct Tracker::Vortex *vortCoordsP = NULL; //Previous array of vortex coordinates from vortexLocation 1's
+	struct Vtx::Vortex *vortCoords = NULL; //array of vortex coordinates from vortexLocation 1's
+
+	struct Vtx::Vortex *vortCoordsP = NULL; //Previous array of vortex coordinates from vortexLocation 1's
+
 	int2 *olCoords = NULL; //array of vortex coordinates from vortexLocation 1's
 	int2 *vortDelta = NULL;
+
+	LatticeGraph::Lattice lattice;
+	double* adjMat;
 	
 	double vortOLSigma=0.0;
 	double sepAvg = 0.0;
@@ -358,83 +375,123 @@ int evolve( cufftDoubleComplex *gpuWfc,
 		if ( ramp == 1 ){
 			omega_0=omegaX*((omega-0.39)*((double)i/(double)(numSteps)) + 0.39); //Adjusts omega for the appropriate trap frequency.
 		}
-		if(i % printSteps == 0){
-			printf("Step: %d	Omega: %lf\n",i,omega_0/omegaX);
-			cudaMemcpy(wfc, gpuWfc, sizeof(cufftDoubleComplex)*xDim*yDim, cudaMemcpyDeviceToHost);
+		if(i % printSteps == 0) {
+			printf("Step: %d	Omega: %lf\n", i, omega_0 / omegaX);
+			cudaMemcpy(wfc, gpuWfc, sizeof(cufftDoubleComplex) * xDim * yDim, cudaMemcpyDeviceToHost);
 			end = clock();
-			time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
-			printf("Time spent: %lf\n",time_spent);
-			char* fileName = "";
-			printf("ramp=%d		gstate=%d	rg=%d		\n",ramp,gstate,ramp | (gstate<<1));
-			switch ( ramp | (gstate<<1) ){
+			time_spent = (double) (end - begin) / CLOCKS_PER_SEC;
+			printf("Time spent: %lf\n", time_spent);
+			char *fileName = "";
+			printf("ramp=%d		gstate=%d	rg=%d		\n", ramp, gstate, ramp | (gstate << 1));
+			switch (ramp | (gstate << 1)) {
 				case 0:
 					fileName = "wfc_0_const";
-					break;
+			        break;
 				case 1:
 					fileName = "wfc_0_ramp";
-					break;
+			        break;
 				case 2:
 					fileName = "wfc_ev";
-					vortexLocation = (int*) calloc(xDim*yDim,sizeof(int));
-					num_vortices[0] = Tracker::findVortex(vortexLocation, wfc, 1e-4, xDim, x, i);
+			        vortexLocation = (int *) calloc(xDim * yDim, sizeof(int));
+			        num_vortices[0] = Tracker::findVortex(vortexLocation, wfc, 1e-4, xDim, x, i);
 
-					if(i==0){
-						vortCoords = (struct Tracker::Vortex*) malloc(sizeof(struct Tracker::Vortex)*(2*num_vortices[0]));
-						vortCoordsP = (struct Tracker::Vortex*) malloc(sizeof(struct Tracker::Vortex)*(2*num_vortices[0]));
-						Tracker::vortPos(vortexLocation, vortCoords, xDim, wfc);
-						Tracker::lsFit(vortCoords, wfc, num_vortices[0], xDim);
-						central_vortex = Tracker::vortCentre(vortCoords, num_vortices[0], xDim);
-						vort_angle = Tracker::vortAngle(vortCoords,central_vortex, num_vortices[0]);
-						appendData(&params,"Vort_angle",vort_angle);
-						optLatSetup(central_vortex, V, vortCoords, num_vortices[0], vort_angle + PI*angle_sweep/180.0, laser_power*HBAR*sqrt(omegaX*omegaY), V_opt, x, y);
-						sepAvg = Tracker::vortSepAvg(vortCoords,central_vortex,num_vortices[0]);
-						if(kick_it == 2){
-							printf("Kicked it 1\n");
-							cudaMemcpy(V_gpu, EV_opt, sizeof(cufftDoubleComplex)*xDim*yDim, cudaMemcpyHostToDevice);
-						}
-						FileIO::writeOutDouble(buffer,"V_opt_1",V_opt,xDim*yDim,0);
-						FileIO::writeOut(buffer,"EV_opt_1",EV_opt,xDim*yDim,0);
-						appendData(&params,"Central_vort_x",(double)central_vortex.coords.x);
-						appendData(&params,"Central_vort_y",(double)central_vortex.coords.y);
-						appendData(&params,"Central_vort_winding",(double)central_vortex.wind);
-						appendData(&params,"Central_vort_sign",(double)central_vortex.sign);
-						appendData(&params,"Num_vort",(double)num_vortices[0]);
-						FileIO::writeOutParam(buffer, params, "Params.dat");
-					}
-					else if(num_vortices[0] > num_vortices[1]){
-						printf("Number of vortices increased from %d to %d\n",num_vortices[1],num_vortices[0]);
-						Tracker::vortPos(vortexLocation, vortCoords, xDim,wfc);
-						Tracker::lsFit(vortCoords, wfc, num_vortices[0], xDim);
-					}
-					else{
-						Tracker::vortPos(vortexLocation, vortCoords, xDim,wfc);
-						Tracker::lsFit(vortCoords, wfc, num_vortices[0], xDim);
-						Tracker::vortArrange(vortCoords, vortCoordsP, num_vortices[0]);
-					}
-			/*		num_latt_max = Tracker::findOLMaxima(olMaxLocation, V_opt, 1e-4, xDim, x);
-					if(num_latt_max == num_vortices[0]){
-						olCoords = (int2*) malloc(sizeof(int2)*num_latt_max);
-						Tracker::olPos(olMaxLocation, olCoords, xDim);
-						vortOLSigma = Tracker::sigVOL(vortCoords, olCoords, x, num_latt_max);
-						FileIO::writeOutInt2(buffer, "opt_max_arr", olCoords, num_latt_max, i);
-						free(olCoords);
-					}*/
+			        if (i == 0) {
+				        vortCoords = (struct Vtx::Vortex *) malloc(
+						        sizeof(struct Vtx::Vortex) * (2 * num_vortices[0]));
+				        vortCoordsP = (struct Vtx::Vortex *) malloc(
+						        sizeof(struct Vtx::Vortex) * (2 * num_vortices[0]));
+				        Tracker::vortPos(vortexLocation, vortCoords, xDim, wfc);
+				        Tracker::lsFit(vortCoords, wfc, num_vortices[0], xDim);
+				        central_vortex = Tracker::vortCentre(vortCoords, num_vortices[0], xDim);
+				        vort_angle = Tracker::vortAngle(vortCoords, central_vortex, num_vortices[0]);
+				        appendData(&params, "Vort_angle", vort_angle);
+				        optLatSetup(central_vortex, V, vortCoords, num_vortices[0],
+				                    vort_angle + PI * angle_sweep / 180.0, laser_power * HBAR * sqrt(omegaX * omegaY),
+				                    V_opt, x, y);
+				        sepAvg = Tracker::vortSepAvg(vortCoords, central_vortex, num_vortices[0]);
+				        if (kick_it == 2) {
+					        printf("Kicked it 1\n");
+					        cudaMemcpy(V_gpu, EV_opt, sizeof(cufftDoubleComplex) * xDim * yDim, cudaMemcpyHostToDevice);
+				        }
+				        FileIO::writeOutDouble(buffer, "V_opt_1", V_opt, xDim * yDim, 0);
+				        FileIO::writeOut(buffer, "EV_opt_1", EV_opt, xDim * yDim, 0);
+				        appendData(&params, "Central_vort_x", (double) central_vortex.coords.x);
+				        appendData(&params, "Central_vort_y", (double) central_vortex.coords.y);
+				        appendData(&params, "Central_vort_winding", (double) central_vortex.wind);
+				        appendData(&params, "Num_vort", (double) num_vortices[0]);
+				        FileIO::writeOutParam(buffer, params, "Params.dat");
+			        }
+			        else if (num_vortices[0] > num_vortices[1]) {
+				        printf("Number of vortices increased from %d to %d\n", num_vortices[1], num_vortices[0]);
+				        Tracker::vortPos(vortexLocation, vortCoords, xDim, wfc);
+				        Tracker::lsFit(vortCoords, wfc, num_vortices[0], xDim);
+			        }
+			        else {
+				        Tracker::vortPos(vortexLocation, vortCoords, xDim, wfc);
+				        Tracker::lsFit(vortCoords, wfc, num_vortices[0], xDim);
+				        Tracker::vortArrange(vortCoords, vortCoordsP, num_vortices[0]);
+			        }
 
-					FileIO::writeOutVortex(buffer, "vort_arr", vortCoords, num_vortices[0], i);
-					printf("Located %d vortices\n",num_vortices[0]);
-					printf("Sigma=%e\n",vortOLSigma);
-					free(vortexLocation);
-					num_vortices[1] = num_vortices[0];
-					memcpy(vortCoordsP,vortCoords,sizeof(int2)*num_vortices[0]);
-					break;
+			        if (graph == 1) {
+
+				        for (unsigned int ii = 0; ii < num_vortices[0]; ++ii) {
+					        std::shared_ptr<LatticeGraph::Node> n(new LatticeGraph::Node(vortCoords[ii]));
+					        lattice.addVortex(std::move(n));
+				        }
+				        unsigned int *uids = (unsigned int *) malloc(
+						        sizeof(unsigned int) * lattice.getVortices().size());
+				        for (int a = 0; a < lattice.getVortices().size(); ++a) {
+					        uids[a] = lattice.getVortexIdx(a)->getUid();
+				        }
+				        if(i==0){
+					        WFC::phaseWinding(Phi,1,x,y,dx,dy,lattice.getVortexUid(44)->getData().coordsD.x,lattice.getVortexUid(44)->getData().coordsD.y,xDim);
+					        cudaMemcpy(Phi_gpu, Phi, sizeof(double)*xDim*yDim, cudaMemcpyHostToDevice);
+					        cMultPhi<<<grid,threads>>>(gpuWfc,Phi_gpu,gpuWfc);
+
+					        WFC::phaseWinding(Phi,1,x,y,dx,dy,lattice.getVortexUid(56)->getData().coordsD.x,lattice.getVortexUid(56)->getData().coordsD.y,xDim);
+					        cudaMemcpy(Phi_gpu, Phi, sizeof(double)*xDim*yDim, cudaMemcpyHostToDevice);
+					        cMultPhi<<<grid,threads>>>(gpuWfc,Phi_gpu,gpuWfc);
+
+					        WFC::phaseWinding(Phi,1,x,y,dx,dy,lattice.getVortexUid(34)->getData().coordsD.x,lattice.getVortexUid(34)->getData().coordsD.y,xDim);
+					        cudaMemcpy(Phi_gpu, Phi, sizeof(double)*xDim*yDim, cudaMemcpyHostToDevice);
+					        //FileIO::writeOutDouble(buffer, "Phi_imp", Phi, xDim * yDim, i);
+					        //cudaMemcpy(Phi_gpu, Phi, sizeof(double)*xDim*yDim, cudaMemcpyHostToDevice);
+
+					        //cudaMemcpy(Phi_gpu, Phi, sizeof(double)*xDim*yDim, cudaMemcpyHostToDevice);
+					        //cudaMemcpy(Phi, Phi_gpu, sizeof(double)*xDim*yDim, cudaMemcpyDeviceToHost);
+					        //FileIO::writeOutDouble(buffer, "Phi_imp2", Phi, xDim * yDim, i);
+
+					        cMultPhi<<<grid,threads>>>(gpuWfc,Phi_gpu,gpuWfc);
+				        }
+				        lattice.createEdges(1.5 * 2e-5 / dx);
+				        adjMat = (double *) calloc(lattice.getVortices().size() * lattice.getVortices().size(),
+				                                   sizeof(double));
+				        lattice.genAdjMat(adjMat);
+				        FileIO::writeOutAdjMat(buffer, "graph", adjMat, uids, lattice.getVortices().size(), i);
+				        free(adjMat);
+				        free(uids);
+				        lattice.getVortices().clear();
+				        lattice.getEdges().clear();
+				        //exit(0);
+			        }
+
+			        FileIO::writeOutVortex(buffer, "vort_arr", vortCoords, num_vortices[0], i);
+			        printf("Located %d vortices\n", num_vortices[0]);
+			        printf("Sigma=%e\n", vortOLSigma);
+			        free(vortexLocation);
+			        num_vortices[1] = num_vortices[0];
+			        memcpy(vortCoordsP, vortCoords, sizeof(int2) * num_vortices[0]);
+			        //exit(1);
+			        break;
 				case 3:
 					fileName = "wfc_ev_ramp";
-					break;
+			        break;
 				default:
 					break;
 			}
-			if(write_it)
-				FileIO::writeOut(buffer, fileName, wfc, xDim*yDim, i);
+			if (write_it) {
+				FileIO::writeOut(buffer, fileName, wfc, xDim * yDim, i);
+			}
 			//printf("Energy[t@%d]=%E\n",i,energy_angmom(gpuPositionOp, gpuMomentumOp, dx, dy, gpuWfc,gstate));
 /*			cudaMemcpy(V_gpu, V, sizeof(double)*xDim*yDim, cudaMemcpyHostToDevice);
 			cudaMemcpy(K_gpu, K, sizeof(double)*xDim*yDim, cudaMemcpyHostToDevice);
@@ -598,7 +655,7 @@ void parSum(double2* gpuWfc, double2* gpuParSum, int xDim, int yDim, int threads
 /**
 ** Matches the optical lattice to the vortex lattice
 **/
-void optLatSetup(struct Tracker::Vortex centre, double* V, struct Tracker::Vortex *vArray, int num_vortices, double theta_opt, double intensity, double* v_opt, double *x, double *y){
+void optLatSetup(struct Vtx::Vortex centre, double* V, struct Vtx::Vortex *vArray, int num_vortices, double theta_opt, double intensity, double* v_opt, double *x, double *y){
 	int i,j;
 	double sepMin = Tracker::vortSepAvg(vArray,centre,num_vortices);
 	sepMin = sepMin*(1 + sepMinEpsilon);
@@ -717,7 +774,7 @@ template<typename T> void parSum(T *gpuToSumArr, T *gpuParSum, int xDim, int yDi
 //###################################################################################################################
 int parseArgs(int argc, char** argv){
 	int opt;
-	while ((opt = getopt (argc, argv, "d:x:y:w:G:g:e:T:t:n:p:r:o:L:l:s:i:P:X:Y:O:k:W:U:V:S:")) != -1) {
+	while ((opt = getopt (argc, argv, "d:x:y:w:G:g:e:T:t:n:p:r:o:L:l:s:i:P:X:Y:O:k:W:U:V:S:a:")) != -1) {
 		switch (opt)
 		{
 			case 'x':
@@ -849,6 +906,11 @@ int parseArgs(int argc, char** argv){
 				sepMinEpsilon = atof(optarg);
 				printf("Argument for sepMinEpsilon is %lf\n",sepMinEpsilon);
 				appendData(&params,"sepMinEpsilon",sepMinEpsilon);
+				break;
+			case 'a':
+				graph = atoi(optarg);
+				printf("Argument for graph is %d\n",graph);
+				appendData(&params,"graph",graph);
 				break;
 			case '?':
 				if (optopt == 'c') {

@@ -8,6 +8,10 @@
 #include "../include/node.h"
 #include "../include/edge.h"
 #include <iostream>
+#include <vector>
+#include <algorithm>
+#include <iterator>
+#include <algorithm>
 
 using namespace LatticeGraph;
 unsigned int Edge::suid = 0;
@@ -21,7 +25,7 @@ int main(){
 
 	//shared_ptr<Node> n( new int );
 
-	Tracker::Vortex *v = (Tracker::Vortex*) malloc(sizeof(Tracker::Vortex)*NUM_VORT);
+	Vtx::Vortex *v = (Vtx::Vortex*) malloc(sizeof(Vtx::Vortex)*NUM_VORT);
 	for(int i=0; i < NUM_VORT; ++i) {
 		v[i].coords.x = (i + 1) * NUM_VORT;
 		v[i].coords.y = (i + 1) * NUM_VORT;
@@ -30,6 +34,8 @@ int main(){
 		//std::cout << "UID=" << l->getElement(i).getUid() << std::endl;
 	}
 	n=NULL;
+
+	std::sort(l->getVortices().begin(),l->getVortices().end());
 
 	e.reset(new Edge(l->getVortexIdx(0),l->getVortexIdx(1),0,0 ));
 	l->addEdge(e);
@@ -41,10 +47,35 @@ int main(){
 	e.reset( new Edge(l->getVortexIdx(1),l->getVortexIdx(2),0,0 ));
 	l->addEdge(e);
 
+
+	for (int ii=0; ii < 3; ++ii){
+		std::cout << l->getVortices().at(ii)<< "    ";
+		std::cout << l->getVortices().at(ii)->getUid()<< std::endl;
+	}
+
+	l->swapIdxUid(1,2);
+	//std::swap(l->getVortices().at(l->getVortexIdxUid(1)),l->getVortices().at(l->getVortexIdxUid(2)));
 	l->removeEdgeUid(1);
-	l->removeEdgeUid(2);
-	l->removeVortexUid(2);
-	l->removeVortexUid(2);
+	std::vector< std::shared_ptr<Node> > s3;
+
+	//std::sort(l->getVortices().begin(),l->getVortices().end());
+
+	//std::set_intersection(l->getVortices().begin(),l->getVortices().end(),l->getVortices().begin(),l->getVortices().end(),s3);
+	for (int ii=0; ii < 3; ++ii){
+		std::cout << l->getVortices().at(ii)<< "    ";
+		std::cout << l->getVortices().at(ii)->getUid()<< std::endl;
+	}
+
+	for(auto a : s3){
+		std::cout << a << std::endl;
+	}
+
+
+	//l->removeEdgeUid(2);
+	//l->removeVortexUid(2);
+	//l->removeVortexUid(2);
+
+
 	//l->removeEdge(l->getVortexUid(1),l->getVortexUid(2));
 	//l->removeVortexIdx(0);
 	//l->removeEdge(l->getVortexUid(1),l->getVortexUid(3));

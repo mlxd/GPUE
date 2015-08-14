@@ -36,7 +36,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <cstdlib>
 #include <cmath>
-#include <algorithm>
+//#include <algorithm>
 #include <vector>
 #include "node.h"
 #include "edge.h"
@@ -83,6 +83,7 @@ namespace LatticeGraph {
 	     * Calculates distance between vortices
 	     */
 	    double getVortexDistance(std::shared_ptr<Node> n1, std::shared_ptr<Node> n2); //compare distances between nodes;
+	    double getVortexDistanceD(std::shared_ptr<Node> n1, std::shared_ptr<Node> n2); //compare distances between nodes;
 
 	    /**
 	     * Set vortex/edge at a specific position
@@ -111,15 +112,27 @@ namespace LatticeGraph {
 	    void removeEdges(std::shared_ptr<Node> n1);
 
 	    /**
+	     * Modify wavefunction
+	     */
+	    void createVortex(double posx, double posy, int winding);
+	    void destroyVortex(unsigned int uid);
+
+	    /**
 	     * Generate edges between vortices closer than radius
 	     */
 	    void createEdges(unsigned int radius); //Check all nodes and see if an edge can be created between pairs
+	    void createEdges(double radius); //Check all nodes and see if an edge can be created between pairs
 
 	    /**
 	     * Generate adjacency matrix. Format with Mathematic-friendly output
 	     */
 	    void genAdjMat(unsigned int *mat);  //generate adjacency matrix
+	    void genAdjMat(double *mat);  //generate adjacency matrix
 	    void adjMatMtca(unsigned int *mat);
+	    void adjMatMtca(double *mat);
+
+	    void swapIdxUid(unsigned int uid1, unsigned int uid2);
+	    void swapIdx(unsigned int idx1, unsigned int idx2);
 
 	    std::weak_ptr<Edge> isConnected(std::shared_ptr<Node> n1, std::shared_ptr<Node> n2);
     };
