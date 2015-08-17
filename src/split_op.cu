@@ -443,17 +443,20 @@ int evolve( cufftDoubleComplex *gpuWfc,
 				        for (int a = 0; a < lattice.getVortices().size(); ++a) {
 					        uids[a] = lattice.getVortexIdx(a)->getUid();
 				        }
-				        if(i==0){
-					        WFC::phaseWinding(Phi,1,x,y,dx,dy,lattice.getVortexUid(44)->getData().coordsD.x,lattice.getVortexUid(44)->getData().coordsD.y,xDim);
-					        cudaMemcpy(Phi_gpu, Phi, sizeof(double)*xDim*yDim, cudaMemcpyHostToDevice);
-					        cMultPhi<<<grid,threads>>>(gpuWfc,Phi_gpu,gpuWfc);
+				        if(i==0) {
+					        auto killIt=[&](int idx) {
+					            WFC::phaseWinding(Phi, 1, x, y, dx, dy, lattice.getVortexUid(idx)->getData().coordsD.x,
+					                          lattice.getVortexUid(idx)->getData().coordsD.y, xDim);
+					            cudaMemcpy(Phi_gpu, Phi, sizeof(double) * xDim * yDim, cudaMemcpyHostToDevice);
+					            cMultPhi <<<grid, threads>>> (gpuWfc, Phi_gpu, gpuWfc);
+				            };
 
-					        WFC::phaseWinding(Phi,1,x,y,dx,dy,lattice.getVortexUid(56)->getData().coordsD.x,lattice.getVortexUid(56)->getData().coordsD.y,xDim);
-					        cudaMemcpy(Phi_gpu, Phi, sizeof(double)*xDim*yDim, cudaMemcpyHostToDevice);
-					        cMultPhi<<<grid,threads>>>(gpuWfc,Phi_gpu,gpuWfc);
+					        killIt(44);
+					        killIt(45);
+					        killIt(46);
+					        killIt(47);
+					        killIt(48);
 
-					        WFC::phaseWinding(Phi,1,x,y,dx,dy,lattice.getVortexUid(34)->getData().coordsD.x,lattice.getVortexUid(34)->getData().coordsD.y,xDim);
-					        cudaMemcpy(Phi_gpu, Phi, sizeof(double)*xDim*yDim, cudaMemcpyHostToDevice);
 					        //FileIO::writeOutDouble(buffer, "Phi_imp", Phi, xDim * yDim, i);
 					        //cudaMemcpy(Phi_gpu, Phi, sizeof(double)*xDim*yDim, cudaMemcpyHostToDevice);
 
@@ -461,7 +464,6 @@ int evolve( cufftDoubleComplex *gpuWfc,
 					        //cudaMemcpy(Phi, Phi_gpu, sizeof(double)*xDim*yDim, cudaMemcpyDeviceToHost);
 					        //FileIO::writeOutDouble(buffer, "Phi_imp2", Phi, xDim * yDim, i);
 
-					        cMultPhi<<<grid,threads>>>(gpuWfc,Phi_gpu,gpuWfc);
 				        }
 				        lattice.createEdges(1.5 * 2e-5 / dx);
 				        adjMat = (double *) calloc(lattice.getVortices().size() * lattice.getVortices().size(),
