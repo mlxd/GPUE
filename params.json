@@ -1,0 +1,1 @@
+{"name":"GPUE","tagline":"GPU Gross-Pitaevskii Equation numerical solver","body":"GPUE is a numerical solver for the Schrodinger and non-linear Schrodinger (Gross-Pitaevskii) equations using CUDA. See the README for details.","google":"UA-66917945-1","note":"Don't delete this file! It's used internally to help with page regeneration."}
