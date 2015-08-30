@@ -38,28 +38,57 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 unsigned int getGid3d3d();;
 
+/**
+ * Indexing of threads, blocks
+ */
 __device__ unsigned int getBid3d3d();
 __device__ unsigned int getTid3d3d();
+
+/**
+ * Helper functions for complex numbers
+ */
+__device__ double complexMagnitude(double2);
 __device__ double complexMagnitudeSquared(double2);
-__device__ double complexMagnitudeSquared(double2);
+__device__ double2 conjugate(double2 in);
+__device__ double2 realCompMult(double scalar, double2 comp);
+
+/**
+ * Multiplication for linear, non-linear and phase-imprinting of the condensate.
+ */
 __global__ void cMult(cufftDoubleComplex*, cufftDoubleComplex*, cufftDoubleComplex*);
 __global__ void cMultPhi(cufftDoubleComplex*, double*, cufftDoubleComplex*);
-__global__ void pinVortex(cufftDoubleComplex*, cufftDoubleComplex*, cufftDoubleComplex*);
 __global__ void cMultDensity(double2*, double2*, double2*, double, double,double, int, int);
+
+/*
+ * Hold vortex at specified position. Not fully implemented. cMultPhi should implement required functionality.
+ */
+__global__ void pinVortex(cufftDoubleComplex*, cufftDoubleComplex*, cufftDoubleComplex*);
+
+/**
+ * FFTW scaling and normalisation routines
+ */
 __global__ void scalarDiv(double2*, double, double2*);
 __global__ void scalarDiv1D(double2*, double2*);
 __global__ void scalarDiv2D(double2*, double2*);
 __global__ void scalarDiv_wfcNorm(double2*, double, double2*, double2*);
+
+
+/**
+ * Parallel summation.
+ */
 __global__ void reduce(double2*, double*);
 __global__ void multipass(cufftDoubleComplex*, cufftDoubleComplex*, int);
+
+/**
+ * Calculate angular momentum. Not fully implemented. Handled in post-processing instead.
+ */
 __global__ void angularOp(double, double, double2*, double*, double2*);
 
 
 //####################################################################
-//
-
-__device__ double2 conjugate(double2 in);
-__device__ double2 realCompMult(double scalar, double2 comp);
+/**
+ * Non-implemented functions.
+ */
 __global__ void energyCalc(double2 *wfc, double2 *op, double dt, double2 *energy, int gnd_state, int op_space, double sqrt_omegaz_mass);
 inline __device__ double2 braKetMult(double2 in1, double2 in2);
 //template<typename T> __global__ void pSumT(T* in1, T* output, int pass);

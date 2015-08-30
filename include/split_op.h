@@ -111,8 +111,3 @@ void optLatSetup(struct Vtx::Vortex centre, double* V, struct Vtx::Vortex *vArra
 double energy_angmom(double* Energy, double* Energy_gpu, double2 *V_op, double2 *K_op, double dx, double dy, double2 *gpuWfc, int gState);
 
 #endif
-
-
-/*class SplitOp{
-
-}*/

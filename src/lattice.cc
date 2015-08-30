@@ -178,7 +178,6 @@ void Lattice::createEdges(double radius){
 	}
 }
 
-
 void Lattice::addVortex(std::shared_ptr<Node> n){
 	this->Lattice::getVortices().push_back((n));
 }
@@ -231,7 +230,6 @@ void Lattice::removeVortexIdx(unsigned int idx){
 		std::cout << "Cannot remove IDX:Vortex["<< idx << "], does not exist." << std::endl;
 	}
 }
-
 
 void Lattice::removeEdge(std::shared_ptr<Edge> e){
 	std::cout << "Removing Edge{" << e->getUid() <<"} connecting Node{" << e->getVortex(0).lock()->getUid() << "} and Node{" << e->getVortex(1).lock()->getUid() << "}." << std::endl;

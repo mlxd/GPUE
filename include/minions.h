@@ -44,7 +44,7 @@ namespace Minions{
 	/* Returns |x|^2 of the double2 arg*/
 	double psi2(double2);
 
-	/* Returns the minimumi and maximum values in the array*/
+	/* Returns the minimum and maximum values in the array*/
 	double minValue(double*,int);
 	double maxValue(double*,int);
 
@@ -55,9 +55,12 @@ namespace Minions{
 	double fInvSqRt(double);
 	//float fInvSqRt(float);
 
+	/** Swap the position of vortices **/
 	void coordSwap(struct Vtx::Vortex *vCoords, int src, int dest);
-	 double complexMag(double2 in);
-	 double complexMag2(double2 in);
+
+	/** More complex helper functions **/
+	double complexMag(double2 in);
+	double complexMag2(double2 in);
 	double2 complexMult(double2 in1, double2 in2);
 	double2 complexScale(double2 comp, double scale);
 	double2 conj(double2 c);

@@ -37,7 +37,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include<stdlib.h>
 #include<string.h>
 
-struct Param{
+struct Param{ //Gathers list of parameters used by Python analysis routines.
 	char title[32];
 	double data;
 };

@@ -67,6 +67,9 @@ namespace Minions{
 		return avg/len;
 	}
 
+	/**
+	 * Double precision fast inverse square-root. Useless, but necessary to have.
+	 */
 	double fInvSqRt(double in){
 		long long l;
 		double in05, calc;
@@ -81,6 +84,8 @@ namespace Minions{
 
 		return calc;
 	}
+
+
 
 	 void coordSwap(struct Vtx::Vortex *vCoords, int src, int dest){
 		struct Vtx::Vortex d = vCoords[dest];

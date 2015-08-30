@@ -50,22 +50,24 @@ unsigned int LatticeGraph::Edge::suid = 0;
 unsigned int LatticeGraph::Node::suid = 0;
 
 char buffer[100];
-int verbose;
-int device;
-int kick_it;
-int graph=0;
-double gammaY;
-double omega;
+int verbose; //Print more info. Not curently implemented.
+int device; //GPU ID choice.
+int kick_it; //Kicking mode: 0 = off, 1 = multiple, 2 = single
+int graph=0; //Generate graph from vortex lattice.
+double gammaY; //Aspect ratio of trapping geometry.
+double omega; //Rotation rate of condensate
 double timeTotal;
-double angle_sweep;
+double angle_sweep; //Rotation angle of condensate relative to x-axis
 Params *paramS;
 Array params;
-double x0_shift, y0_shift;
-double Rxy;
-double a0x, a0y;
-double sepMinEpsilon=0.0;
-/* Buffer and FILE for IO */
+double x0_shift, y0_shift; //Optical lattice shift parameters.
+double Rxy; //Condensate scaling factor.
+double a0x, a0y; //Harmonic oscillator length in x and y directions
+double sepMinEpsilon=0.0; //Minimum separation for epsilon.
 
+/*
+ * Checks CUDA routines have exitted correctly.
+ */
 int isError(int result, char* c){
 	if(result!=0){printf("Error has occurred for method %s with return type %d\n",c,result);
 		exit(result);
@@ -161,7 +163,7 @@ int initialise(double omegaX, double omegaY, int N){
 	yp = (double *) malloc(sizeof(double) * yDim);
 
 	/*
-	 * Pos and Mom grids
+	 * R-space and K-space grids
 	 */
 	for(i=0; i<xDim/2; ++i){
 		x[i] = -xMax + (i+1)*dx;		
@@ -179,7 +181,7 @@ int initialise(double omegaX, double omegaY, int N){
 	
 	//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%//
 	
-	/* Initialise wavefunction, momentum and position operators on host */
+	/* Initialise wavefunction, momentum, position, angular momentum, imaginary and real-time evolution operators . */
 	Energy = (double*) malloc(sizeof(double) * gSize);
 	r = (double *) malloc(sizeof(double) * gSize);
 	Phi = (double *) malloc(sizeof(double) * gSize);
@@ -213,7 +215,7 @@ int initialise(double omegaX, double omegaY, int N){
 	#ifdef __linux
 	int cores = omp_get_num_procs();
 	appendData(&params,"Cores_Total",cores);
-	appendData(&params,"Cores_Max",cores/2);
+	appendData(&params,"Cores_Max",cores/2); //Assuming dev system specifics (Xeon with HT -> cores detected / 2)
 	omp_set_num_threads(cores/2);
 	#pragma omp parallel for private(j)
 	#endif
@@ -249,7 +251,7 @@ int initialise(double omegaX, double omegaY, int N){
 		}
 	}
 	//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%//
-	//hdfWriteDouble(xDim, V, 0, "V_0");
+	//hdfWriteDouble(xDim, V, 0, "V_0"); //HDF not required for current projects. Removed.
 	//hdfWriteComplex(xDim, wfc, 0, "wfc_0");
 	FileIO::writeOutDouble(buffer,"V",V,xDim*yDim,0);
 	//FileIO::writeOutDouble(buffer,"V_opt",V_opt,xDim*yDim,0);
@@ -344,7 +346,7 @@ int evolve( cufftDoubleComplex *gpuWfc,
 	#endif
 
 	/** ** ####################################################################################################### ** **/
-	/** **					HERE BE DRAGONS OF THE MOST DANGEROUS KIND!			       ** **/
+	/** **					        HERE BE DRAGONS OF THE MOST DANGEROUS KIND!			                           ** **/
 	/** ** ####################################################################################################### ** **/
 
 	//Double buffering and will attempt to thread free and calloc operations to hide time penalty. Or may not bother.
@@ -362,7 +364,7 @@ int evolve( cufftDoubleComplex *gpuWfc,
 	int2 *olCoords = NULL; //array of vortex coordinates from vortexLocation 1's
 	int2 *vortDelta = NULL;
 
-	LatticeGraph::Lattice lattice;
+	LatticeGraph::Lattice lattice; //Vortex lattice graph.
 	double* adjMat;
 	
 	double vortOLSigma=0.0;
@@ -375,7 +377,7 @@ int evolve( cufftDoubleComplex *gpuWfc,
 		if ( ramp == 1 ){
 			omega_0=omegaX*((omega-0.39)*((double)i/(double)(numSteps)) + 0.39); //Adjusts omega for the appropriate trap frequency.
 		}
-		if(i % printSteps == 0) {
+		if(i % printSteps == 0) { //Print-out at pre-determined rate. Vortex & wfc analysis performed here also.
 			printf("Step: %d	Omega: %lf\n", i, omega_0 / omegaX);
 			cudaMemcpy(wfc, gpuWfc, sizeof(cufftDoubleComplex) * xDim * yDim, cudaMemcpyDeviceToHost);
 			end = clock();
@@ -384,18 +386,18 @@ int evolve( cufftDoubleComplex *gpuWfc,
 			char *fileName = "";
 			printf("ramp=%d		gstate=%d	rg=%d		\n", ramp, gstate, ramp | (gstate << 1));
 			switch (ramp | (gstate << 1)) {
-				case 0:
+				case 0: //Groundstate solver, constant Omega value.
 					fileName = "wfc_0_const";
 			        break;
-				case 1:
+				case 1: //Groundstate solver, ramped Omega value.
 					fileName = "wfc_0_ramp";
 			        break;
-				case 2:
+				case 2: //Real-time evolution, constant Omega value.
 					fileName = "wfc_ev";
 			        vortexLocation = (int *) calloc(xDim * yDim, sizeof(int));
 			        num_vortices[0] = Tracker::findVortex(vortexLocation, wfc, 1e-4, xDim, x, i);
 
-			        if (i == 0) {
+			        if (i == 0) { //If initial step, locate vortices, least-squares to find exact centre, calculate lattice angle, generate optical lattice.
 				        vortCoords = (struct Vtx::Vortex *) malloc(
 						        sizeof(struct Vtx::Vortex) * (2 * num_vortices[0]));
 				        vortCoordsP = (struct Vtx::Vortex *) malloc(
@@ -444,25 +446,15 @@ int evolve( cufftDoubleComplex *gpuWfc,
 					        uids[a] = lattice.getVortexIdx(a)->getUid();
 				        }
 				        if(i==0) {
+					        //Lambda for vortex annihilation/creation.
 					        auto killIt=[&](int idx) {
 					            WFC::phaseWinding(Phi, 1, x, y, dx, dy, lattice.getVortexUid(idx)->getData().coordsD.x,
 					                          lattice.getVortexUid(idx)->getData().coordsD.y, xDim);
 					            cudaMemcpy(Phi_gpu, Phi, sizeof(double) * xDim * yDim, cudaMemcpyHostToDevice);
 					            cMultPhi <<<grid, threads>>> (gpuWfc, Phi_gpu, gpuWfc);
 				            };
+					        //killIt(44); //Kills vortex with UID 44
 
-					        killIt(44);
-					        killIt(45);
-					        killIt(46);
-					        killIt(47);
-					        killIt(48);
-
-					        //FileIO::writeOutDouble(buffer, "Phi_imp", Phi, xDim * yDim, i);
-					        //cudaMemcpy(Phi_gpu, Phi, sizeof(double)*xDim*yDim, cudaMemcpyHostToDevice);
-
-					        //cudaMemcpy(Phi_gpu, Phi, sizeof(double)*xDim*yDim, cudaMemcpyHostToDevice);
-					        //cudaMemcpy(Phi, Phi_gpu, sizeof(double)*xDim*yDim, cudaMemcpyDeviceToHost);
-					        //FileIO::writeOutDouble(buffer, "Phi_imp2", Phi, xDim * yDim, i);
 
 				        }
 				        lattice.createEdges(1.5 * 2e-5 / dx);
@@ -631,7 +623,7 @@ int evolve( cufftDoubleComplex *gpuWfc,
 }
 
 /*
- * Used to perform parallel summation on WFC and normalise
+ * Used to perform parallel summation on WFC for normalisation.
  */
 void parSum(double2* gpuWfc, double2* gpuParSum, int xDim, int yDim, int threads){
 		int grid_tmp = xDim*yDim;
@@ -655,7 +647,7 @@ void parSum(double2* gpuWfc, double2* gpuParSum, int xDim, int yDim, int threads
 }
 
 /**
-** Matches the optical lattice to the vortex lattice
+** Matches the optical lattice to the vortex lattice. Moire super-lattice project.
 **/
 void optLatSetup(struct Vtx::Vortex centre, double* V, struct Vtx::Vortex *vArray, int num_vortices, double theta_opt, double intensity, double* v_opt, double *x, double *y){
 	int i,j;
@@ -713,7 +705,7 @@ void optLatSetup(struct Vtx::Vortex centre, double* V, struct Vtx::Vortex *vArra
 }
 
 /**
-** Calculates energy and angular momentum of current state
+** Calculates energy and angular momentum of current state. Implementation not fully finished.
 **/
 double energy_angmom(double *Energy, double* Energy_gpu, double2 *V_op, double2 *K_op, double dx, double dy, double2 *gpuWfc, int gState){
 	double renorm_factor_2d=1.0/pow(xDim*yDim,0.5);

@@ -100,21 +100,7 @@ __global__ void cMult(double2* in1, double2* in2, double2* out){
 	result.x = (tin1.x*tin2.x - tin1.y*tin2.y);
 	result.y = (tin1.x*tin2.y + tin1.y*tin2.x);
 	out[gid] = result;
-}/*
-__global__ void cMult(double2* in1, double2* in2, double2* out){
-	double2 result;
-	unsigned int gid = getGid3d3d();
-	int tid = getTid3d3d();
-	extern __shared__ double2 sin1[];
-	extern __shared__ double2 sin2[];
-	sin1[tid] = in1[gid];
-	sin2[tid] = in2[gid];
-
-	result.x = (sin1[tid].x*sin2[tid].x - sin1[tid].y*sin2[tid].y);
-	result.y = (sin1[tid].x*sin2[tid].y + sin1[tid].y*sin2[tid].x);
-	__syncthreads();
-	out[gid] = result;
-}*/
+}
 
 __global__ void cMultPhi(double2* in1, double* in2, double2* out){
 	double2 result;
@@ -124,6 +110,10 @@ __global__ void cMultPhi(double2* in1, double* in2, double2* out){
 	out[gid] = result;
 }
 
+
+/**
+ * Performs the non-linear evolution term of Gross--Pitaevskii equation.
+ */
 __global__ void cMultDensity(double2* in1, double2* in2, double2* out, double dt, double mass,double omegaZ, int gstate, int N){
 	double2 result;
 	double gDensity;
@@ -173,8 +163,6 @@ __global__ void scalarDiv_wfcNorm(double2* in, double dr, double2* pSum, double2
 	out[gid] = result;
 }
 
-/**
- */
 __global__ void angularOp(double omega, double dt, double2* wfc, double* xpyypx, double2* out){
 	unsigned int gid = getGid3d3d();
 	double2 result;
@@ -276,8 +264,6 @@ __global__ void pSum(double* in1, double* output, int pass){
                 output[bid] = sdata2[0];
         }
 }
-
-
 
 //#############################################################################################
 //#############################################################################################

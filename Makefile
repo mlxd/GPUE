@@ -10,7 +10,7 @@ CC			= /usr/local/cuda/bin/nvcc --ptxas-options=-v --compiler-options -Wall #-sa
 CUDA_LIB	= /usr/local/cuda/lib64
 CUDA_HEADER	= /usr/local/cuda/include
 CHOSTFLAGS	= #-fopenmp
-CFLAGS		= -g -O3 -std=c++11 -Xcompiler '-std=c++11'#-malign-double
+CFLAGS		= -g -O3 -std=c++11 -Xcompiler '-std=c++11' -Xcompiler '-fopenmp' #-malign-double
 GPU_ARCH	= sm_30
 endif
 
@@ -32,16 +32,16 @@ kernels.o: ./include/split_op.h Makefile ./include/constants.h ./include/kernels
 	$(CC) -c  ./src/kernels.cu -o $@ $(INCFLAGS) $(CFLAGS) $(LDFLAGS) -arch=$(GPU_ARCH) 
 	
 fileIO.o: ./include/fileIO.h ./src/fileIO.cc Makefile
-	g++ -c ./src/fileIO.cc -o $@ $(INCFLAGS) $(CFLAGS) $(LDFLAGS) 
+	nvcc -c ./src/fileIO.cc -o $@ $(INCFLAGS) $(CFLAGS) $(LDFLAGS) 
 
 tracker.o: ./src/tracker.cc ./include/tracker.h ./include/fileIO.h
-	g++ -c ./src/tracker.cc -o $@ $(INCFLAGS) $(CFLAGS) $(LDFLAGS) $(CHOSTFLAGS)
+	nvcc -c ./src/tracker.cc -o $@ $(INCFLAGS) $(CFLAGS) $(LDFLAGS) $(CHOSTFLAGS)
 
 minions.o: ./src/minions.cc ./include/minions.h
-	g++ -c ./src/minions.cc -o $@ $(INCFLAGS) $(CFLAGS) $(LDFLAGS) $(CHOSTFLAGS) 
+	nvcc -c ./src/minions.cc -o $@ $(INCFLAGS) $(CFLAGS) $(LDFLAGS) $(CHOSTFLAGS) 
 
 ds.o: ./src/ds.cc ./include/ds.h
-	g++ -c ./src/ds.cc -o $@ $(INCFLAGS) $(CFLAGS) $(LDFLAGS) $(CHOSTFLAGS)
+	nvcc -c ./src/ds.cc -o $@ $(INCFLAGS) $(CFLAGS) $(LDFLAGS) $(CHOSTFLAGS)
 
 node.o: ./src/node.cc ./include/node.h
 	$(CC) -c ./src/node.cc -o $@ $(INCFLAGS) $(CFLAGS) $(LDFLAGS) $(CHOSTFLAGS)
