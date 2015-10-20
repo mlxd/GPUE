@@ -236,16 +236,24 @@ class VtxList: #Linked-list for tracking vortices
 def do_the_thing(start,fin,incr): #Performs the tracking
 ###############################################################################
 	#v_arr_p=genfromtxt('vort_lsq_' + str(0) + '.csv',delimiter=',')
-	v_arr_p=genfromtxt('vort_lsq_' + str(0) + '.csv',delimiter=',')
-	for i in range(start+incr, fin+1, incr): #loop over samples in time
+	v_arr_p=genfromtxt('vort_arr_' + str(1000),delimiter=',')
+	for i in range( start + incr + 1000, fin + 1, incr): #loop over samples in time
+	#	print v_arr_p[:,2]
 		vorts_p = VtxList()
 		vorts_c = VtxList()
 		#v_arr_c=genfromtxt('vort_lsq_' + str(i) + '.csv',delimiter=',' )
-		v_arr_c=genfromtxt('vort_lsq_' + str(i) + '.csv',delimiter=',' )
-		v_arr_p_coords = np.array([[a for a in v][:2] for v in v_arr_p])
-		v_arr_c_coords = np.array([[a for a in v][:2] for v in v_arr_c])
-		v_arr_p_sign = np.array([[a for a in v][2] for v in v_arr_p])
-		v_arr_c_sign = np.array([[a for a in v][2] for v in v_arr_c])
+		v_arr_c=genfromtxt('vort_arr_' + str(i), delimiter=',')
+		if i==2000:
+			v_arr_p_coords = np.array([a for a in v_arr_p[:,[1,3]]])
+			v_arr_c_coords = np.array([a for a in v_arr_c[:,[1,3]]])
+			v_arr_p_sign = np.array([a for a in v_arr_p[:,4]])
+			v_arr_c_sign = np.array([a for a in v_arr_c[:,4]])
+		else:
+			v_arr_p_coords = np.array([a for a in v_arr_p[:,[0,1]]])
+			v_arr_p_sign = np.array([a for a in v_arr_p[:,2]])
+			
+		v_arr_c_coords = np.array([a for a in v_arr_c[:,[1,3]]])
+		v_arr_c_sign = np.array([a for a in v_arr_c[:,4]])
 		for i1 in range(0,v_arr_p_coords.size/2): #loop over coordinates for a given time
 			vtx_p = Vortex(i1,v_arr_p_coords[i1][0],v_arr_p_coords[i1][1],True,sign=v_arr_p_sign[i1])#,v_arr_p[i1][2])
 			vorts_p.add(vtx_p)
@@ -268,7 +276,6 @@ def do_the_thing(start,fin,incr): #Performs the tracking
 		#You will never remember why this works
 		uid_c = [[a for a in b][3] for b in vorts_c.as_np()]
 		uid_p = [[a for a in b][3] for b in vorts_p.as_np()]
-
 		#Check the difference between current and previous vtx data
 		dpc = set(uid_p).difference(set(uid_c))
 		dcp = set(uid_c).difference(set(uid_p))
@@ -289,4 +296,4 @@ def do_the_thing(start,fin,incr): #Performs the tracking
 
 ###############################################################################
 ###############################################################################
-do_the_thing(0,200000,500)
+do_the_thing(0,evMaxVal,incr)
