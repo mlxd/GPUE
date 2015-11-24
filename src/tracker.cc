@@ -350,11 +350,12 @@ namespace Tracker {
 		}
     }
 
+	/*
 	void trackVortices(Vtx::VtxList &vorticesC, Vtx::VtxList &vorticesP){
 
 		for(auto a: vorticesC.getVortices()){
 
 		}
 
-	}
+	}*/
 }

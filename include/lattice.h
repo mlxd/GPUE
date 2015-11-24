@@ -1,3 +1,4 @@
+///@cond LICENSE
 /*** lattice.h - GPUE: Split Operator based GPU solver for Nonlinear
 Schrodinger Equation, Copyright (C) 2011-2015, Lee J. O'Riordan
 <loriordan@gmail.com>, Tadhg Morgan, Neil Crowley.
@@ -30,6 +31,22 @@ LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
+///@endcond
+//##############################################################################
+/**
+ *  @file    lattice.h
+ *  @author  Lee J. O'Riordan (mlxd)
+ *  @date    12/11/2015
+ *  @version 0.1
+ *
+ *  @brief Class for treating vortices as a graph
+ *
+ *  @section DESCRIPTION
+ *  Vortices are passed in as nodes, with edges created between them for
+ *  generating graphs. Edges and nodes can be created as necessary. An adjacency
+ *  matrix can also be output, with Mathematica input syntax in mind.
+ */
+//##############################################################################
 
 #ifndef LATTICEGRAPH_LATTICE_H
 #define LATTICEGRAPH_LATTICE_H
@@ -47,93 +64,295 @@ namespace LatticeGraph {
     class Lattice {
 
     private:
-	    //std::vector <Node> vortices; //The nodes
-	    std::vector <std::shared_ptr <Node> > vortices; //The nodes
-	    std::vector <std::shared_ptr <Edge> > edges; //The nodes
+	    std::vector <std::shared_ptr <Node> > vortices; //The vortices (nodes)
+	    std::vector <std::shared_ptr <Edge> > edges; //The edges
 
     public:
+		/**
+		* @brief	Makes stuff exist
+		* @ingroup	graph
+		*/
 	    Lattice();
+		/**
+		* @brief	Makes stuff anti-exist
+		* @ingroup	graph
+		*/
 	    ~Lattice();
 
-	    /**
-	     * Returns the vectors for vortices or edges
-	     */
-	    std::vector <std::shared_ptr <Node> > &getVortices(); //get vortices vector
-	    std::vector <std::shared_ptr <Edge> > &getEdges(); //get edges vector
+//##############################################################################
 
-	    /**
-	     * Returns vortex/edge specified at index idx
-	     */
+		/**
+		* @brief	Returns the vectors for vortices
+		* @ingroup	graph
+		* @return	Vector of shared_ptr for vortices (Nodes)
+		*/
+	    std::vector <std::shared_ptr <Node> > &getVortices();
+		/**
+		* @brief	Returns the edges for edges
+		* @ingroup	graph
+		* @return	Vector of shared_ptr for edges (Nodes)
+		*/
+	    std::vector <std::shared_ptr <Edge> > &getEdges();
+
+//##############################################################################
+
+		/**
+		* @brief	Returns vortex specified at index idx
+		* @ingroup	graph
+		* @param	idx Index of vortex position
+		* @return	Shared pointer to vortex (Node) at index idx
+		*/
 	    std::shared_ptr<Node> getVortexIdx(unsigned int idx);
+		/**
+		* @brief	Returns edge specified at index idx
+		* @ingroup	graph
+		* @param	idx Index of vortex position
+		* @return	Shared pointer to edge at index idx
+		*/
 	    std::shared_ptr<Edge> getEdgeIdx(unsigned int idx);
 
-	    /**
-	     * Returns the index of vortex/edge with UID uid
-	     */
-	    unsigned int getVortexIdxUid(unsigned int uid); //get vortex index by uid
-	    unsigned int getEdgeIdxUid(unsigned int uid); //get edge index by uid
+//##############################################################################
 
-	    /**
-	     * Returns vortex/edge with UID uid
-	     */
-	    std::shared_ptr<Node> getVortexUid(unsigned int uid); // gets vortex by uid. Assumes it exists.
-	    std::shared_ptr<Edge> getEdgeUid(unsigned int uid); // gets edge by uid. Assumes it exists.
+		/**
+		* @brief	Returns vortex index based on UID
+		* @ingroup	graph
+		* @param	uid UID of vortex
+		* @return	Index of vortex with UID uid
+		*/
+	    unsigned int getVortexIdxUid(unsigned int uid);
+		/**
+		* @brief	Returns edge index based on UID
+		* @ingroup	graph
+		* @param	uid UID of edge
+		* @return	Index of edge with UID uid
+		*/
+	    unsigned int getEdgeIdxUid(unsigned int uid);
 
-	    /**
-	     * Calculates distance between vortices
-	     */
-	    double getVortexDistance(std::shared_ptr<Node> n1, std::shared_ptr<Node> n2); //compare distances between nodes;
-	    double getVortexDistanceD(std::shared_ptr<Node> n1, std::shared_ptr<Node> n2); //compare distances between nodes;
+//##############################################################################
 
-	    /**
-	     * Set vortex/edge at a specific position
-	     */
+		/**
+		* @brief	Returns vortex based on UID
+		* @ingroup	graph
+		* @param	uid UID of vortex
+		* @return	Vortex with UID uid
+		* @bug		Fails for vortex UIDs that do not exist. Assumes they do.
+		*/
+	    std::shared_ptr<Node> getVortexUid(unsigned int uid);
+		/**
+		* @brief	Returns edge based on UID
+		* @ingroup	graph
+		* @param	uid UID of edge
+		* @return	edge with UID uid
+		* @bug		Fails for vortex UIDs that do not exist. Assumes they do.
+		*/
+	    std::shared_ptr<Edge> getEdgeUid(unsigned int uid);
+
+//##############################################################################
+
+		/**
+		* @brief	Calculates distance between vortices
+		* @ingroup	graph
+		* @param	n1 Vortex (node) 1
+		* @param	n2 Vortex (node) 2
+		* @return	double of intervortex distance
+		*/
+	    double getVortexDistance(std::shared_ptr<Node> n1, std::shared_ptr<Node> n2);
+		/**
+		* @brief	Calculates distance between vortices
+		* @ingroup	graph
+		* @param	n1 Vortex (node) 1
+		* @param	n2 Vortex (node) 2
+		* @return	double of intervortex distance
+		*/
+	    double getVortexDistanceD(std::shared_ptr<Node> n1, std::shared_ptr<Node> n2);
+
+//##############################################################################
+
+		/**
+		* @brief	Set vortex (node) at a specific position
+		* @ingroup	graph
+		* @param	idx Index to set vortex
+		* @param	n Vortex to set
+		*/
 	    void setVortex(unsigned int idx, std::shared_ptr<Node> n);
+		/**
+		* @brief	Set edge at a specific position
+		* @ingroup	graph
+		* @param	idx Index to set vortex
+		* @param	n Vortex to set
+		*/
 	    void setEdge(unsigned int idx, std::shared_ptr<Edge> e);
 
-	    /**
-	     * Add vortex/edge to the lattice.
-	     */
+//##############################################################################
+
+		/**
+		* @brief	Add vortex (node) to the lattice (graph).
+		* @ingroup	graph
+		* @param	n Vortex to add
+		*/
 	    void addVortex(std::shared_ptr<Node> n);
+		/**
+		* @brief	Add edge e to the lattice (graph). Assumes edge has nodes already.
+		* @ingroup	graph
+		* @param	e Edge to add
+		*/
 	    void addEdge(std::shared_ptr<Edge> e);
+		/**
+		* @brief	Add edge between vortex (node) n1 and n2 to the lattice (graph).
+		* @ingroup	graph
+		* @param	n1 Vortex to add edge to as connection 1
+		* @param	n2 Vortex to add edge to as connection 2
+		*/
 	    void addEdge(std::shared_ptr<Node> n1, std::shared_ptr<Node> n2);
+		/**
+		* @brief	Add edge e between vortex (node) n1 and n2 to the lattice (graph).
+		* @ingroup	graph
+		* @param	e Edge to add
+		* @param	n1 Vortex to add edge to as connection 1
+		* @param	n2 Vortex to add edge to as connection 2
+		*/
 	    void addEdge(std::shared_ptr<Edge> e, std::shared_ptr<Node> n1, std::shared_ptr<Node> n2);
 
-	    /**
-	     * Remove vortex/edge from the lattice
-	     */
+//##############################################################################
+
+		/**
+		* @brief	Remove vortex n from the lattice
+		* @ingroup	graph
+		* @param	n Vortex (node) to remove
+		*/
 	    void removeVortex(std::shared_ptr<Node> n);
+		/**
+		* @brief	Remove vortex from the lattice based on index idx
+		* @ingroup	graph
+		* @param	idx Vortex at index idx to remove
+		*/
 	    void removeVortexIdx(unsigned int idx);
-	    void removeVortexUid(unsigned int idx);
+		/**
+		* @brief	Remove vortex from the lattice based on UID uid
+		* @ingroup	graph
+		* @param	uid Vortex with UID uid to remove
+		*/
+	    void removeVortexUid(unsigned int uid);
+
+//##############################################################################
+
+		/**
+		* @brief	Remove edge between n1 and n2 from the lattice
+		* @ingroup	graph
+		* @param	n1 Vortex 1
+		* @param	n2 Vortex 2
+		*/
 	    void removeEdge(std::shared_ptr<Node> n1, std::shared_ptr<Node> n2);
+		/**
+		* @brief	Remove edge from the lattice
+		* @ingroup	graph
+		* @param	e Edge to remove
+		*/
 	    void removeEdge(std::shared_ptr<Edge> e);
+		/**
+		* @brief	Remove edge from the lattice based on UID uid
+		* @ingroup	graph
+		* @param	uid Edge with UID uid to remove
+		*/
 	    void removeEdgeUid(unsigned int uid);
+		/**
+		* @brief	Remove edge from the lattice based index idx
+		* @ingroup	graph
+		* @param	idx Edge at index idx to remove
+		*/
 	    void removeEdgeIdx(unsigned int idx);
+		/**
+		* @brief	Remove all edges from vortex
+		* @ingroup	graph
+		* @param	n1 Vortex (node) to lose all edges
+		*/
 	    void removeEdges(std::shared_ptr<Node> n1);
 
-	    /**
-	     * Modify wavefunction
-	     */
+
+
+		/**
+		* @brief	Create a vortex at specified location with given winding
+		* @ingroup	graph
+		* @param	posx Position x to create vortex
+		* @param	posy Position y to create vortex
+		* @param	Winding of vortex to create
+		*/
 	    void createVortex(double posx, double posy, int winding);
+		/**
+		* @brief	Destroy a vortex with UID uid
+		* @ingroup	graph
+		* @param	uid Vortex to destroy with UID uid
+		*/
 	    void destroyVortex(unsigned int uid);
 
-	    /**
-	     * Generate edges between vortices closer than radius
-	     */
-	    void createEdges(unsigned int radius); //Check all nodes and see if an edge can be created between pairs
-	    void createEdges(double radius); //Check all nodes and see if an edge can be created between pairs
 
-	    /**
-	     * Generate adjacency matrix. Format with Mathematic-friendly output
-	     */
+
+		/**
+		* @brief	Generate edges between vortices closer than int radius
+		* @ingroup	graph
+		* @param	radius Radius cutoff for creating edge connections
+		*/
+	    void createEdges(unsigned int radius);
+		/**
+		* @brief	Generate edges between vortices closer than double radius
+		* @ingroup	graph
+		* @param	radius Radius cutoff for creating edge connections
+		*/
+	    void createEdges(double radius);
+
+//##############################################################################
+
+		/**
+		* @brief	Output adjacency matrix.
+		* @ingroup	graph
+		* @param	*mat Modifyable UInt array for adjacency matrix
+		*/
 	    void genAdjMat(unsigned int *mat);  //generate adjacency matrix
+		/**
+		* @brief	Output adjacency matrix.
+		* @ingroup	graph
+		* @param	*mat Modifyable double array for adjacency matrix
+		*/
 	    void genAdjMat(double *mat);  //generate adjacency matrix
+		/**
+		* @brief	Format adjacency matrix with Mathematica-friendly output
+		* @ingroup	graph
+		* @param	*mat Adjacency matrix from genAdjMat(*uint)
+		*/
 	    void adjMatMtca(unsigned int *mat);
+		/**
+		* @brief	Format adjacency matrix with Mathematica-friendly output
+		* @ingroup	graph
+		* @param	*mat Adjacency matrix from genAdjMat(*double)
+		*/
 	    void adjMatMtca(double *mat);
 
+//##############################################################################
+
+		/**
+		* @brief	Swap the elements at indices based on UID uid1 and uid2
+		* @ingroup	graph
+		* @param	uid1 UID of element 1 to swap
+		* @param	uid2 UID of element 2 to swap
+		*/
 	    void swapIdxUid(unsigned int uid1, unsigned int uid2);
+		/**
+		* @brief	Swap the elements at indices idx1 and idx2
+		* @ingroup	graph
+		* @param	idx1 Index of element 1
+		* @param	idx2 Index of element 2
+		*/
 	    void swapIdx(unsigned int idx1, unsigned int idx2);
 
+//##############################################################################
+
+		/**
+		* @brief	Checks if vortex n1 and n2 are connected
+		* @ingroup	graph
+		* @param	n1 Vortex (node) 1
+		* @param	n2 Vortex (node) 2
+		* @return	Weak pointer to the connecting edge
+		*/
 	    std::weak_ptr<Edge> isConnected(std::shared_ptr<Node> n1, std::shared_ptr<Node> n2);
     };
 }
