@@ -100,6 +100,9 @@ necessary parameters to generate your favourite condensate.
 As an example
 ./gpue -x 256 -y 256 -T 1e-3 -t 1e-3 -n 1e5 -g 1e3 -e 1e3 -p 1 -r 0 -w 0.3 -o 10 -d 0 -l 1 -s 1 -i 1.0 -P 0.0 -G 1.0 -L 0 -X 1 -Y 1 -k 0 -O 0.0 -W 1 -U 0 -V 0 -S 0.0
 
+As an example, here are some simulations performed with the code:
+https://www.youtube.com/playlist?list=PLiRboSbbz10s6cXxvYLFOn3QbmQpdtQVd
+
 The above parameters will be better explained when the papers have been 
 published (which is only fair). Comments will be added for relevant sections 
 too to allow for their use. 
