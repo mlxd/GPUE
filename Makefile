@@ -1,17 +1,17 @@
+CUDA_HOME = /usr/local/cuda
+GPU_ARCH	= sm_30
 OS:=	$(shell uname)
 ifeq ($(OS),Darwin)
-CC		= nvcc -ccbin /usr/bin/clang --ptxas-options=-v#-save-temps
-CUDA_LIB	= /usr/local/cuda/lib
-CUDA_HEADER	= /usr/local/cuda/include
+CUDA_LIB	= $(CUDA_HOME)/lib
+CUDA_HEADER	= $(CUDA_HOME)/include
+CC		= $(CUDA_HOME)/bin/nvcc -ccbin /usr/bin/clang --ptxas-options=-v#-save-temps
 CFLAGS		= -g -O3 -m64 -std=c++11
-GPU_ARCH	= sm_30
 else
-CC		= nvcc --ptxas-options=-v --compiler-options -Wall #-save-temps
-CUDA_LIB	= /usr/local/cuda/lib64
-CUDA_HEADER	= /usr/local/cuda/include
+CUDA_LIB	= $(CUDA_HOME)/lib64
+CUDA_HEADER	= $(CUDA_HOME)/include
+CC		= $(CUDA_HOME)/bin/nvcc --ptxas-options=-v --compiler-options -Wall #-save-temps
 CHOSTFLAGS	= #-fopenmp
 CFLAGS		= -g -O3 -std=c++11 -Xcompiler '-std=c++11' -Xcompiler '-fopenmp' #-malign-double
-GPU_ARCH	= sm_30
 endif
 
 CLINKER		= $(CC) 
@@ -32,16 +32,16 @@ kernels.o: ./include/split_op.h Makefile ./include/constants.h ./include/kernels
 	$(CC) -c  ./src/kernels.cu -o $@ $(INCFLAGS) $(CFLAGS) $(LDFLAGS) -arch=$(GPU_ARCH)
 
 fileIO.o: ./include/fileIO.h ./src/fileIO.cc Makefile
-	nvcc -c ./src/fileIO.cc -o $@ $(INCFLAGS) $(CFLAGS) $(LDFLAGS)
+	$(CC) -c ./src/fileIO.cc -o $@ $(INCFLAGS) $(CFLAGS) $(LDFLAGS)
 
 tracker.o: ./src/tracker.cc ./include/tracker.h ./include/fileIO.h
-	nvcc -c ./src/tracker.cc -o $@ $(INCFLAGS) $(CFLAGS) $(LDFLAGS) $(CHOSTFLAGS)
+	$(CC) -c ./src/tracker.cc -o $@ $(INCFLAGS) $(CFLAGS) $(LDFLAGS) $(CHOSTFLAGS)
 
 minions.o: ./src/minions.cc ./include/minions.h
-	nvcc -c ./src/minions.cc -o $@ $(INCFLAGS) $(CFLAGS) $(LDFLAGS) $(CHOSTFLAGS)
+	$(CC) -c ./src/minions.cc -o $@ $(INCFLAGS) $(CFLAGS) $(LDFLAGS) $(CHOSTFLAGS)
 
 ds.o: ./src/ds.cc ./include/ds.h
-	nvcc -c ./src/ds.cc -o $@ $(INCFLAGS) $(CFLAGS) $(LDFLAGS) $(CHOSTFLAGS)
+	$(CC) -c ./src/ds.cc -o $@ $(INCFLAGS) $(CFLAGS) $(LDFLAGS) $(CHOSTFLAGS)
 
 node.o: ./src/node.cc ./include/node.h
 	$(CC) -c ./src/node.cc -o $@ $(INCFLAGS) $(CFLAGS) $(LDFLAGS) $(CHOSTFLAGS)
@@ -68,7 +68,7 @@ minions: ./src/minions.cc ./include/minions.h minions.o
 	$(CC) minions.o -o mintest $(INCFLAGS) $(CFLAGS) $(LDFLAGS)
 
 tracker_test: tracker.o fileIO.o ./src/tracker.cc ./include/fileIO.h ./src/fileIO.cc ./include/tracker.h
-	gcc ./tracker.o ./fileIO.o -o tracker_test $(INCFLAGS) $(CFLAGS) $(LDFLAGS)
+	$(CC) ./tracker.o ./fileIO.o -o tracker_test $(INCFLAGS) $(CFLAGS) $(LDFLAGS)
 
 default:	gpue
 all:		gpue test
