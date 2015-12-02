@@ -115,24 +115,20 @@ int initialise(double omegaX, double omegaY, int N){
 	xOffset=0.0;//5.0e-6;
 	yOffset=0.0;//5.0e-6;
 	
-	mass = 1.4431607e-25; //Rb 87 mass, kg
+	mass = 1.0; //Rb 87 mass, kg
 	appendData(&params,"Mass",mass);
-	a_s = 4.67e-9;
+	a_s = 0.0;//4.67e-9;
 	appendData(&params,"a_s",a_s);
 
 	double sum = 0.0;
 
-	a0x = sqrt(HBAR/(2*mass*omegaX));
-	a0y = sqrt(HBAR/(2*mass*omegaY));
+	a0x = sqrt(1.0/2.0);
+	a0y = sqrt(1.0/2.0);
 	appendData(&params,"a0x",a0x);
 	appendData(&params,"a0y",a0y);
 	
-	Rxy = pow(15,0.2)*pow(N*a_s*sqrt(mass*omegaZ/HBAR),0.2);
-	appendData(&params,"Rxy",Rxy);
-	//Rxy = pow(15,0.2)*pow(N*4.67e-9*sqrt(mass*pow(omegaX*omegaY,0.5)/HBAR),0.2);
-	double bec_length = sqrt( HBAR/(mass*sqrt( omegaX*omegaX * ( 1 - omega*omega) ) ));
-	xMax = 6*Rxy*a0x;//10*bec_length;//6*Rxy*a0x;
-	yMax = 6*Rxy*a0y;//10*bec_length;//
+	xMax = 10*a0x;//10*bec_length;//6*Rxy*a0x;
+	yMax = 10*a0y;//10*bec_length;//
 	appendData(&params,"xMax",xMax);
 	appendData(&params,"yMax",yMax);
 
@@ -166,19 +162,29 @@ int initialise(double omegaX, double omegaY, int N){
 	 * R-space and K-space grids
 	 */
 	for(i=0; i<xDim/2; ++i){
-		x[i] = -xMax + (i+1)*dx;		
-		x[i + (xDim/2)] = (i+1)*dx;
+		x[i] = -xMax + (i)*dx;		
+		x[i + (xDim/2)] = (i)*dx;
 		
-		y[i] = -yMax + (i+1)*dy;		
-		y[i + (yDim/2)] = (i+1)*dy;
+		y[i] = -yMax + (i)*dy;		
+		y[i + (yDim/2)] = (i)*dy;
 		
-		xp[i] = (i+1)*dpx;
-		xp[i + (xDim/2)] = -pxMax + (i+1)*dpx;
+		xp[i] = (i)*dpx;
+		xp[i + (xDim/2)] = -pxMax + (i)*dpx;
 		
-		yp[i] = (i+1)*dpy;
-		yp[i + (yDim/2)] = -pyMax + (i+1)*dpy;
+		yp[i] = (i)*dpy;
+		yp[i + (yDim/2)] = -pyMax + (i)*dpy;
 	}
-	
+
+/*
+	 % maximum values
+	  pxmax=pi*Ngx/(2*xmax);
+	   % spacing in position and momentum space
+	    dx=2*xmax/Ngx;   dpx=2*pxmax/Ngx;
+	     % grid vectors, position and momentum space
+	      x=(1:Ngx)'*dx-xmax;   pxn=((1:Ngx)*dpx-pxmax)';   
+	       % reordination needed for the fourier transform
+	        px(Ngx/2+2:Ngx,1)=pxn(1:Ngx/2-1,1);   px(1:Ngx/2+1,1)=pxn(Ngx/2:Ngx,1);
+*/	
 	//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%//
 	
 	/* Initialise wavefunction, momentum, position, angular momentum, imaginary and real-time evolution operators . */
@@ -223,31 +229,31 @@ int initialise(double omegaX, double omegaY, int N){
 		for( j=0; j < yDim; j++ ){
 			Phi[(i*yDim + j)] = fmod(l*atan2(y[j], x[i]),2*PI);
 			
-			wfc[(i*yDim + j)].x = exp(-( pow((x[i])/(Rxy*a0x),2) + pow((y[j])/(Rxy*a0y),2) ) )*cos(Phi[(i*xDim + j)]);
-			wfc[(i*yDim + j)].y = -exp(-( pow((x[i])/(Rxy*a0x),2) + pow((y[j])/(Rxy*a0y),2) ) )*sin(Phi[(i*xDim + j)]);
+			wfc[(i*yDim + j)].x =  (1/sqrt(2))*pow(1/PI,0.5) * exp( -0.5*( x[i]*x[i] + y[j]*y[j] ) )*(1+2*x[i]/sqrt(2));
+			wfc[(i*yDim + j)].y = 0.0;
 				
-			V[(i*yDim + j)] = 0.5*mass*( pow(omegaX*(x[i]+xOffset),2) + pow(gammaY*omegaY*(y[j]+yOffset),2) );
-			K[(i*yDim + j)] = (HBAR*HBAR/(2*mass))*(xp[i]*xp[i] + yp[j]*yp[j]);
+			V[(i*yDim + j)] = 0.5*( x[i]*x[i] + y[j]*y[j] );
+			K[(i*yDim + j)] = 0.5*( xp[i]*xp[i] + yp[j]*yp[j] );
 
-			GV[(i*yDim + j)].x = exp( -V[(i*xDim + j)]*(gdt/(2*HBAR)));
-			GK[(i*yDim + j)].x = exp( -K[(i*xDim + j)]*(gdt/HBAR));
+			GV[(i*yDim + j)].x = exp( -V[(i*xDim + j)]*(gdt/(2)));
+			GK[(i*yDim + j)].x = exp( -K[(i*xDim + j)]*(gdt/1));
 			GV[(i*yDim + j)].y = 0.0;
 			GK[(i*yDim + j)].y = 0.0;
 			
 			xPy[(i*yDim + j)] = x[i]*yp[j];
 			yPx[(i*yDim + j)] = -y[j]*xp[i];
 			
-			EV[(i*yDim + j)].x=cos( -V[(i*xDim + j)]*(dt/(2*HBAR)));
-			EV[(i*yDim + j)].y=sin( -V[(i*xDim + j)]*(dt/(2*HBAR)));
-			EK[(i*yDim + j)].x=cos( -K[(i*xDim + j)]*(dt/HBAR));
-			EK[(i*yDim + j)].y=sin( -K[(i*xDim + j)]*(dt/HBAR));
+			EV[(i*yDim + j)].x=cos( -V[(i*xDim + j)]*(dt/(2)));
+			EV[(i*yDim + j)].y=sin( -V[(i*xDim + j)]*(dt/(2)));
+			EK[(i*yDim + j)].x=cos( -K[(i*xDim + j)]*(dt/1));
+			EK[(i*yDim + j)].y=sin( -K[(i*xDim + j)]*(dt/1));
 			
 			ExPy[(i*yDim + j)].x=cos(-omega*omegaX*xPy[(i*xDim + j)]*dt);
 			ExPy[(i*yDim + j)].y=sin(-omega*omegaX*xPy[(i*xDim + j)]*dt);
 			EyPx[(i*yDim + j)].x=cos(-omega*omegaX*yPx[(i*xDim + j)]*dt);
 			EyPx[(i*yDim + j)].y=sin(-omega*omegaX*yPx[(i*xDim + j)]*dt);
 	
-			sum+=sqrt(wfc[(i*xDim + j)].x*wfc[(i*xDim + j)].x + wfc[(i*xDim + j)].y*wfc[(i*xDim + j)].y);
+			sum += (wfc[(i*xDim + j)].x*wfc[(i*xDim + j)].x + wfc[(i*xDim + j)].y*wfc[(i*xDim + j)].y);
 		}
 	}
 	//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%//
@@ -273,16 +279,16 @@ int initialise(double omegaX, double omegaY, int N){
 	free(K); free(r); //free(Phi);
 
 	//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%//
-
-	sum=sqrt(sum*dx*dy);
-	//#pragma omp parallel for reduction(+:sum) private(j)
-	for (i = 0; i < xDim; i++){
-		for (j = 0; j < yDim; j++){
-			wfc[(i*yDim + j)].x = (wfc[(i*yDim + j)].x)/(sum);
-			wfc[(i*yDim + j)].y = (wfc[(i*yDim + j)].y)/(sum);
+	if (gsteps>0.0){
+		sum=sqrt(sum*dx*dy);
+		//#pragma omp parallel for reduction(+:sum) private(j)
+		for (i = 0; i < xDim; i++){
+			for (j = 0; j < yDim; j++){
+				wfc[(i*yDim + j)].x = (wfc[(i*yDim + j)].x)/(sum);
+				wfc[(i*yDim + j)].y = (wfc[(i*yDim + j)].y)/(sum);
+			}
 		}
 	}
-	
 	//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%//
 	
 	result = cufftPlan2d(&plan_2d, xDim, yDim, CUFFT_Z2Z);
@@ -394,6 +400,9 @@ int evolve( cufftDoubleComplex *gpuWfc,
 			        break;
 				case 2: //Real-time evolution, constant Omega value.
 					fileName = "wfc_ev";
+					if(gpe==0){
+						break;
+					}
 			        vortexLocation = (int *) calloc(xDim * yDim, sizeof(int));
 			        num_vortices[0] = Tracker::findVortex(vortexLocation, wfc, 1e-4, xDim, x, i);
 
@@ -531,7 +540,7 @@ int evolve( cufftDoubleComplex *gpuWfc,
 		else {
 			cMult<<<grid,threads>>>(gpuPositionOp,gpuWfc,gpuWfc);
 		}
-		if( (i % (int)(t_kick+1) == 0 && num_kick<=6 && gstate==1) || (kick_it >= 1 && i==0) ){
+		if( kick_it !=0 && ( (i % (int)(t_kick+1) == 0 && num_kick<=6 && gstate==1) || (kick_it >= 1 && i==0)) ){
 			cudaMemcpy(V_gpu, EV, sizeof(cufftDoubleComplex)*xDim*yDim, cudaMemcpyHostToDevice);
 			printf("Got here: Cuda memcpy EV into GPU\n");
 		}
@@ -994,7 +1003,7 @@ int main(int argc, char **argv){
 		if(err!=cudaSuccess)
 			exit(1);
 		
-		evolve(wfc_gpu, K_gpu, V_gpu, yPx_gpu, xPy_gpu, par_sum, xDim*yDim, gsteps, 128, 0, ang_mom, gpe, print, atoms, 0);
+		evolve(wfc_gpu, K_gpu, V_gpu, yPx_gpu, xPy_gpu, par_sum, xDim*yDim, gsteps, threads, 0, ang_mom, gpe, print, atoms, 0);
 		cudaMemcpy(wfc, wfc_gpu, sizeof(cufftDoubleComplex)*xDim*yDim, cudaMemcpyDeviceToHost);
 	}
 
@@ -1030,7 +1039,7 @@ int main(int argc, char **argv){
 			
 		//delta_define(x, y, (523.6667 - 512 + x0_shift)*dx, (512.6667 - 512  + y0_shift)*dy, V_opt);
 		FileIO::writeOutDouble(buffer,"V_opt",V_opt,xDim*yDim,0);
-		evolve(wfc_gpu, K_gpu, V_gpu, yPx_gpu, xPy_gpu, par_sum, xDim*yDim, esteps, 128, 1, ang_mom, gpe, print, atoms, 0);
+		evolve(wfc_gpu, K_gpu, V_gpu, yPx_gpu, xPy_gpu, par_sum, xDim*yDim, esteps, threads, 1, ang_mom, gpe, print, atoms, 0);
 	
 	}
 	free(EV); free(EK); free(ExPy); free(EyPx);

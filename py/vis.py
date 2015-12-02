@@ -209,7 +209,7 @@ def image_gen_single(dataName, value, imgdpi,opmode):
 #			#plt.rc('font',family='serif')
 
 			fig, ax = plt.subplots()
-			f = plt.imshow((abs(b)**2),cmap='gnuplot2',vmin=0,vmax=1e7)
+			f = plt.imshow((abs(b)**2),cmap='gnuplot2')#,vmin=0,vmax=3)
 			plt.title('rho(r) @ t=' + str(value*dt))
 		#	plt.title(r'$\\rho \left( r,t \right),\,t=$' + str(value*dt))
 			
@@ -320,16 +320,16 @@ def overlap(dataName, initValue, finalValue, increment):
 		print i, np.sum(b)
 
 if __name__ == '__main__':
-	try:
-		delaunay('vort_arr_',0)
-		stats.lsFit(0,evMaxVal,incr)
-		hist3d.plot_hist_pcolor(0,evMaxVal,incr,'b')
-		vort_traj('traj_plot',200)
-	except:
-		print "Unhandled error occurred. Blame Lee."
-	opPot('V_opt_0',200)
-	opPot('V_0',200)
-	opPot('K_0',200)
+	#try:
+	#	delaunay('vort_arr_',0)
+	#	stats.lsFit(0,evMaxVal,incr)
+	#	hist3d.plot_hist_pcolor(0,evMaxVal,incr,'b')
+	#	vort_traj('traj_plot',200)
+	#except:
+	#	print "Unhandled error occurred. Blame Lee."
+	#opPot('V_opt_0',200)
+	#opPot('V_0',200)
+	#opPot('K_0',200)
 	gndImgList=[]
 	evImgList=[]
 	for i in range(0,gndMaxVal,incr):
@@ -346,9 +346,9 @@ if __name__ == '__main__':
 		i=evImgList.pop()
 		ev_proc.append(Process(target=image_gen_single,args=("wfc_ev",i,200,0b101000)))
 		#ev_proc.append(Process(target=mpld3.show,))
-		ev_proc.append(Process(target=delaunay,args=("vort_lsq_",'.csv',i)))
-		ev_proc.append(Process(target=voronoi,args=("vort_lsq_",'.csv',i)))
-		ev_proc.append(Process(target=hist_gen,args=("hist_ev",i,128)))
+	#	ev_proc.append(Process(target=delaunay,args=("vort_lsq_",'.csv',i)))
+	#	ev_proc.append(Process(target=voronoi,args=("vort_lsq_",'.csv',i)))
+	#	ev_proc.append(Process(target=hist_gen,args=("hist_ev",i,128)))
 	proc = gnd_proc + ev_proc
 	while proc:
 		#if (mp.cpu_count()/2) > len(mp.active_children()):

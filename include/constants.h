@@ -50,7 +50,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define CONSTANTS_H
 
 #define PI 3.141592653589793
-#define HBAR 1.05457148e-34 // m^2 kg/s
+#define HBAR 1 // m^2 kg/s
 #define MU_N 5.05078324e-27 // J/T  Nuclear magneton
 #define MU_B 9.27400915e-24 // J/T  Bohr magneton
 #define Q 1.602176565e-19 // C  Elementary charge of proton
