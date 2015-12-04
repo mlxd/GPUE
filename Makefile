@@ -1,15 +1,15 @@
-CUDA_HOME = /apps/free/cuda/7.5.18
+CUDA_HOME = /usr/local/cuda
 GPU_ARCH	= sm_20
 OS:=	$(shell uname)
 ifeq ($(OS),Darwin)
 CUDA_LIB	= $(CUDA_HOME)/lib
 CUDA_HEADER	= $(CUDA_HOME)/include
-CC		= $(CUDA_HOME)/bin/nvcc -ccbin /usr/bin/clang --ptxas-options=-v#-save-temps
+CC		= $(CUDA_HOME)/bin/nvcc --ptxas-options=-v #-ccbin=/opt/local/bin/clang++-mp-3.5 #-save-temps
 CFLAGS		= -g -O3 -m64 -std=c++11
 else
 CUDA_LIB	= $(CUDA_HOME)/lib64
 CUDA_HEADER	= $(CUDA_HOME)/include
-CC		= $(CUDA_HOME)/bin/nvcc --ptxas-options=-v --compiler-options -Wall #-save-temps
+CC		= $(CUDA_HOME)/bin/nvcc --ptxas-options=-v --compiler-options -Wall #-ccbin=<Location of GCC 4.9> #-save-temps
 CHOSTFLAGS	= #-fopenmp
 CFLAGS		= -g -O3 -std=c++11 -Xcompiler '-std=c++11' -Xcompiler '-fopenmp' #-malign-double
 endif

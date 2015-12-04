@@ -88,6 +88,9 @@ def energy_total(dataName,i):
 	E_vi = np.trapz(np.trapz(wfcr_c*E2))*dx*dy
 	return np.real(E_k + E_vi)
 
+for ii in range(0,gndMaxVal,incr):
+	print "E(t={} s)={}".format(ii*dt,energy_total('wfc_0_const',ii))	
+
 for ii in range(0,evMaxVal,incr):
-	print "E(t={})={}".format(ii,energy_total('wfc_ev',ii))	
+	print "E(t={} s)={}".format(ii*dt,energy_total('wfc_ev',ii))	
 

@@ -229,9 +229,14 @@ int initialise(double omegaX, double omegaY, int N){
 		for( j=0; j < yDim; j++ ){
 			Phi[(i*yDim + j)] = fmod(l*atan2(y[j], x[i]),2*PI);
 			
-			wfc[(i*yDim + j)].x =  (1/sqrt(2))*pow(1/PI,0.5) * exp( -0.5*( x[i]*x[i] + y[j]*y[j] ) )*(1+2*x[i]/sqrt(2));
-			wfc[(i*yDim + j)].y = 0.0;
-				
+			if(gsteps==0){
+				wfc[(i*yDim + j)].x =  (1/sqrt(2))*pow(1/PI,0.5) * exp( -0.5*( x[i]*x[i] + y[j]*y[j] ) )*(1+2*x[i]/sqrt(2));
+				wfc[(i*yDim + j)].y = 0.0;
+			}
+			else{
+				wfc[(i*yDim + j)].x =  sin(0.5*PI*x[i]/xMax)*sin(0.5*PI*y[j]/yMax);
+				wfc[(i*yDim + j)].y = 0.0;
+			}
 			V[(i*yDim + j)] = 0.5*( x[i]*x[i] + y[j]*y[j] );
 			K[(i*yDim + j)] = 0.5*( xp[i]*xp[i] + yp[j]*yp[j] );
 
