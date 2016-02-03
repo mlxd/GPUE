@@ -23,8 +23,7 @@
 ## 0. Introduction
 ###############################################################################
 
-Welcome to GPUE, the fastest zero temperature BEC routines in the land (the 
-last time I checked).
+Welcome to GPUE, the [fastest zero temperature BEC routines in the land](http://peterwittek.com/gpe-comparison.html) (the last time I checked).
 
 Runs on CUDA 7.0 (C++11 functionality needed) on both Linux and Mac OS X 
 (Nvidia GPU only). I have not tested on Windows. Other requirements are Python 
