@@ -117,8 +117,8 @@ Schrodinger and non-linear Schrodinger systems.
 ###############################################################################
 A citation would be nice :) Feel free to cite as:
 
-Moiré superlattice structures in kicked Bose-Einstein condensates
-L. J. O'Riordan, A. C. White, and Th. Busch
+Moiré superlattice structures in kicked Bose-Einstein condensates,
+L. J. O'Riordan, A. C. White, and Th. Busch,
 Phys. Rev. A 93, 023609 (2016)
 
 Otherwise, an email with a message, comments, or anything is appreciated. I'm 
