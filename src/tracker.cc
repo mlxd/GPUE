@@ -47,16 +47,14 @@ namespace Tracker {
 	 * Determines the vortex separation at the centre of the lattice.
 	 */
 	double vortSepAvg(struct Vtx::Vortex *vArray, struct Vtx::Vortex centre, int length){
-		double result=0.0;// = sqrt( pow(centre.x - v_array[0].x,2) + pow(centre.y - v_array[0].y,2));
 		double min = 0.0;
 		double min_tmp = 0.0;
-		int index=0;
 		min = sqrt( pow(centre.coordsD.x - vArray[0].coordsD.x,2) + pow(centre.coordsD.y - vArray[0].coordsD.y,2));
 		for (int j=1; j<length; ++j){
 			min_tmp	= sqrt( pow(centre.coordsD.x - vArray[j].coordsD.x,2) + pow(centre.coordsD.y - vArray[j].coordsD.y,2));
 			if(min > min_tmp && min_tmp > 1e-7){
 				min = min_tmp;
-				index = j;
+				//index = j;
 			}
 		}
 		return min;
@@ -267,7 +265,7 @@ namespace Tracker {
 	 * Determines the coords of the vortex closest to the central position. Useful for centering the optical lattice over v. lattice*
 	*/
 	struct Vtx::Vortex vortCentre(struct Vtx::Vortex *cArray, int length, int xDim){
-		int i, j, counter=0;
+		int i, counter=0;
 		int valX, valY;
 		double valueTest, value = 0.0;
 		valX = (cArray)[0].coordsD.x - ((xDim/2)-1);
@@ -289,8 +287,7 @@ namespace Tracker {
 	 * Determines the angle of the vortex lattice relative to the x-axis
 	 */
 	double vortAngle(struct Vtx::Vortex *vortCoords, struct Vtx::Vortex central, int numVort){
-		int location;
-		double sign=1.0;
+		int location = 0;
 		double minVal=1e300;//(pow(central.x - vortCoords[0].x,2) + pow(central.y - vortCoords[0].y,2));
 		for (int i=0; i < numVort; ++i){
 			if (minVal > (pow(central.coordsD.x - vortCoords[i].coordsD.x,2) + pow(central.coordsD.y - vortCoords[i].coordsD.y,2)) && abs(central.coordsD.x - vortCoords[i].coordsD.x) > 2e-6 && abs(central.coordsD.y - vortCoords[i].coordsD.y) > 2e-6){

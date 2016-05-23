@@ -365,7 +365,7 @@ int evolve( cufftDoubleComplex *gpuWfc,
 	double* adjMat;
 	
 	double vortOLSigma=0.0;
-	double sepAvg;
+	double sepAvg = 0.0;
 	
 	int num_kick = 0;
 	double t_kick = (2*PI/omega_0)/(6*Dt);
@@ -444,7 +444,7 @@ int evolve( cufftDoubleComplex *gpuWfc,
 				        }
 				        if(i==0) {
 					        //Lambda for vortex annihilation/creation.
-					        auto killIt=[&](int idx) {
+					        [&](int idx) {
 					            WFC::phaseWinding(Phi, 1, x, y, dx, dy, lattice.getVortexUid(idx)->getData().coordsD.x,
 					                          lattice.getVortexUid(idx)->getData().coordsD.y, xDim);
 					            cudaMemcpy(Phi_gpu, Phi, sizeof(double) * xDim * yDim, cudaMemcpyHostToDevice);

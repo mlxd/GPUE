@@ -41,7 +41,7 @@ namespace Minions{
 
 	double maxValue(double* grid,int len){
 		double max = grid[0];
-		for (unsigned int i=1;i<len-1;++i){
+		for (int i=1;i<len-1;++i){
 			if(max<grid[i]){
 				max=grid[i];
 			}
@@ -51,7 +51,7 @@ namespace Minions{
 
 	double minValue(double* grid,int len){
 		double min = grid[0];
-		for (unsigned int i=1;i<len-1;++i){
+		for (int i=1;i<len-1;++i){
 			if(min>grid[i])
 				min=grid[i];
 		}
@@ -61,7 +61,7 @@ namespace Minions{
 	double sumAvg(double* in, int len){
 		double avg = 0.0;
 
-		for (unsigned int i=0; i<len; ++i){
+		for (int i=0; i<len; ++i){
 			avg += in[i];
 		}
 		return avg/len;
@@ -73,7 +73,6 @@ namespace Minions{
 	double fInvSqRt(double in){
 		long long l;
 		double in05, calc;
-		const double threehalfs = 1.5;
 
 		in05 = in*0.5;
 		calc=in;
