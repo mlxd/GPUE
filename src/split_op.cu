@@ -44,6 +44,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../include/edge.h"
 #include "../include/manip.h"
 #include "../include/vort.h"
+#include <string>
 #include <iostream>
 
 unsigned int LatticeGraph::Edge::suid = 0;
@@ -108,7 +109,7 @@ int initialise(double omegaX, double omegaY, int N){
 	grid.z=zD; 
 	//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%//
 	
-	unsigned int i,j; //Used in for-loops for indexing
+	int i,j; //Used in for-loops for indexing
 	
 	unsigned int gSize = xDim*yDim;
 	double xOffset, yOffset;
@@ -351,7 +352,6 @@ int evolve( cufftDoubleComplex *gpuWfc,
 
 	//Double buffering and will attempt to thread free and calloc operations to hide time penalty. Or may not bother.
 	int num_vortices[2] = {0,0};
-	int num_latt_max = 0;
 	int* vortexLocation; //binary matrix of size xDim*yDim, 1 for vortex at specified index, 0 otherwise
 	int* olMaxLocation = (int*) calloc(xDim*yDim,sizeof(int));
 
@@ -361,14 +361,11 @@ int evolve( cufftDoubleComplex *gpuWfc,
 
 	struct Vtx::Vortex *vortCoordsP = NULL; //Previous array of vortex coordinates from vortexLocation 1's
 
-	int2 *olCoords = NULL; //array of vortex coordinates from vortexLocation 1's
-	int2 *vortDelta = NULL;
-
 	LatticeGraph::Lattice lattice; //Vortex lattice graph.
 	double* adjMat;
 	
 	double vortOLSigma=0.0;
-	double sepAvg = 0.0;
+	double sepAvg;
 	
 	int num_kick = 0;
 	double t_kick = (2*PI/omega_0)/(6*Dt);
@@ -383,7 +380,7 @@ int evolve( cufftDoubleComplex *gpuWfc,
 			end = clock();
 			time_spent = (double) (end - begin) / CLOCKS_PER_SEC;
 			printf("Time spent: %lf\n", time_spent);
-			char *fileName = "";
+			std::string fileName = "";
 			printf("ramp=%d		gstate=%d	rg=%d		\n", ramp, gstate, ramp | (gstate << 1));
 			switch (ramp | (gstate << 1)) {
 				case 0: //Groundstate solver, constant Omega value.
@@ -436,13 +433,13 @@ int evolve( cufftDoubleComplex *gpuWfc,
 
 			        if (graph == 1) {
 
-				        for (unsigned int ii = 0; ii < num_vortices[0]; ++ii) {
+				        for (int ii = 0; ii < num_vortices[0]; ++ii) {
 					        std::shared_ptr<LatticeGraph::Node> n(new LatticeGraph::Node(vortCoords[ii]));
 					        lattice.addVortex(std::move(n));
 				        }
 				        unsigned int *uids = (unsigned int *) malloc(
 						        sizeof(unsigned int) * lattice.getVortices().size());
-				        for (int a = 0; a < lattice.getVortices().size(); ++a) {
+				        for (size_t a = 0; a < lattice.getVortices().size(); ++a) {
 					        uids[a] = lattice.getVortexIdx(a)->getUid();
 				        }
 				        if(i==0) {
@@ -732,8 +729,8 @@ double energy_angmom(double *Energy, double* Energy_gpu, double2 *V_op, double2 
 		result += energy[i].x;
 		//printf("En=%E\n",result*dx*dy);
 	}
-	return result*dx*dy;
 */
+	return result*dx*dy;
 	
 }
 
@@ -923,8 +920,8 @@ int parseArgs(int argc, char** argv){
 }
 
 void delta_define(double *x, double *y, double x0, double y0, double *delta){
-	for (unsigned int i=0; i<xDim; ++i){
-		for (unsigned int j=0; j<yDim; ++j){
+	for (int i=0; i<xDim; ++i){
+		for (int j=0; j<yDim; ++j){
 			delta[j*xDim + i] = 1e6*HBAR*exp( -( pow( x[i] - x0, 2)  +  pow( y[j] - y0, 2) )/(5*dx*dx) );
 			EV_opt[(j*xDim + i)].x=cos( -(V[(j*xDim + i)] + delta[j*xDim + i])*(dt/(2*HBAR)));
 			EV_opt[(j*xDim + i)].y=sin( -(V[(j*xDim + i)] + delta[j*xDim + i])*(dt/(2*HBAR)));
@@ -965,11 +962,11 @@ int main(int argc, char **argv){
 		printf("Wavefunction loaded.\n");
 	}
 	
-	double2 ph;
+/*
 	double x_0,y_0;
 	x_0 = 0;//(0.5*xDim)*dx;
 	y_0 = 0;//(0.5*yDim)*dy;
-/*	for(int i=0; i < xDim; i++ ){
+	for(int i=0; i < xDim; i++ ){
 		for(int j=0; j < yDim; j++ ){
 			ph.x = cos( fmod( 0*atan2( y[j] - y_0, x[i] - x_0 ), 2*PI) );
 			ph.y = -sin( fmod( 0*atan2( y[j] - y_0, x[i] - x_0 ), 2*PI) );
@@ -977,7 +974,8 @@ int main(int argc, char **argv){
 		}
 	}
 	printf("l=%e\n",l);
-*/	if(gsteps > 0){
+*/
+	if(gsteps > 0){
 		err=cudaMemcpy(K_gpu, GK, sizeof(cufftDoubleComplex)*xDim*yDim, cudaMemcpyHostToDevice);
 		if(err!=cudaSuccess)
 			exit(1);

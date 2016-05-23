@@ -32,6 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #include "../include/vort.h"
 
+/*
 //@todo Implemet this
 namespace Vtx {
 
@@ -70,3 +71,4 @@ namespace Vtx {
 
     }
 }
+*/

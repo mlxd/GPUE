@@ -52,6 +52,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define DS_H
 #include<stdio.h>
 #include<stdlib.h>
+#include<string>
 #include<string.h>
 
 struct Param{ //Gathers list of parameters used by Python analysis routines.
@@ -81,7 +82,7 @@ void initArr(Array *arr, size_t initLen);
 * @param	*t Parameter name to be saved
 * @param	d Double value of parameter
 */
-void appendData(Array *arr, char* t, double d);
+void appendData(Array *arr, std::string t, double d);
 /**
 * @brief	Free all allocated memory from Array
 * @ingroup	data
@@ -95,5 +96,5 @@ void freeArray(Array *arr);
 * @param	*t Parameter name to be saved
 * @param	d Double value of parameter
 */
-Param newParam(char* t,double d);
+Param newParam(std::string t,double d);
 #endif

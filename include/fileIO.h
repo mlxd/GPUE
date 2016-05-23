@@ -53,6 +53,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../include/ds.h"
 #include "../include/tracker.h"
 #include <vector>
+#include <string>
 
 /** Check source file for further information on functions **/
 namespace FileIO {
@@ -67,7 +68,7 @@ namespace FileIO {
     * @param	yDim Size of y-grid
     * @return	*double2 Memory address of read-in data. Complex only
     */
-    double2 *readIn(char* fileR, char* fileI, int xDim, int yDim);
+    double2 *readIn(std::string fileR, std::string fileI, int xDim, int yDim);
 
     /**
     * @brief	Writes the specified double2 array to a text file
@@ -79,7 +80,7 @@ namespace FileIO {
     * @param	length Overall length of the file to write out
     * @param	step Index for the filename. file_step,filei_step
     */
-    void writeOut(char* buffer, char *file, double2 *data, int length, int step);
+    void writeOut(std::string buffer, std::string file, double2 *data, int length, int step);
 
 	/**
     * @brief	Writes the specified double array to a text file
@@ -91,7 +92,8 @@ namespace FileIO {
     * @param	length Overall length of the file to write out
     * @param	step Index for the filename. file_step
     */
-    void writeOutDouble(char* buffer, char *file, double *data, int length, int step);
+    void writeOutDouble(std::string buffer, std::string file, double *data, 
+                        int length, int step);
 
 	/**
     * @brief	Writes the specified int array to a text file
@@ -103,7 +105,8 @@ namespace FileIO {
     * @param	length Overall length of the file to write out
     * @param	step Index for the filename. file_step
     */
-    void writeOutInt(char* buffer, char *file, int *data, int length, int step);
+    void writeOutInt(std::string buffer, std::string file, int *data, 
+                     int length, int step);
 
 	/**
     * @brief	Writes the specified int2 array to a text file
@@ -115,7 +118,8 @@ namespace FileIO {
     * @param	length Overall length of the file to write out
     * @param	step Index for the filename. file_step
     */
-    void writeOutInt2(char* buffer, char *file, int2 *data, int length, int step);
+    void writeOutInt2(std::string buffer, std::string file, int2 *data, 
+                      int length, int step);
 
 	/**
     * @brief	Writes the specified Vtx::Vortex array to a text file
@@ -127,7 +131,8 @@ namespace FileIO {
     * @param	length Overall length of the file to write out
     * @param	step Index for the filename. file_step
     */
-    void writeOutVortex(char *buffer, char *file, struct Vtx::Vortex *data, int length, int step);
+    void writeOutVortex(std::string buffer, std::string file, 
+                        struct Vtx::Vortex *data, int length, int step);
 
 	/**
     * @brief	Writes the parameter file
@@ -137,14 +142,14 @@ namespace FileIO {
 	* @param	arr struct Array holding the parameter values to be written out
     * @param	*file Name of data file name for saving to
     */
-    void writeOutParam(char* buffer, Array arr, char *file);
+    void writeOutParam(std::string buffer, Array arr, std::string file);
 
 	/*
 	 * @brief	Opens and closes file. Nothing more. Nothing less.
 	 * @param	file Name of file to open
 	 * @return	int 0. That's all.
 	 */
-    int readState(char *name);
+    int readState(std::string name);
 
 	/**
     * @brief	Write adjacency matrix of ints to a file in Mathematica readable format
@@ -157,7 +162,7 @@ namespace FileIO {
 	* @param	dim Dimension/length of the grid (xDim*yDim)
 	* @param	step Index for the filename.
     */
-    void writeOutAdjMat(char *buffer, char *file, int *mat, unsigned int *uids, int dim, int step);
+    void writeOutAdjMat(std::string buffer, std::string file, int *mat, unsigned int *uids, int dim, int step);
 
 	/**
     * @brief	Write adjacency matrix of doubles to a file in Mathematica readable format
@@ -170,6 +175,7 @@ namespace FileIO {
 	* @param	dim Dimension/length of the grid (xDim*yDim)
 	* @param	step Index for the filename.
     */
-    void writeOutAdjMat(char *buffer, char *file, double *mat, unsigned int *uids, int dim, int step);
+    void writeOutAdjMat(std::string buffer, std::string file, double *mat, 
+                        unsigned int *uids, int dim, int step);
 }
 #endif

@@ -66,7 +66,7 @@ std::shared_ptr<Node> Lattice::getVortexIdx(unsigned int idx){
  * Gets the location of the Node with UID uid.
  */
 unsigned int Lattice::getVortexIdxUid(unsigned int uid){
-	for (int ii=0; ii< getVortices().size(); ++ii){
+	for (size_t ii=0; ii< getVortices().size(); ++ii){
 		if(this->Lattice::getVortexIdx(ii)->getUid()== uid){
 			return ii;
 		}
@@ -104,7 +104,7 @@ std::shared_ptr<Edge> Lattice::getEdgeIdx(unsigned int idx){
  * Gets the location of the Edge with UID uid.
  */
 unsigned int Lattice::getEdgeIdxUid(unsigned int uid){
-	for (int ii=0; ii< getEdges().size(); ++ii){
+	for (size_t ii=0; ii< getEdges().size(); ++ii){
 		if(this->Lattice::getEdgeIdx(ii)->getUid()== uid){
 			return ii;
 		}
@@ -148,9 +148,9 @@ void Lattice::setEdge(unsigned int idx, std::shared_ptr<Edge> e){
 void Lattice::createEdges(unsigned int radius){
 	std::shared_ptr<Edge> e;
 	double dist = 0.0;
-	for(int ii=0; ii< this->Lattice::getVortices().size(); ++ii){
+	for(size_t ii=0; ii< this->Lattice::getVortices().size(); ++ii){
 		//std::cout << "Got here ii " << ii << std::endl;
-		for(int jj=ii+1; jj < this->Lattice::getVortices().size(); ++jj){
+		for(size_t jj=ii+1; jj < this->Lattice::getVortices().size(); ++jj){
 			dist = Lattice::getVortexDistance(this->getVortexIdx(ii),this->getVortexIdx(jj));
 			if(dist < radius ) {
 				//std::cout << "Got here jj " << jj << std::endl;
@@ -164,9 +164,9 @@ void Lattice::createEdges(unsigned int radius){
 void Lattice::createEdges(double radius){
 	std::shared_ptr<Edge> e;
 	double dist = 0.0;
-	for(int ii=0; ii< this->Lattice::getVortices().size(); ++ii){
+	for(size_t ii=0; ii< this->Lattice::getVortices().size(); ++ii){
 		//std::cout << "Got here ii " << ii << std::endl;
-		for(int jj=ii+1; jj < this->Lattice::getVortices().size(); ++jj){
+		for(size_t jj=ii+1; jj < this->Lattice::getVortices().size(); ++jj){
 			dist = Lattice::getVortexDistance(this->getVortexIdx(ii),this->getVortexIdx(jj));
 			if( dist < radius ) {
 				//std::cout << "Got here jj " << jj << std::endl;
@@ -328,9 +328,9 @@ void Lattice::genAdjMat(double *mat){
 void Lattice::adjMatMtca(unsigned int *mat){
 	unsigned int size = this->Lattice::getVortices().size();
 	std::cout << "{";
-	for(int ii = 0; ii < size; ++ii){
+	for(size_t ii = 0; ii < size; ++ii){
 		std::cout << "{";
-		for(int jj = 0; jj < size; ++jj){
+		for(size_t jj = 0; jj < size; ++jj){
 			std::cout << mat[ii*size + jj];
 			if(jj<size-1)
 				std::cout <<",";
@@ -346,9 +346,9 @@ void Lattice::adjMatMtca(unsigned int *mat){
 void Lattice::adjMatMtca(double *mat){
 	unsigned int size = this->Lattice::getVortices().size();
 	std::cout << "{";
-	for(int ii = 0; ii < size; ++ii){
+	for(size_t ii = 0; ii < size; ++ii){
 		std::cout << "{";
-		for(int jj = 0; jj < size; ++jj){
+		for(size_t jj = 0; jj < size; ++jj){
 			std::cout << mat[ii*size + jj];
 			if(jj<size-1)
 				std::cout <<",";

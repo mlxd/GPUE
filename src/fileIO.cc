@@ -42,9 +42,10 @@ namespace FileIO{
 	/*
 	 * Reads datafile into memory.
 	 */
-	double2* readIn(char* fileR, char* fileI, int xDim, int yDim){
+	double2* readIn(std::string fileR, std::string fileI, 
+                        int xDim, int yDim){
 		FILE *f;
-		f = fopen(fileR,"r");
+		f = fopen(fileR.c_str(),"r");
 		int i = 0;
 		double2 *arr = (double2*) malloc(sizeof(double2)*xDim*yDim);
 		double line;
@@ -53,7 +54,7 @@ namespace FileIO{
 			++i;
 		}
 		fclose(f);
-		f = fopen(fileI,"r");
+		f = fopen(fileI.c_str(),"r");
 		i = 0;
 		while(fscanf(f,"%lE",&line) > 0){
 			arr[i].y = line;
@@ -66,12 +67,12 @@ namespace FileIO{
 	/*
 	 * Writes out the parameter file.
 	 */
-	void writeOutParam(char* buffer, Array arr, char *file){
+	void writeOutParam(std::string buffer, Array arr, std::string file){
 		FILE *f;
-		sprintf(buffer, "%s", file);
-		f = fopen(file,"w");
+		sprintf((char *)buffer.c_str(), "%s", file.c_str());
+		f = fopen(file.c_str(),"w");
 		fprintf(f,"[Params]\n");
-		for (int i = 0; i < arr.used; ++i){
+		for (size_t i = 0; i < arr.used; ++i){
 			fprintf(f,"%s=",arr.array[i].title);
 			fprintf(f,"%e\n",arr.array[i].data);
 		}
@@ -81,17 +82,18 @@ namespace FileIO{
 	/*
 	 * Writes out double2 complex data files.
 	 */
-	void writeOut(char* buffer, char *file, double2 *data, int length, int step){
+	void writeOut(std::string buffer, std::string file, double2 *data, 
+                      int length, int step){
 		FILE *f;
-		sprintf (buffer, "%s_%d", file, step);
-		f = fopen (buffer,"w");
+		sprintf ((char *)buffer.c_str(), "%s_%d", file.c_str(), step);
+		f = fopen (buffer.c_str(),"w");
 		int i;
 		for (i = 0; i < length; i++)
 			fprintf (f, "%.16e\n",data[i].x);
 		fclose (f);
 
-		sprintf (buffer, "%si_%d", file, step);
-		f = fopen (buffer,"w");
+		sprintf ((char *)buffer.c_str(), "%si_%d", file.c_str(), step);
+		f = fopen (buffer.c_str(),"w");
 		for (i = 0; i < length; i++)
 			fprintf (f, "%.16e\n",data[i].y);
 		fclose (f);
@@ -100,10 +102,10 @@ namespace FileIO{
 	/*
 	 * Writes out double type data files.
 	 */
-	void writeOutDouble(char* buffer, char *file, double *data, int length, int step){
+	void writeOutDouble(std::string buffer, std::string file, double *data,                             int length, int step){
 		FILE *f;
-		sprintf (buffer, "%s_%d", file, step);
-		f = fopen (buffer,"w");
+		sprintf ((char *)buffer.c_str(), "%s_%d", file.c_str(), step);
+		f = fopen (buffer.c_str(),"w");
 		int i;
 		for (i = 0; i < length; i++)
 			fprintf (f, "%.16e\n",data[i]);
@@ -113,10 +115,11 @@ namespace FileIO{
 	/*
 	 * Writes out int type data files.
 	 */
-	void writeOutInt(char* buffer, char *file, int *data, int length, int step){
+	void writeOutInt(std::string buffer, std::string file, int *data, 
+                         int length, int step){
 		FILE *f;
-		sprintf (buffer, "%s_%d", file, step);
-		f = fopen (buffer,"w");
+		sprintf ((char *)buffer.c_str(), "%s_%d", file.c_str(), step);
+		f = fopen (buffer.c_str(),"w");
 		int i;
 		for (i = 0; i < length; i++)
 			fprintf (f, "%d\n",data[i]);
@@ -126,10 +129,11 @@ namespace FileIO{
 	/*
 	 * Writes out int2 data type.
 	 */
-	void writeOutInt2(char* buffer, char *file, int2 *data, int length, int step){
+	void writeOutInt2(std::string buffer, std::string file, int2 *data, 
+                          int length, int step){
 		FILE *f;
-		sprintf (buffer, "%s_%d", file, step);
-		f = fopen (buffer,"w");
+		sprintf ((char *)buffer.c_str(), "%s_%d", file.c_str(), step);
+		f = fopen (buffer.c_str(),"w");
 		int i;
 		for (i = 0; i < length; i++)
 			fprintf (f, "%d,%d\n",data[i].x,data[i].y);
@@ -139,10 +143,11 @@ namespace FileIO{
 	/*
 	 * Writes out tracked vortex data.
 	 */
-	void writeOutVortex(char* buffer, char *file, struct Vtx::Vortex *data, int length, int step){
+	void writeOutVortex(std::string buffer, std::string file, 
+                            struct Vtx::Vortex *data, int length, int step){
 		FILE *f;
-		sprintf (buffer, "%s_%d", file, step);
-		f = fopen (buffer,"w");
+		sprintf ((char *)buffer.c_str(), "%s_%d", file.c_str(), step);
+		f = fopen (buffer.c_str(),"w");
 		int i;
 		fprintf (f, "#X,Y,WINDING\n");
 		for (i = 0; i < length; i++)
@@ -153,9 +158,9 @@ namespace FileIO{
 	/*
 	 * Opens and closes file. Nothing more. Nothing less.
 	 */
-	int readState(char* name){
+	int readState(std::string name){
 		FILE *f;
-		f = fopen(name,"r");
+		f = fopen(name.c_str(),"r");
 		fclose(f);
 		return 0;
 	}
@@ -163,10 +168,10 @@ namespace FileIO{
 	/*
 	 * Outputs the adjacency matrix to a file
 	 */
-    void writeOutAdjMat(char* buffer, char *file, int *mat, unsigned int *uids, int dim, int step){
+    void writeOutAdjMat(std::string buffer, std::string file, int *mat, unsigned int *uids, int dim, int step){
 	    FILE *f;
-	    sprintf (buffer, "%s_%d", file, step);
-	    f = fopen (buffer,"w");
+	    sprintf ((char *)buffer.c_str(), "%s_%d", file.c_str(), step);
+	    f = fopen (buffer.c_str(),"w");
 		fprintf (f, "(*");
 		for(int ii = 0; ii<dim; ++ii){
 			fprintf (f, "%d",uids[ii]);
@@ -176,7 +181,7 @@ namespace FileIO{
 	    for(int ii = 0; ii < dim; ++ii){
 		    fprintf (f, "{");
 		    for(int jj = 0; jj < dim; ++jj){
-			    fprintf (f, "%e",mat[ii*dim + jj]);
+			    fprintf (f, "%i",mat[ii*dim + jj]);
 			    if(jj<dim-1)
 				    fprintf (f, ",");
 			    else
@@ -189,15 +194,18 @@ namespace FileIO{
 	    fprintf (f, "}\n");
 		fclose(f);
     }
-    void writeOutAdjMat(char* buffer, char *file, double *mat, unsigned int *uids, int dim, int step){
+    void writeOutAdjMat(std::string buffer, std::string file, double *mat, 
+                        unsigned int *uids, int dim, int step){
 	    FILE *f;
-	    sprintf (buffer, "%s_%d", file, step);
-	    f = fopen (buffer,"w");
+	    sprintf ((char *)buffer.c_str(), "%s_%d", file.c_str(), step);
+	    f = fopen (buffer.c_str(),"w");
 	    fprintf (f, "(*");
 	    for(int ii = 0; ii<dim; ++ii){
 		    fprintf (f, "%d",uids[ii]);
 		    if(ii!=dim-1)
-			    fprintf (f, ",",uids[ii]);
+			   /* I am not sure what Lee wants here, but I think...
+                           fprintf (f, ",",uids[ii]); */
+                           fprintf (f, ",");
 
 	    }
 	    fprintf (f, "*)\n");

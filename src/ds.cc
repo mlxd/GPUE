@@ -39,7 +39,7 @@ void initArr(Array *arr, size_t initLen){
 	arr->length = initLen;
 }
 
-void appendData(Array *arr, char* t, double d){
+void appendData(Array *arr, std::string t, double d){
 	Param p = newParam(t,d);
 	if(arr->used == arr->length){
 		arr->length *= 2;
@@ -56,9 +56,9 @@ void freeArray(Array *arr){
 	arr->length = 0;
 }
 
-Param newParam(char* t,double d){
+Param newParam(std::string t,double d){
 	Param p;
-	strcpy(p.title,t);
+	strcpy(p.title,t.c_str());
 	p.data = d;
 	return p;
 }

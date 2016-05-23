@@ -95,7 +95,7 @@ void Node::addEdge(std::weak_ptr<Edge> e){
 }
 
 void Node::removeEdgeUid(unsigned int uid){
-	for (int ii=0; ii < this->Node::edges.size(); ++ii){
+	for (size_t ii=0; ii < this->Node::edges.size(); ++ii){
 		if(this->Node::getEdge(ii).lock()->getUid() == uid){
 			this->Node::getEdges().erase(this->Node::getEdges().begin()+ii);
 			break;
@@ -123,7 +123,7 @@ void Node::removeEdge(std::weak_ptr<Edge> edge){
 }
 
 void Node::removeEdges(){
-	for(int ii=0; ii<this->getEdges().size(); ++ii){
+	for(size_t ii=0; ii<this->getEdges().size(); ++ii){
 		this->Node::removeEdge(this->Node::getEdge(ii));
 	}
 	this->Node::getEdges().clear();
