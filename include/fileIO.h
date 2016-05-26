@@ -76,7 +76,7 @@ namespace FileIO {
     *
     * @param	*buffer Char buffer for use by function internals. char[100] usually
     * @param	*file Name of data file name for saving to
-	* @param	*data double2 array to be written out
+    * @param	*data double2 array to be written out
     * @param	length Overall length of the file to write out
     * @param	step Index for the filename. file_step,filei_step
     */
@@ -88,7 +88,7 @@ namespace FileIO {
     *
     * @param	*buffer Char buffer for use by function internals. char[100] usually
     * @param	*file Name of data file name for saving to
-	* @param	*data double array to be written out
+    * @param	*data double array to be written out
     * @param	length Overall length of the file to write out
     * @param	step Index for the filename. file_step
     */
@@ -101,7 +101,7 @@ namespace FileIO {
     *
     * @param	*buffer Char buffer for use by function internals. char[100] usually
     * @param	*file Name of data file name for saving to
-	* @param	*data int array to be written out
+    * @param	*data int array to be written out
     * @param	length Overall length of the file to write out
     * @param	step Index for the filename. file_step
     */
@@ -114,7 +114,7 @@ namespace FileIO {
     *
     * @param	*buffer Char buffer for use by function internals. char[100] usually
     * @param	*file Name of data file name for saving to
-	* @param	*data int2 array to be written out
+    * @param	*data int2 array to be written out
     * @param	length Overall length of the file to write out
     * @param	step Index for the filename. file_step
     */
@@ -127,7 +127,7 @@ namespace FileIO {
     *
     * @param	*buffer Char buffer for use by function internals. char[100] usually
     * @param	*file Name of data file name for saving to
-	* @param	*data Vtx::Vortex array to be written out
+    * @param	*data Vtx::Vortex array to be written out
     * @param	length Overall length of the file to write out
     * @param	step Index for the filename. file_step
     */
@@ -139,7 +139,7 @@ namespace FileIO {
     * @ingroup	helper
     *
     * @param	*buffer Char buffer for use by function internals. char[100] usually
-	* @param	arr struct Array holding the parameter values to be written out
+    * @param	arr struct Array holding the parameter values to be written out
     * @param	*file Name of data file name for saving to
     */
     void writeOutParam(std::string buffer, Array arr, std::string file);

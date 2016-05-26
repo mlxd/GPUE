@@ -39,7 +39,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *  @date    12/11/2015
  *  @version 0.1
  *
- *  @brief Dastructure for simulation runtime paramters
+ *  @brief Dastructure for simulation runtime parameters
  *
  *  @section DESCRIPTION
  *  This file keeps track of and generates a parameter file (INI format) of the
@@ -55,16 +55,17 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include<string>
 #include<string.h>
 
-struct Param{ //Gathers list of parameters used by Python analysis routines.
-	char title[32];
-	double data;
+// Gathers all data from command-line parsing
+struct Param{ 
+    char title[32];
+    double data;
 };
 typedef struct Param Param;
 
 struct Array{
-	Param *array;
-	size_t length;
-	size_t used;
+    Param *array;
+    size_t length;
+    size_t used;
 };
 typedef struct Array Array;
 

@@ -38,6 +38,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../include/tracker.h"
 #include "../include/minions.h"
 #include "../include/ds.h"
+#include "../include/parser.h"
 
 #include "../include/lattice.h"
 #include "../include/node.h"
@@ -444,7 +445,7 @@ int evolve( cufftDoubleComplex *gpuWfc,
 				        }
 				        if(i==0) {
 					        //Lambda for vortex annihilation/creation.
-					        [&](int idx) {
+					        auto killIt=[&](int idx) {
 					            WFC::phaseWinding(Phi, 1, x, y, dx, dy, lattice.getVortexUid(idx)->getData().coordsD.x,
 					                          lattice.getVortexUid(idx)->getData().coordsD.y, xDim);
 					            cudaMemcpy(Phi_gpu, Phi, sizeof(double) * xDim * yDim, cudaMemcpyHostToDevice);

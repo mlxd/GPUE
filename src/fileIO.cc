@@ -102,7 +102,8 @@ namespace FileIO{
 	/*
 	 * Writes out double type data files.
 	 */
-	void writeOutDouble(std::string buffer, std::string file, double *data,                             int length, int step){
+	void writeOutDouble(std::string buffer, std::string file, double *data,
+                            int length, int step){
 		FILE *f;
 		sprintf ((char *)buffer.c_str(), "%s_%d", file.c_str(), step);
 		f = fopen (buffer.c_str(),"w");
