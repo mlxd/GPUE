@@ -33,6 +33,30 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "../include/ds.h"
 
+// Function to store integer into Grid->param_int
+void Grid::store(std::string id, int iparam){
+    param_int[id] = iparam;
+}
+
+// Function to store double into Grid->param_double
+void Grid::store(std::string id, double dparam){
+    param_double[id] = dparam;
+}
+
+// Function to retrieve integer from Grid->param_int
+int Grid::ival(std::string id){
+    return param_int[id];
+}
+
+//Function to retrieve double from Grid->param_double
+double Grid::dval(std::string id){
+    return param_double[id];
+}
+
+/*----------------------------------------------------------------------------//
+* DEPRECATION WARNING
+*-----------------------------------------------------------------------------*/
+
 void initArr(Array *arr, size_t initLen){
 	arr->array = (Param*) malloc(initLen*sizeof(Param));
 	arr->used = 0;

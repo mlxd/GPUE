@@ -46,7 +46,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *	simulation parameters used. The resulting file is read in by the Python
  *	post-proc/analysis functions.
  */
- //##############################################################################
+ //#############################################################################
 
 #ifndef DS_H
 #define DS_H
@@ -55,12 +55,18 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string>
 #include <string.h>
 #include <unordered_map>
+#include <vector>
+
+/*----------------------------------------------------------------------------//
+* CLASSES
+*-----------------------------------------------------------------------------*/
 
 /**
  * @brief       Class to hold the variable map and grid information
  * @ingroup     data
  */
 // NOTE: This is necessary if we ever want to do dynamic grid manipulation.
+// NOTE: I do not like this integer double split for retrieval. Find solution.
 class Grid{
     // Here we keep our variable map (unordered for performance)
     // and also grid information
@@ -70,21 +76,31 @@ class Grid{
 
     // Here we keep the functions to store variables and access grid data
     public:
-        void store(std::string, int iparam);
-        void store(std::string, double dparam);
-        double val_int(std::string id);
-        int val_double(std::string id);
+        // Function to store integer into param_int
+        void store(std::string id, int iparam);
+
+        // Function to store double into param_double
+        void store(std::string id, double dparam);
+
+        // Function to retrieve integer value from param_int
+        int ival(std::string id);
+
+        // Function to retrieve double value from param_double
+        double dval(std::string id);
 };
 typedef class Grid Grid;
 
-// NOTE: We may want to combine the Op and Wave class. It depends on the types
-//       of functions we need to have in Wave
+// NOTE: We may need to store the operators as a 3 1d vectors 
+//       instead of 1 3d one.
 
 /**
  * @brief       class to hold all necessary information about the operators
  * @ingroup     data
  */
 class Op{
+    private:
+        std::vector<double> potential, kinetic, momentum;
+    public:
 };
 typedef class Op Op;
 
@@ -93,11 +109,15 @@ typedef class Op Op;
  * @ingroup     data
  */
 class Wave{
+    public:
+        std::vector<double> wfc;
+    private:
 };
 typedef class Wave Wave;
 
-
-// DEPRECATION WARNING
+/*----------------------------------------------------------------------------//
+* DEPRECATION WARNING
+*-----------------------------------------------------------------------------*/
 
 // Gathers all data from command-line parsing
 struct Param{ 
@@ -142,6 +162,10 @@ void freeArray(Array *arr);
 * @param	d Double value of parameter
 */
 Param newParam(std::string t,double d);
+
+/*----------------------------------------------------------------------------//
+* END DEPRECATION WARNING
+*-----------------------------------------------------------------------------*/
+
 #endif
 
-// END DEPRECATION WARNING
