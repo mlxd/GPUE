@@ -50,10 +50,54 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #ifndef DS_H
 #define DS_H
-#include<stdio.h>
-#include<stdlib.h>
-#include<string>
-#include<string.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string>
+#include <string.h>
+#include <unordered_map>
+
+/**
+ * @brief       Class to hold the variable map and grid information
+ * @ingroup     data
+ */
+// NOTE: This is necessary if we ever want to do dynamic grid manipulation.
+class Grid{
+    // Here we keep our variable map (unordered for performance)
+    // and also grid information
+    private:
+        std::unordered_map<std::string, double> param_double;
+        std::unordered_map<std::string, int> param_int;
+
+    // Here we keep the functions to store variables and access grid data
+    public:
+        void store(std::string, int iparam);
+        void store(std::string, double dparam);
+        double val_int(std::string id);
+        int val_double(std::string id);
+};
+typedef class Grid Grid;
+
+// NOTE: We may want to combine the Op and Wave class. It depends on the types
+//       of functions we need to have in Wave
+
+/**
+ * @brief       class to hold all necessary information about the operators
+ * @ingroup     data
+ */
+class Op{
+};
+typedef class Op Op;
+
+/**
+ * @brief       class to hold all necessary information about the wavefunction
+ * @ingroup     data
+ */
+class Wave{
+};
+typedef class Wave Wave;
+
+
+// DEPRECATION WARNING
 
 // Gathers all data from command-line parsing
 struct Param{ 
@@ -99,3 +143,5 @@ void freeArray(Array *arr);
 */
 Param newParam(std::string t,double d);
 #endif
+
+// END DEPRECATION WARNING
