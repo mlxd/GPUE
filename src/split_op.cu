@@ -37,7 +37,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../include/fileIO.h"
 #include "../include/tracker.h"
 #include "../include/minions.h"
-#include "../include/ds.h"
 #include "../include/parser.h"
 
 #include "../include/lattice.h"
@@ -61,7 +60,7 @@ double omega; //Rotation rate of condensate
 double timeTotal;
 double angle_sweep; //Rotation angle of condensate relative to x-axis
 Params *paramS;
-Array params;
+//Array params;
 double x0_shift, y0_shift; //Optical lattice shift parameters.
 double Rxy; //Condensate scaling factor.
 double a0x, a0y; //Harmonic oscillator length in x and y directions
@@ -76,7 +75,7 @@ int isError(int result, char* c){
     }
     return result;
 }
-int initialise(double omegaX, double omegaY, int N){
+int initialise(double omegaX, double omegaY, int N, Grid &par){
     //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%//
     unsigned int xD=1,yD=1,zD=1;
     threads = 128;
@@ -118,42 +117,42 @@ int initialise(double omegaX, double omegaY, int N){
     yOffset=0.0;//5.0e-6;
     
     mass = 1.4431607e-25; //Rb 87 mass, kg
-    appendData(&params,"Mass",mass);
+    par.store("Mass",mass);
     a_s = 4.67e-9;
-    appendData(&params,"a_s",a_s);
+    par.store("a_s",a_s);
 
     double sum = 0.0;
 
     a0x = sqrt(HBAR/(2*mass*omegaX));
     a0y = sqrt(HBAR/(2*mass*omegaY));
-    appendData(&params,"a0x",a0x);
-    appendData(&params,"a0y",a0y);
+    par.store("a0x",a0x);
+    par.store("a0y",a0y);
     
     Rxy = pow(15,0.2)*pow(N*a_s*sqrt(mass*omegaZ/HBAR),0.2);
-    appendData(&params,"Rxy",Rxy);
+    par.store("Rxy",Rxy);
     //Rxy = pow(15,0.2)*pow(N*4.67e-9*sqrt(mass*pow(omegaX*omegaY,0.5)/HBAR),0.2);
     double bec_length = sqrt( HBAR/(mass*sqrt( omegaX*omegaX * ( 1 - omega*omega) ) ));
     xMax = 6*Rxy*a0x;//10*bec_length;//6*Rxy*a0x;
     yMax = 6*Rxy*a0y;//10*bec_length;//
-    appendData(&params,"xMax",xMax);
-    appendData(&params,"yMax",yMax);
+    par.store("xMax",xMax);
+    par.store("yMax",yMax);
 
     double pxMax, pyMax;
     pxMax = (PI/xMax)*(xDim>>1);
     pyMax = (PI/yMax)*(yDim>>1);
-    appendData(&params,"pyMax",pyMax);
-    appendData(&params,"pxMax",pxMax);
+    par.store("pyMax",pyMax);
+    par.store("pxMax",pxMax);
     
     dx = xMax/(xDim>>1);
     dy = yMax/(yDim>>1);
-    appendData(&params,"dx",dx);
-    appendData(&params,"dy",dy);
+    par.store("dx",dx);
+    par.store("dy",dy);
     
     double dpx, dpy;
     dpx = PI/(xMax);
     dpy = PI/(yMax);
-    appendData(&params,"dpx",dpx);
-    appendData(&params,"dpy",dpy);
+    par.store("dpx",dpx);
+    par.store("dpy",dpy);
 
     //printf("a0x=%e  a0y=%e \n dx=%e   dx=%e\n R_xy=%e\n",a0x,a0y,dx,dy,Rxy);
     //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%//
@@ -216,8 +215,10 @@ int initialise(double omegaX, double omegaY, int N){
 
     #ifdef __linux
     int cores = omp_get_num_procs();
-    appendData(&params,"Cores_Total",cores);
-    appendData(&params,"Cores_Max",cores/2); //Assuming dev system specifics (Xeon with HT -> cores detected / 2)
+    par.store("Cores_Total",cores);
+
+    // Assuming dev system specifics (Xeon with HT -> cores detected / 2)
+    par.store("Cores_Max",cores/2);
     omp_set_num_threads(cores/2);
     #pragma omp parallel for private(j)
     #endif
@@ -313,7 +314,8 @@ int evolve( cufftDoubleComplex *gpuWfc,
             void *gpu1dxPy,
             cufftDoubleComplex *gpuParSum,             
             int gridSize, int numSteps, int threads, 
-            unsigned int gstate, int lz, int nonlin, int printSteps, int N, unsigned int ramp){
+            unsigned int gstate, int lz, int nonlin, int printSteps, 
+            int N, unsigned int ramp, Grid &par){
 
     //Because no two operations are created equally. Multiplimultiplication is faster than divisions.
     double renorm_factor_2d=1.0/pow(gridSize,0.5);
@@ -347,11 +349,12 @@ int evolve( cufftDoubleComplex *gpuWfc,
     printf("Avg healing length at centre=%E\n",xi);
     #endif
 
-    /** ** ####################################################################################################### ** **/
-    /** **                            HERE BE DRAGONS OF THE MOST DANGEROUS KIND!                                       ** **/
-    /** ** ####################################################################################################### ** **/
+    /** ** ############################################################## ** **/
+    /** **         HERE BE DRAGONS OF THE MOST DANGEROUS KIND!            ** **/
+    /** ** ############################################################## ** **/
 
-    //Double buffering and will attempt to thread free and calloc operations to hide time penalty. Or may not bother.
+    // Double buffering and will attempt to thread free and calloc operations to
+    // hide time penalty. Or may not bother.
     int num_vortices[2] = {0,0};
     int* vortexLocation; //binary matrix of size xDim*yDim, 1 for vortex at specified index, 0 otherwise
     int* olMaxLocation = (int*) calloc(xDim*yDim,sizeof(int));
@@ -404,10 +407,10 @@ int evolve( cufftDoubleComplex *gpuWfc,
                         Tracker::lsFit(vortCoords, wfc, num_vortices[0], xDim);
                         central_vortex = Tracker::vortCentre(vortCoords, num_vortices[0], xDim);
                         vort_angle = Tracker::vortAngle(vortCoords, central_vortex, num_vortices[0]);
-                        appendData(&params, "Vort_angle", vort_angle);
+                        par.store("Vort_angle", vort_angle);
                         optLatSetup(central_vortex, V, vortCoords, num_vortices[0],
                                     vort_angle + PI * angle_sweep / 180.0, laser_power * HBAR * sqrt(omegaX * omegaY),
-                                    V_opt, x, y);
+                                    V_opt, x, y, par);
                         sepAvg = Tracker::vortSepAvg(vortCoords, central_vortex, num_vortices[0]);
                         if (kick_it == 2) {
                             printf("Kicked it 1\n");
@@ -415,11 +418,11 @@ int evolve( cufftDoubleComplex *gpuWfc,
                         }
                         FileIO::writeOutDouble(buffer, "V_opt_1", V_opt, xDim * yDim, 0);
                         FileIO::writeOut(buffer, "EV_opt_1", EV_opt, xDim * yDim, 0);
-                        appendData(&params, "Central_vort_x", (double) central_vortex.coords.x);
-                        appendData(&params, "Central_vort_y", (double) central_vortex.coords.y);
-                        appendData(&params, "Central_vort_winding", (double) central_vortex.wind);
-                        appendData(&params, "Num_vort", (double) num_vortices[0]);
-                        FileIO::writeOutParam(buffer, params, "Params.dat");
+                        par.store("Central_vort_x", (double) central_vortex.coords.x);
+                        par.store("Central_vort_y", (double) central_vortex.coords.y);
+                        par.store("Central_vort_winding", (double) central_vortex.wind);
+                        par.store("Num_vort", (double) num_vortices[0]);
+                        FileIO::writeOutParam(buffer, par, "Params.dat");
                     }
                     else if (num_vortices[0] > num_vortices[1]) {
                         printf("Number of vortices increased from %d to %d\n", num_vortices[1], num_vortices[0]);
@@ -647,17 +650,20 @@ void parSum(double2* gpuWfc, double2* gpuParSum, int xDim, int yDim, int threads
 /**
 ** Matches the optical lattice to the vortex lattice. Moire super-lattice project.
 **/
-void optLatSetup(struct Vtx::Vortex centre, double* V, struct Vtx::Vortex *vArray, int num_vortices, double theta_opt, double intensity, double* v_opt, double *x, double *y){
+void optLatSetup(struct Vtx::Vortex centre, double* V, 
+                 struct Vtx::Vortex *vArray, int num_vortices, double theta_opt,
+                 double intensity, double* v_opt, double *x, double *y,
+                 Grid &par){
     int i,j;
     double sepMin = Tracker::vortSepAvg(vArray,centre,num_vortices);
     sepMin = sepMin*(1 + sepMinEpsilon);
-    appendData(&params,"Vort_sep",(double)sepMin);
+    par.store("Vort_sep",(double)sepMin);
     /*
     * Defining the necessary k vectors for the optical lattice
     */
     double k_mag = ((2*PI/(sepMin*dx))/2)*(2/sqrt(3)); // Additional /2 as a result of lambda/2 period
     double2* k = (double2*) malloc(sizeof(double2)*3);
-    appendData(&params,"kmag",(double)k_mag);
+    par.store("kmag",(double)k_mag);
     k[0].x = k_mag * cos(0*PI/3 + theta_opt);
     k[0].y = k_mag * sin(0*PI/3 + theta_opt);
     k[1].x = k_mag * cos(2*PI/3 + theta_opt);
@@ -673,12 +679,12 @@ void optLatSetup(struct Vtx::Vortex centre, double* V, struct Vtx::Vortex *vArra
     }
 */
     FileIO::writeOut(buffer,"r_opt",r_opt,xDim,0);
-    appendData(&params,"k[0].x",(double)k[0].x);
-    appendData(&params,"k[0].y",(double)k[0].y);
-    appendData(&params,"k[1].x",(double)k[1].x);
-    appendData(&params,"k[1].y",(double)k[1].y);
-    appendData(&params,"k[2].x",(double)k[2].x);
-    appendData(&params,"k[2].y",(double)k[2].y);
+    par.store("k[0].x",(double)k[0].x);
+    par.store("k[0].y",(double)k[0].y);
+    par.store("k[1].x",(double)k[1].x);
+    par.store("k[1].y",(double)k[1].y);
+    par.store("k[2].x",(double)k[2].x);
+    par.store("k[2].y",(double)k[2].y);
 
     double x_shift = dx*(9+(0.5*xDim-1) - centre.coords.x);//sin(theta_opt)*(sepMin);
     double y_shift = dy*(0+(0.5*yDim-1) - centre.coords.y);//cos(theta_opt)*(sepMin);
@@ -764,161 +770,6 @@ template<typename T> void parSum(T *gpuToSumArr, T *gpuParSum, int xDim, int yDi
 }
 //##############################################################################
 //##############################################################################
-int parseArgs(int argc, char** argv){
-    int opt;
-    while ((opt = getopt (argc, argv, "d:x:y:w:G:g:e:T:t:n:p:r:o:L:l:s:i:P:X:Y:O:k:W:U:V:S:a:")) != -1) {
-        switch (opt)
-        {
-            case 'x':
-                xDim = atoi(optarg);
-                printf("Argument for x is given as %d\n",xDim);
-                appendData(&params,"xDim",(double)xDim);
-                break;
-            case 'y':
-                yDim = atoi(optarg);
-                printf("Argument for y is given as %d\n",yDim);
-                appendData(&params,"yDim",(double)yDim);
-                break;
-            case 'w':
-                omega = atof(optarg);
-                printf("Argument for OmegaRotate is given as %E\n",omega);
-                appendData(&params,"omega",omega);
-                break;
-            case 'G':
-                gammaY = atof(optarg);
-                printf("Argument for gamma is given as %E\n",gammaY);
-                appendData(&params,"gammaY",gammaY);
-                break;
-            case 'g':
-                gsteps = atof(optarg);
-                printf("Argument for Groundsteps is given as %ld\n",gsteps);
-                appendData(&params,"gsteps",gsteps);
-                break;
-            case 'e':
-                esteps = atof(optarg);
-                printf("Argument for EvSteps is given as %ld\n",esteps);
-                appendData(&params,"esteps",esteps);
-                break;
-            case 'T':
-                gdt = atof(optarg);
-                printf("Argument for groundstate Timestep is given as %E\n",gdt);
-                appendData(&params,"gdt",gdt);
-                break;
-            case 't':
-                dt = atof(optarg);
-                printf("Argument for Timestep is given as %E\n",dt);
-                appendData(&params,"dt",dt);
-                break;
-            case 'd':
-                device = atoi(optarg);
-                printf("Argument for device is given as %d\n",device);
-                appendData(&params,"device",device);
-                break;
-            case 'n':
-                atoms = atof(optarg);
-                printf("Argument for atoms is given as %ld\n",atoms);
-                appendData(&params,"atoms",atoms);
-                break;
-            case 'r':
-                read_wfc  = atoi(optarg);
-                printf("Argument for ReadIn is given as %d\n",read_wfc);
-                appendData(&params,"read_wfc",(double)read_wfc);
-                break;
-            case 'p':
-                print = atoi(optarg);
-                printf("Argument for Printout is given as %d\n",print);
-                appendData(&params,"print_out",(double)print);
-                break;
-            case 'L':
-                l = atof(optarg);
-                printf("Vortex winding is given as : %E\n",l);
-                appendData(&params,"winding",l);
-                break;
-            case 'l':
-                ang_mom = atoi(optarg);
-                printf("Angular Momentum mode engaged: %d\n",ang_mom);
-                appendData(&params,"corotating",(double)ang_mom);
-                break;
-            case 's':
-                gpe = atoi(optarg);
-                printf("Non-linear mode engaged: %d\n",gpe);
-                appendData(&params,"gpe",gpe);
-                break;
-            case 'o':
-                omegaZ = atof(optarg);
-                printf("Argument for OmegaZ is given as %E\n",omegaZ);
-                appendData(&params,"omegaZ",omegaZ);
-                break;
-            case 'i':
-                interaction = atof(optarg);
-                printf("Argument for interaction scaling is %E\n",interaction);
-                appendData(&params,"int_scaling",interaction);
-                break;
-            case 'P':
-                laser_power = atof(optarg);
-                printf("Argument for laser power is %E\n",laser_power);
-                appendData(&params,"laser_power",laser_power);
-                break;
-            case 'X':
-                omegaX = atof(optarg);
-                printf("Argument for omegaX is %E\n",omegaX);
-                appendData(&params,"omegaX",omegaX);
-                break;
-            case 'Y':
-                omegaY = atof(optarg);
-                printf("Argument for omegaY is %E\n",omegaY);
-                appendData(&params,"omegaY",omegaY);
-                break;
-            case 'O':
-                angle_sweep = atof(optarg);
-                printf("Argument for angle_sweep is %E\n",angle_sweep);
-                appendData(&params,"angle_sweep",angle_sweep);
-                break;
-            case 'k':
-                kick_it = atoi(optarg);
-                printf("Argument for kick_it is %i\n",kick_it);
-                appendData(&params,"kick_it",kick_it);
-                break;
-            case 'W':
-                write_it = atoi(optarg);
-                printf("Argument for write_it is %i\n",write_it);
-                appendData(&params,"write_it",write_it);
-                break;
-            case 'U':
-                x0_shift = atof(optarg);
-                printf("Argument for x0_shift is %lf\n",x0_shift);
-                appendData(&params,"x0_shift",x0_shift);
-                break;
-            case 'V':
-                y0_shift = atof(optarg);
-                printf("Argument for y0_shift is %lf\n",y0_shift);
-                appendData(&params,"y0_shift",y0_shift);
-                break;
-            case 'S':
-                sepMinEpsilon = atof(optarg);
-                printf("Argument for sepMinEpsilon is %lf\n",sepMinEpsilon);
-                appendData(&params,"sepMinEpsilon",sepMinEpsilon);
-                break;
-            case 'a':
-                graph = atoi(optarg);
-                printf("Argument for graph is %d\n",graph);
-                appendData(&params,"graph",graph);
-                break;
-            case '?':
-                if (optopt == 'c') {
-                    fprintf (stderr, "Option -%c requires an argument.\n", optopt);
-                } else if (isprint (optopt)) {
-                    fprintf (stderr, "Unknown option `-%c'.\n", optopt);
-                } else {
-                    fprintf (stderr,"Unknown option character `\\x%x'.\n",optopt);
-                }
-                return -1;
-            default:
-                abort ();
-        }
-    }
-    return 0;
-}
 
 void delta_define(double *x, double *y, double x0, double y0, double *delta){
     for (int i=0; i<xDim; ++i){
@@ -936,9 +787,9 @@ int main(int argc, char **argv){
     time_t start,fin;
     time(&start);
     printf("Start: %s\n", ctime(&start));
-    initArr(&params,32);
+    //initArr(&params,32);
     //appendData(&params,ctime(&start),0.0);
-    parseArgs(argc,argv);
+    Grid par = parseArgs(argc,argv);
     cudaSetDevice(device);
     //************************************************************//
     /*
@@ -949,14 +800,14 @@ int main(int argc, char **argv){
     //strcpy(paramS->data,"INIT");
     //paramS->next=NULL;
 
-    initialise(omegaX,omegaY,atoms);
+    initialise(omegaX,omegaY,atoms,par);
     timeTotal = 0.0;
     //************************************************************//
     /*
     * Groundstate finder section
     */
     //************************************************************//
-    FileIO::writeOutParam(buffer, params, "Params.dat");
+    FileIO::writeOutParam(buffer, par, "Params.dat");
     if(read_wfc == 1){
         printf("Loading wavefunction...");
         wfc=FileIO::readIn("wfc_load","wfci_load",xDim, yDim);
@@ -993,7 +844,7 @@ int main(int argc, char **argv){
         if(err!=cudaSuccess)
             exit(1);
         
-        evolve(wfc_gpu, K_gpu, V_gpu, yPx_gpu, xPy_gpu, par_sum, xDim*yDim, gsteps, 128, 0, ang_mom, gpe, print, atoms, 0);
+        evolve(wfc_gpu, K_gpu, V_gpu, yPx_gpu, xPy_gpu, par_sum, xDim*yDim, gsteps, 128, 0, ang_mom, gpe, print, atoms, 0, par);
         cudaMemcpy(wfc, wfc_gpu, sizeof(cufftDoubleComplex)*xDim*yDim, cudaMemcpyDeviceToHost);
     }
 
@@ -1029,7 +880,7 @@ int main(int argc, char **argv){
             
         //delta_define(x, y, (523.6667 - 512 + x0_shift)*dx, (512.6667 - 512  + y0_shift)*dy, V_opt);
         FileIO::writeOutDouble(buffer,"V_opt",V_opt,xDim*yDim,0);
-        evolve(wfc_gpu, K_gpu, V_gpu, yPx_gpu, xPy_gpu, par_sum, xDim*yDim, esteps, 128, 1, ang_mom, gpe, print, atoms, 0);
+        evolve(wfc_gpu, K_gpu, V_gpu, yPx_gpu, xPy_gpu, par_sum, xDim*yDim, esteps, 128, 1, ang_mom, gpe, print, atoms, 0, par);
     
     }
     free(EV); free(EK); free(ExPy); free(EyPx);

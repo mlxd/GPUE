@@ -48,41 +48,57 @@ int Grid::ival(std::string id){
     return param_int[id];
 }
 
-//Function to retrieve double from Grid->param_double
+// Function to retrieve double from Grid->param_double
 double Grid::dval(std::string id){
     return param_double[id];
+}
+
+// Function for file writing (to replace writeOutParam)
+void Grid::write(std::string filename){
+    std::ofstream output;
+    output.open(filename);
+    // We simply iterate through the int and double param maps
+    for (auto item : param_double){
+        output << item.first << "=" << item.second << '\n';
+    }
+
+    for (auto item : param_int){
+        output << item.first << "=" << item.second << '\n';
+    }
+
+    output.close();
 }
 
 /*----------------------------------------------------------------------------//
 * DEPRECATION WARNING
 *-----------------------------------------------------------------------------*/
-
-void initArr(Array *arr, size_t initLen){
-	arr->array = (Param*) malloc(initLen*sizeof(Param));
-	arr->used = 0;
-	arr->length = initLen;
-}
-
-void appendData(Array *arr, std::string t, double d){
-	Param p = newParam(t,d);
-	if(arr->used == arr->length){
-		arr->length *= 2;
-		arr->array = (Param*)realloc(arr->array, arr->length*sizeof(Param));
-	}
-	arr->array[arr->used] = p;
-	arr->used = arr->used + 1;
-}
-
-void freeArray(Array *arr){
-	free(arr->array);
-	arr->array = NULL;
-	arr->used = 0;
-	arr->length = 0;
-}
-
-Param newParam(std::string t,double d){
-	Param p;
-	strcpy(p.title,t.c_str());
-	p.data = d;
-	return p;
-}
+// 
+// void initArr(Array *arr, size_t initLen){
+// 	arr->array = (Param*) malloc(initLen*sizeof(Param));
+// 	arr->used = 0;
+// 	arr->length = initLen;
+// }
+// 
+// void appendData(Array *arr, std::string t, double d){
+// 	Param p = newParam(t,d);
+// 	if(arr->used == arr->length){
+// 		arr->length *= 2;
+// 		arr->array = (Param*)realloc(arr->array, arr->length*sizeof(Param));
+// 	}
+// 	arr->array[arr->used] = p;
+// 	arr->used = arr->used + 1;
+// }
+// 
+// void freeArray(Array *arr){
+// 	free(arr->array);
+// 	arr->array = NULL;
+// 	arr->used = 0;
+// 	arr->length = 0;
+// }
+// 
+// Param newParam(std::string t,double d){
+// 	Param p;
+// 	strcpy(p.title,t.c_str());
+// 	p.data = d;
+// 	return p;
+// }

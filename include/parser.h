@@ -51,10 +51,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <cstdlib>
 #include <string>
 #include <getopt.h>
+#include "../include/ds.h"
 
 /**
-* @brief	Parses command-line input.
+* @brief	Parses command-line input, creates initial grid
 */
-//void parseArgs(int argc, char** argv);
+Grid parseArgs(int argc, char** argv);
 
 #endif

@@ -43,8 +43,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  *  @section DESCRIPTION
  *  These functions and variables are necessary for carrying out the GPUE
- *	simulations. This file will be re-written in an improved form in some future
- *	release.
+ *	simulations. This file will be re-written in an improved form in some
+ *	future release.
  */
 //##############################################################################
 
@@ -62,6 +62,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <ctype.h>
 #include <getopt.h>
 #include "tracker.h"
+#include "ds.h"
 #ifdef __linux
 	#include<omp.h>
 #elif __APPLE__
@@ -155,7 +156,7 @@ void parSum(double2* gpuWfc, double2* gpuParSum, int xDim, int yDim, int threads
 * @param	x X grid array
 * @param	y Y grid array
 */
-void optLatSetup(struct Vtx::Vortex centre, double* V, struct Vtx::Vortex *vArray, int num_vortices, double theta_opt, double intensity, double* v_opt, double *x, double *y);
+void optLatSetup(struct Vtx::Vortex centre, double* V, struct Vtx::Vortex *vArray, int num_vortices, double theta_opt, double intensity, double* v_opt, double *x, double *y, Grid &par);
 
 /**
 * @brief	Calculates the energy of the condensate. Not implemented.

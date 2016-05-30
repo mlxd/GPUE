@@ -56,6 +56,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string.h>
 #include <unordered_map>
 #include <vector>
+#include <fstream>
 
 /*----------------------------------------------------------------------------//
 * CLASSES
@@ -87,6 +88,9 @@ class Grid{
 
         // Function to retrieve double value from param_double
         double dval(std::string id);
+
+        // Function for file writing
+        void write(std::string filename);
 };
 typedef class Grid Grid;
 
@@ -118,51 +122,51 @@ typedef class Wave Wave;
 /*----------------------------------------------------------------------------//
 * DEPRECATION WARNING
 *-----------------------------------------------------------------------------*/
-
-// Gathers all data from command-line parsing
-struct Param{ 
-    char title[32];
-    double data;
-};
-typedef struct Param Param;
-
-struct Array{
-    Param *array;
-    size_t length;
-    size_t used;
-};
-typedef struct Array Array;
-
-/**
-* @brief	Intialises Array to specified length
-* @ingroup	data
-* @param	*arr Pointer to parameter storage Array
-* @param	initLength Length to initialise Array
-*/
-void initArr(Array *arr, size_t initLen);
-/**
-* @brief	Adds data to the parameter storage Array
-* @ingroup	data
-* @param	*arr Pointer to parameter storage Array
-* @param	*t Parameter name to be saved
-* @param	d Double value of parameter
-*/
-void appendData(Array *arr, std::string t, double d);
-/**
-* @brief	Free all allocated memory from Array
-* @ingroup	data
-* @param	*arr Pointer to parameter storage Array
-*/
-void freeArray(Array *arr);
-/**
-* @brief	Allocate new Param. Unused.
-* @ingroup	data
-* @param	*arr Pointer to parameter storage Array
-* @param	*t Parameter name to be saved
-* @param	d Double value of parameter
-*/
-Param newParam(std::string t,double d);
-
+// 
+// // Gathers all data from command-line parsing
+// struct Param{ 
+//     char title[32];
+//     double data;
+// };
+// typedef struct Param Param;
+// 
+// struct Array{
+//     Param *array;
+//     size_t length;
+//     size_t used;
+// };
+// typedef struct Array Array;
+// 
+// /**
+// * @brief	Intialises Array to specified length
+// * @ingroup	data
+// * @param	*arr Pointer to parameter storage Array
+// * @param	initLength Length to initialise Array
+// */
+// void initArr(Array *arr, size_t initLen);
+// /**
+// * @brief	Adds data to the parameter storage Array
+// * @ingroup	data
+// * @param	*arr Pointer to parameter storage Array
+// * @param	*t Parameter name to be saved
+// * @param	d Double value of parameter
+// */
+// void appendData(Array *arr, std::string t, double d);
+// /**
+// * @brief	Free all allocated memory from Array
+// * @ingroup	data
+// * @param	*arr Pointer to parameter storage Array
+// */
+// void freeArray(Array *arr);
+// /**
+// * @brief	Allocate new Param. Unused.
+// * @ingroup	data
+// * @param	*arr Pointer to parameter storage Array
+// * @param	*t Parameter name to be saved
+// * @param	d Double value of parameter
+// */
+// Param newParam(std::string t,double d);
+// 
 /*----------------------------------------------------------------------------//
 * END DEPRECATION WARNING
 *-----------------------------------------------------------------------------*/

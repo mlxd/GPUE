@@ -142,7 +142,7 @@ namespace FileIO {
     * @param	arr struct Array holding the parameter values to be written out
     * @param	*file Name of data file name for saving to
     */
-    void writeOutParam(std::string buffer, Array arr, std::string file);
+    void writeOutParam(std::string buffer, Grid &par, std::string file);
 
 	/*
 	 * @brief	Opens and closes file. Nothing more. Nothing less.
