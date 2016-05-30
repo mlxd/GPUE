@@ -82,14 +82,14 @@ Grid parseArgs(int argc, char** argv){
             case 'g':
             {
                 double gsteps = atof(optarg);
-                printf("Argument for Groundsteps is given as %d\n",gsteps);
+                printf("Argument for Groundsteps is given as %E\n",gsteps);
                 par.store("gsteps",gsteps);
                 break;
             }
             case 'e':
             {
                 double esteps = atof(optarg);
-                printf("Argument for EvSteps is given as %d\n",esteps);
+                printf("Argument for EvSteps is given as %E\n",esteps);
                 par.store("esteps",esteps);
                 break;
             }
@@ -118,7 +118,7 @@ Grid parseArgs(int argc, char** argv){
             case 'n':
             {
                 double atoms = atof(optarg);
-                printf("Argument for atoms is given as %d\n",atoms);
+                printf("Argument for atoms is given as %E\n",atoms);
                 par.store("atoms",atoms);
                 break;
             }
