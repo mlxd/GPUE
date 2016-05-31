@@ -70,17 +70,27 @@ double sepMinEpsilon=0.0; //Minimum separation for epsilon.
  * Checks CUDA routines have exitted correctly.
  */
 int isError(int result, char* c){
-    if(result!=0){printf("Error has occurred for method %s with return type %d\n",c,result);
+    if(result!=0){
+        printf("Error has occurred for method %s with return type %d\n",
+               c,result);
         exit(result);
     }
     return result;
 }
-int initialise(double omegaX, double omegaY, int N, Grid &par){
-    //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%//
+
+int initialise(Grid &par){
+
+    double omegaX = par.dval("omegaX");
+    double omegaY = par.dval("omegaY");
+    int N = par.ival("atoms");
     unsigned int xD=1,yD=1,zD=1;
     threads = 128;
-    unsigned int b = xDim*yDim/threads;  //number of blocks in simulation
-    unsigned long long maxElements = 65536*65536ULL; //largest number of elements
+
+    // number of blocks in simulation
+    unsigned int b = xDim*yDim/threads;
+
+    // largest number of elements
+    unsigned long long maxElements = 65536*65536ULL; 
 
     if( b < (1<<16) ){
         xD = b;
@@ -130,10 +140,10 @@ int initialise(double omegaX, double omegaY, int N, Grid &par){
     
     Rxy = pow(15,0.2)*pow(N*a_s*sqrt(mass*omegaZ/HBAR),0.2);
     par.store("Rxy",Rxy);
-    //Rxy = pow(15,0.2)*pow(N*4.67e-9*sqrt(mass*pow(omegaX*omegaY,0.5)/HBAR),0.2);
-    double bec_length = sqrt( HBAR/(mass*sqrt( omegaX*omegaX * ( 1 - omega*omega) ) ));
-    xMax = 6*Rxy*a0x;//10*bec_length;//6*Rxy*a0x;
-    yMax = 6*Rxy*a0y;//10*bec_length;//
+    double bec_length = sqrt( HBAR/(mass*sqrt( omegaX*omegaX * 
+                                               ( 1 - omega*omega) ) ));
+    xMax = 6*Rxy*a0x; //10*bec_length; //6*Rxy*a0x;
+    yMax = 6*Rxy*a0y; //10*bec_length;
     par.store("xMax",xMax);
     par.store("yMax",yMax);
 
@@ -182,12 +192,14 @@ int initialise(double omegaX, double omegaY, int N, Grid &par){
     
     //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%//
     
-    /* Initialise wavefunction, momentum, position, angular momentum, imaginary and real-time evolution operators . */
+    /* Initialise wavefunction, momentum, position, angular momentum, 
+       imaginary and real-time evolution operators . */
     Energy = (double*) malloc(sizeof(double) * gSize);
     r = (double *) malloc(sizeof(double) * gSize);
     Phi = (double *) malloc(sizeof(double) * gSize);
     wfc = (cufftDoubleComplex *) malloc(sizeof(cufftDoubleComplex) * gSize);
-    wfc_backup = (cufftDoubleComplex *) malloc(sizeof(cufftDoubleComplex) * (gSize/threads));
+    wfc_backup = (cufftDoubleComplex *) malloc(sizeof(cufftDoubleComplex) * 
+                                               (gSize/threads));
     K = (double *) malloc(sizeof(double) * gSize);
     V = (double *) malloc(sizeof(double) * gSize);
     V_opt = (double *) malloc(sizeof(double) * gSize);
@@ -200,7 +212,8 @@ int initialise(double omegaX, double omegaY, int N, Grid &par){
     yPx = (double *) malloc(sizeof(double) * gSize);
     ExPy = (cufftDoubleComplex *) malloc(sizeof(cufftDoubleComplex) * gSize);
     EyPx = (cufftDoubleComplex *) malloc(sizeof(cufftDoubleComplex) * gSize);
-    EappliedField = (cufftDoubleComplex *) malloc(sizeof(cufftDoubleComplex) * gSize);
+    EappliedField = (cufftDoubleComplex *) malloc(sizeof(cufftDoubleComplex) * 
+                                                         gSize);
     
     /* Initialise wfc, EKp, and EVr buffers on GPU */
     cudaMalloc((void**) &Energy_gpu, sizeof(double) * gSize);
@@ -226,10 +239,15 @@ int initialise(double omegaX, double omegaY, int N, Grid &par){
         for( j=0; j < yDim; j++ ){
             Phi[(i*yDim + j)] = fmod(l*atan2(y[j], x[i]),2*PI);
             
-            wfc[(i*yDim + j)].x = exp(-( pow((x[i])/(Rxy*a0x),2) + pow((y[j])/(Rxy*a0y),2) ) )*cos(Phi[(i*xDim + j)]);
-            wfc[(i*yDim + j)].y = -exp(-( pow((x[i])/(Rxy*a0x),2) + pow((y[j])/(Rxy*a0y),2) ) )*sin(Phi[(i*xDim + j)]);
+            wfc[(i*yDim + j)].x = exp(-( pow((x[i])/(Rxy*a0x),2) + 
+                                         pow((y[j])/(Rxy*a0y),2) ) ) *
+                                  cos(Phi[(i*xDim + j)]);
+            wfc[(i*yDim + j)].y = -exp(-( pow((x[i])/(Rxy*a0x),2) + 
+                                          pow((y[j])/(Rxy*a0y),2) ) ) *
+                                  sin(Phi[(i*xDim + j)]);
                 
-            V[(i*yDim + j)] = 0.5*mass*( pow(omegaX*(x[i]+xOffset),2) + pow(gammaY*omegaY*(y[j]+yOffset),2) );
+            V[(i*yDim + j)] = 0.5*mass*( pow(omegaX*(x[i]+xOffset),2) + 
+                                         pow(gammaY*omegaY*(y[j]+yOffset),2) );
             K[(i*yDim + j)] = (HBAR*HBAR/(2*mass))*(xp[i]*xp[i] + yp[j]*yp[j]);
 
             GV[(i*yDim + j)].x = exp( -V[(i*xDim + j)]*(gdt/(2*HBAR)));
@@ -250,11 +268,12 @@ int initialise(double omegaX, double omegaY, int N, Grid &par){
             EyPx[(i*yDim + j)].x=cos(-omega*omegaX*yPx[(i*xDim + j)]*dt);
             EyPx[(i*yDim + j)].y=sin(-omega*omegaX*yPx[(i*xDim + j)]*dt);
     
-            sum+=sqrt(wfc[(i*xDim + j)].x*wfc[(i*xDim + j)].x + wfc[(i*xDim + j)].y*wfc[(i*xDim + j)].y);
+            sum+=sqrt(wfc[(i*xDim + j)].x*wfc[(i*xDim + j)].x + 
+                      wfc[(i*xDim + j)].y*wfc[(i*xDim + j)].y);
         }
     }
     //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%//
-    //hdfWriteDouble(xDim, V, 0, "V_0"); //HDF not required for current projects. Removed.
+    //hdfWriteDouble(xDim, V, 0, "V_0"); //HDF COMING SOON!
     //hdfWriteComplex(xDim, wfc, 0, "wfc_0");
     FileIO::writeOutDouble(buffer,"V",V,xDim*yDim,0);
     //FileIO::writeOutDouble(buffer,"V_opt",V_opt,xDim*yDim,0);
@@ -291,14 +310,16 @@ int initialise(double omegaX, double omegaY, int N, Grid &par){
     result = cufftPlan2d(&plan_2d, xDim, yDim, CUFFT_Z2Z);
     if(result != CUFFT_SUCCESS){
         printf("Result:=%d\n",result);
-        printf("Error: Could not execute cufftPlan2d(%s ,%d, %d).\n", "plan_2d", (unsigned int)xDim, (unsigned int)yDim);
+        printf("Error: Could not execute cufftPlan2d(%s ,%d, %d).\n", "plan_2d",
+                (unsigned int)xDim, (unsigned int)yDim);
         return -1;
     }
 
     result = cufftPlan1d(&plan_1d, xDim, CUFFT_Z2Z, yDim);
     if(result != CUFFT_SUCCESS){
         printf("Result:=%d\n",result);
-        printf("Error: Could not execute cufftPlan3d(%s ,%d ,%d ).\n", "plan_1d", (unsigned int)xDim, (unsigned int)yDim);
+        printf("Error: Could not execute cufftPlan3d(%s ,%d ,%d ).\n", 
+               "plan_1d", (unsigned int)xDim, (unsigned int)yDim);
         return -1;
     }
     
@@ -307,17 +328,22 @@ int initialise(double omegaX, double omegaY, int N, Grid &par){
     return 0;
 }
 
-int evolve( cufftDoubleComplex *gpuWfc, 
-            cufftDoubleComplex *gpuMomentumOp,
-            cufftDoubleComplex *gpuPositionOp,
-            void *gpu1dyPx,
-            void *gpu1dxPy,
-            cufftDoubleComplex *gpuParSum,             
-            int gridSize, int numSteps, int threads, 
-            unsigned int gstate, int lz, int nonlin, int printSteps, 
-            int N, unsigned int ramp, Grid &par){
+int evolve( cufftDoubleComplex *gpuWfc, cufftDoubleComplex *gpuMomentumOp,
+            cufftDoubleComplex *gpuPositionOp, void *gpu1dyPx, void *gpu1dxPy,
+            cufftDoubleComplex *gpuParSum, int numSteps,
+            int threads, unsigned int gstate, unsigned int ramp, Grid &par){
 
-    //Because no two operations are created equally. Multiplimultiplication is faster than divisions.
+    // Re-establishing variables from parsed Grid class
+    int N = par.ival("atoms");
+    int printSteps = par.ival("print");
+    int nonlin = par.ival("gpe");
+    int lz = par.ival("ang_mom");
+    int xDim = par.ival("xDim");
+    int yDim = par.ival("yDim");
+    int gridSize = xDim * yDim;
+
+    // Because no two operations are created equally. 
+    // Multiplication is faster than divisions.
     double renorm_factor_2d=1.0/pow(gridSize,0.5);
     double renorm_factor_1d=1.0/pow(xDim,0.5);
 
@@ -336,16 +362,20 @@ int evolve( cufftDoubleComplex *gpuWfc,
     double omega_0=omega*omegaX;
 
     #if 0 
-    /** Determines the initial average density at the condensate central position and calculates a value for the healing length from this. Used thereafter as the lower limit for distances between vortices. **/
+    /** Determines the initial average density at the condensate central 
+    * position and calculates a value for the healing length from this. Used 
+    * thereafter as the lower limit for distances between vortices. **/
     int gridSum = 1<<6;
     double *densitySubset = (double*) malloc(sizeof(double)*gridSum);
     #pragma omp parallel for private(k)
     for (int j=0; j<gridSum; ++j){
         for (int k=0; k<gridSum; ++k){
-            densitySubset[j*gridSum + k] = Minions::psi2(wfc[ ( (yDim/2) - (gridSum/2) + j )*yDim  + ( (xDim/2)  - (gridSum/2) + k )]);
+            densitySubset[j*gridSum + k] = Minions::psi2(wfc[ ( (yDim/2) - 
+                (gridSum/2) + j )*yDim  + ( (xDim/2)  - (gridSum/2) + k )]);
         }
     }
-    xi = 1/sqrt(8*PI*a_s*Minions::sumAvg(densitySubset,gridSum)/(dx*dy));//defined central condensate density
+    // defined central condensate density
+    xi = 1/sqrt(8*PI*a_s*Minions::sumAvg(densitySubset,gridSum)/(dx*dy));
     printf("Avg healing length at centre=%E\n",xi);
     #endif
 
@@ -356,14 +386,22 @@ int evolve( cufftDoubleComplex *gpuWfc,
     // Double buffering and will attempt to thread free and calloc operations to
     // hide time penalty. Or may not bother.
     int num_vortices[2] = {0,0};
-    int* vortexLocation; //binary matrix of size xDim*yDim, 1 for vortex at specified index, 0 otherwise
+
+    // binary matrix of size xDim*yDim, 
+    // 1 for vortex at specified index, 0 otherwise
+    int* vortexLocation;
     int* olMaxLocation = (int*) calloc(xDim*yDim,sizeof(int));
 
     struct Vtx::Vortex central_vortex; //vortex closest to the central position
-    double vort_angle; //Angle of vortex lattice. Add to optical lattice for alignment.
-    struct Vtx::Vortex *vortCoords = NULL; //array of vortex coordinates from vortexLocation 1's
 
-    struct Vtx::Vortex *vortCoordsP = NULL; //Previous array of vortex coordinates from vortexLocation 1's
+    // Angle of vortex lattice. Add to optical lattice for alignment.
+    double vort_angle;
+
+    // array of vortex coordinates from vortexLocation 1's
+    struct Vtx::Vortex *vortCoords = NULL;
+
+    //Previous array of vortex coordinates from vortexLocation 1's
+    struct Vtx::Vortex *vortCoordsP = NULL;
 
     LatticeGraph::Lattice lattice; //Vortex lattice graph.
     double* adjMat;
@@ -376,16 +414,22 @@ int evolve( cufftDoubleComplex *gpuWfc,
     
     for(int i=0; i < numSteps; ++i){
         if ( ramp == 1 ){
-            omega_0=omegaX*((omega-0.39)*((double)i/(double)(numSteps)) + 0.39); //Adjusts omega for the appropriate trap frequency.
+            //Adjusts omega for the appropriate trap frequency.
+            omega_0=omegaX*((omega-0.39)*((double)i/(double)(numSteps)) + 0.39);
         }
-        if(i % printSteps == 0) { //Print-out at pre-determined rate. Vortex & wfc analysis performed here also.
+
+        // Print-out at pre-determined rate.
+        // Vortex & wfc analysis performed here also.
+        if(i % printSteps == 0) { 
             printf("Step: %d    Omega: %lf\n", i, omega_0 / omegaX);
-            cudaMemcpy(wfc, gpuWfc, sizeof(cufftDoubleComplex) * xDim * yDim, cudaMemcpyDeviceToHost);
+            cudaMemcpy(wfc, gpuWfc, sizeof(cufftDoubleComplex) * xDim * yDim, 
+                       cudaMemcpyDeviceToHost);
             end = clock();
             time_spent = (double) (end - begin) / CLOCKS_PER_SEC;
             printf("Time spent: %lf\n", time_spent);
             std::string fileName = "";
-            printf("ramp=%d        gstate=%d    rg=%d        \n", ramp, gstate, ramp | (gstate << 1));
+            printf("ramp=%d        gstate=%d    rg=%d        \n", 
+                   ramp, gstate, ramp | (gstate << 1));
             switch (ramp | (gstate << 1)) {
                 case 0: //Groundstate solver, constant Omega value.
                     fileName = "wfc_0_const";
@@ -396,73 +440,104 @@ int evolve( cufftDoubleComplex *gpuWfc,
                 case 2: //Real-time evolution, constant Omega value.
                     fileName = "wfc_ev";
                     vortexLocation = (int *) calloc(xDim * yDim, sizeof(int));
-                    num_vortices[0] = Tracker::findVortex(vortexLocation, wfc, 1e-4, xDim, x, i);
+                    num_vortices[0] = Tracker::findVortex(vortexLocation, 
+                                                         wfc, 1e-4, xDim, x, i);
 
-                    if (i == 0) { //If initial step, locate vortices, least-squares to find exact centre, calculate lattice angle, generate optical lattice.
+                    // If initial step, locate vortices, least-squares to find
+                    // exact centre, calculate lattice angle, generate optical 
+                    // lattice.
+                    if (i == 0) {
                         vortCoords = (struct Vtx::Vortex *) malloc(
-                                sizeof(struct Vtx::Vortex) * (2 * num_vortices[0]));
+                                sizeof(struct Vtx::Vortex) * 
+                                (2 * num_vortices[0]));
                         vortCoordsP = (struct Vtx::Vortex *) malloc(
-                                sizeof(struct Vtx::Vortex) * (2 * num_vortices[0]));
+                                sizeof(struct Vtx::Vortex) * 
+                                (2 * num_vortices[0]));
                         Tracker::vortPos(vortexLocation, vortCoords, xDim, wfc);
                         Tracker::lsFit(vortCoords, wfc, num_vortices[0], xDim);
-                        central_vortex = Tracker::vortCentre(vortCoords, num_vortices[0], xDim);
-                        vort_angle = Tracker::vortAngle(vortCoords, central_vortex, num_vortices[0]);
+                        central_vortex = Tracker::vortCentre(vortCoords, 
+                                                             num_vortices[0], 
+                                                             xDim);
+                        vort_angle = Tracker::vortAngle(vortCoords, 
+                                                        central_vortex, 
+                                                        num_vortices[0]);
                         par.store("Vort_angle", vort_angle);
-                        optLatSetup(central_vortex, V, vortCoords, num_vortices[0],
-                                    vort_angle + PI * angle_sweep / 180.0, laser_power * HBAR * sqrt(omegaX * omegaY),
+                        optLatSetup(central_vortex, V, vortCoords, 
+                                    num_vortices[0], 
+                                    vort_angle + PI * angle_sweep / 180.0,
+                                    laser_power * HBAR * sqrt(omegaX * omegaY),
                                     V_opt, x, y, par);
-                        sepAvg = Tracker::vortSepAvg(vortCoords, central_vortex, num_vortices[0]);
+                        sepAvg = Tracker::vortSepAvg(vortCoords, central_vortex,                                                     num_vortices[0]);
                         if (kick_it == 2) {
                             printf("Kicked it 1\n");
-                            cudaMemcpy(V_gpu, EV_opt, sizeof(cufftDoubleComplex) * xDim * yDim, cudaMemcpyHostToDevice);
+                            cudaMemcpy(V_gpu, EV_opt, 
+                                       sizeof(cufftDoubleComplex) * xDim * yDim,
+                                       cudaMemcpyHostToDevice);
                         }
-                        FileIO::writeOutDouble(buffer, "V_opt_1", V_opt, xDim * yDim, 0);
-                        FileIO::writeOut(buffer, "EV_opt_1", EV_opt, xDim * yDim, 0);
-                        par.store("Central_vort_x", (double) central_vortex.coords.x);
-                        par.store("Central_vort_y", (double) central_vortex.coords.y);
-                        par.store("Central_vort_winding", (double) central_vortex.wind);
+                        FileIO::writeOutDouble(buffer, "V_opt_1", V_opt, 
+                                               xDim * yDim, 0);
+                        FileIO::writeOut(buffer, "EV_opt_1", EV_opt, 
+                                         xDim * yDim, 0);
+                        par.store("Central_vort_x", 
+                                  (double) central_vortex.coords.x);
+                        par.store("Central_vort_y", 
+                                  (double) central_vortex.coords.y);
+                        par.store("Central_vort_winding", 
+                                  (double) central_vortex.wind);
                         par.store("Num_vort", (double) num_vortices[0]);
                         FileIO::writeOutParam(buffer, par, "Params.dat");
                     }
                     else if (num_vortices[0] > num_vortices[1]) {
-                        printf("Number of vortices increased from %d to %d\n", num_vortices[1], num_vortices[0]);
+                        printf("Number of vortices increased from %d to %d\n", 
+                               num_vortices[1], num_vortices[0]);
                         Tracker::vortPos(vortexLocation, vortCoords, xDim, wfc);
                         Tracker::lsFit(vortCoords, wfc, num_vortices[0], xDim);
                     }
                     else {
                         Tracker::vortPos(vortexLocation, vortCoords, xDim, wfc);
                         Tracker::lsFit(vortCoords, wfc, num_vortices[0], xDim);
-                        Tracker::vortArrange(vortCoords, vortCoordsP, num_vortices[0]);
+                        Tracker::vortArrange(vortCoords, vortCoordsP, 
+                                             num_vortices[0]);
                     }
 
                     if (graph == 1) {
 
                         for (int ii = 0; ii < num_vortices[0]; ++ii) {
-                            std::shared_ptr<LatticeGraph::Node> n(new LatticeGraph::Node(vortCoords[ii]));
+                            std::shared_ptr<LatticeGraph::Node> 
+                                n(new LatticeGraph::Node(vortCoords[ii]));
                             lattice.addVortex(std::move(n));
                         }
                         unsigned int *uids = (unsigned int *) malloc(
-                                sizeof(unsigned int) * lattice.getVortices().size());
-                        for (size_t a = 0; a < lattice.getVortices().size(); ++a) {
+                                sizeof(unsigned int) *
+                                lattice.getVortices().size());
+                        for (size_t a=0; a < lattice.getVortices().size(); ++a){
                             uids[a] = lattice.getVortexIdx(a)->getUid();
                         }
                         if(i==0) {
                             //Lambda for vortex annihilation/creation.
                             auto killIt=[&](int idx) {
-                                WFC::phaseWinding(Phi, 1, x, y, dx, dy, lattice.getVortexUid(idx)->getData().coordsD.x,
-                                              lattice.getVortexUid(idx)->getData().coordsD.y, xDim);
-                                cudaMemcpy(Phi_gpu, Phi, sizeof(double) * xDim * yDim, cudaMemcpyHostToDevice);
-                                cMultPhi <<<grid, threads>>> (gpuWfc, Phi_gpu, gpuWfc);
+                                WFC::phaseWinding(Phi, 1, x, y, dx, dy, 
+                                                  lattice.getVortexUid(idx)->
+                                                      getData().coordsD.x,
+                                                  lattice.getVortexUid(idx)->
+                                                      getData().coordsD.y,xDim);
+                                cudaMemcpy(Phi_gpu, Phi, 
+                                           sizeof(double) * xDim * yDim, 
+                                           cudaMemcpyHostToDevice);
+                                cMultPhi <<<grid, threads>>> (gpuWfc, Phi_gpu, 
+                                                              gpuWfc);
                             };
                             //killIt(44); //Kills vortex with UID 44
 
 
                         }
                         lattice.createEdges(1.5 * 2e-5 / dx);
-                        adjMat = (double *) calloc(lattice.getVortices().size() * lattice.getVortices().size(),
+                        adjMat = (double *)calloc(lattice.getVortices().size() *
+                                                  lattice.getVortices().size(),
                                                    sizeof(double));
                         lattice.genAdjMat(adjMat);
-                        FileIO::writeOutAdjMat(buffer, "graph", adjMat, uids, lattice.getVortices().size(), i);
+                        FileIO::writeOutAdjMat(buffer, "graph", adjMat, uids, 
+                                               lattice.getVortices().size(), i);
                         free(adjMat);
                         free(uids);
                         lattice.getVortices().clear();
@@ -470,14 +545,18 @@ int evolve( cufftDoubleComplex *gpuWfc,
                         //exit(0);
                     }
 
-                    FileIO::writeOutVortex(buffer, "vort_arr", vortCoords, num_vortices[0], i);
+                    FileIO::writeOutVortex(buffer, "vort_arr", vortCoords, 
+                                           num_vortices[0], i);
                     printf("Located %d vortices\n", num_vortices[0]);
                     printf("Sigma=%e\n", vortOLSigma);
                     free(vortexLocation);
                     num_vortices[1] = num_vortices[0];
-                    memcpy(vortCoordsP, vortCoords, sizeof(int2) * num_vortices[0]);
+                    memcpy(vortCoordsP, vortCoords, 
+                           sizeof(int2) * num_vortices[0]);
                     //exit(1);
                     break;
+
+
                 case 3:
                     fileName = "wfc_ev_ramp";
                     break;
@@ -487,28 +566,35 @@ int evolve( cufftDoubleComplex *gpuWfc,
             if (write_it) {
                 FileIO::writeOut(buffer, fileName, wfc, xDim * yDim, i);
             }
-            //printf("Energy[t@%d]=%E\n",i,energy_angmom(gpuPositionOp, gpuMomentumOp, dx, dy, gpuWfc,gstate));
-/*            cudaMemcpy(V_gpu, V, sizeof(double)*xDim*yDim, cudaMemcpyHostToDevice);
-            cudaMemcpy(K_gpu, K, sizeof(double)*xDim*yDim, cudaMemcpyHostToDevice);
-            cudaMemcpy(V_gpu, , sizeof(double)*xDim*yDim, cudaMemcpyHostToDevice);
-            cudaMemcpy(K_gpu, K, sizeof(double)*xDim*yDim, cudaMemcpyHostToDevice);
-*/        }
+            // printf("Energy[t@%d]=%E\n",i,energy_angmom(gpuPositionOp, 
+            //        gpuMomentumOp, dx, dy, gpuWfc,gstate));
+/*            cudaMemcpy(V_gpu, V, sizeof(double)*xDim*yDim, 
+                         cudaMemcpyHostToDevice);
+            cudaMemcpy(K_gpu, K, sizeof(double)*xDim*yDim, 
+                       cudaMemcpyHostToDevice);
+            cudaMemcpy(V_gpu, , sizeof(double)*xDim*yDim, 
+                       cudaMemcpyHostToDevice);
+            cudaMemcpy(K_gpu, K, sizeof(double)*xDim*yDim, 
+                       cudaMemcpyHostToDevice);
+*/        
+        }
     
-    /** ** ####################################################################################################### ** **/
-    /** ** ####################################################################################################### ** **/
-    /** **                             More F'n' Dragons!                       ** **/
-    /** ** ####################################################################################################### ** **/
-        if(i % ((int)t_kick+1) == 0 && num_kick<=6 && gstate==1 && kick_it == 1 ){
-            cudaMemcpy(V_gpu, EV_opt, sizeof(cufftDoubleComplex)*xDim*yDim, cudaMemcpyHostToDevice);
+    /** ** ############################################################## ** **/
+    /** **                       More F'n' Dragons!                       ** **/
+    /** ** ############################################################## ** **/
+        if(i%((int)t_kick+1) == 0 && num_kick<=6 && gstate==1 && kick_it == 1 ){
+            cudaMemcpy(V_gpu, EV_opt, sizeof(cufftDoubleComplex)*xDim*yDim, 
+                       cudaMemcpyHostToDevice);
             ++num_kick;
         }
-    /** ** ####################################################################################################### ** **/
+    /** ** ############################################################## ** **/
 
         /*
          * U_r(dt/2)*wfc
          */ 
         if(nonlin == 1){
-            cMultDensity<<<grid,threads>>>(gpuPositionOp,gpuWfc,gpuWfc,0.5*Dt,mass,omegaZ,gstate,N*interaction);
+            cMultDensity<<<grid,threads>>>(gpuPositionOp,gpuWfc,gpuWfc,0.5*Dt,
+                                           mass,omegaZ,gstate,N*interaction);
         }
         else {
             cMult<<<grid,threads>>>(gpuPositionOp,gpuWfc,gpuWfc);
@@ -527,13 +613,16 @@ int evolve( cufftDoubleComplex *gpuWfc,
          * U_r(dt/2)*wfc
          */    
         if(nonlin == 1){
-            cMultDensity<<<grid,threads>>>(gpuPositionOp,gpuWfc,gpuWfc,Dt*0.5,mass,omegaZ,gstate,N*interaction);
+            cMultDensity<<<grid,threads>>>(gpuPositionOp,gpuWfc,gpuWfc,Dt*0.5,
+                                           mass,omegaZ,gstate,N*interaction);
         }
         else {
             cMult<<<grid,threads>>>(gpuPositionOp,gpuWfc,gpuWfc);
         }
-        if( (i % (int)(t_kick+1) == 0 && num_kick<=6 && gstate==1) || (kick_it >= 1 && i==0) ){
-            cudaMemcpy(V_gpu, EV, sizeof(cufftDoubleComplex)*xDim*yDim, cudaMemcpyHostToDevice);
+        if( (i % (int)(t_kick+1) == 0 && num_kick<=6 && gstate==1) || 
+            (kick_it >= 1 && i==0) ){
+            cudaMemcpy(V_gpu, EV, sizeof(cufftDoubleComplex)*xDim*yDim, 
+                       cudaMemcpyHostToDevice);
             printf("Got here: Cuda memcpy EV into GPU\n");
         }
         /**************************************************************/
@@ -541,76 +630,120 @@ int evolve( cufftDoubleComplex *gpuWfc,
         if(lz == 1){
             switch(i%2 | (gstate<<1)){
                 case 0: //Groundstate solver, even step
-                result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_FORWARD); // wfc_xPy
-                scalarDiv<<<grid,threads>>>(gpuWfc,renorm_factor_1d,gpuWfc);
-                angularOp<<<grid,threads>>>(omega_0, Dt, gpuWfc, (double*) gpu1dxPy, gpuWfc);
-                result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_INVERSE);
-                scalarDiv<<<grid,threads>>>(gpuWfc,renorm_factor_1d,gpuWfc);
-            
-                result = cufftExecZ2Z(plan_2d,gpuWfc,gpuWfc,CUFFT_FORWARD); //2D forward
-                scalarDiv<<<grid,threads>>>(gpuWfc,renorm_factor_2d,gpuWfc);
-                result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_INVERSE); //1D inverse to wfc_yPx
-                scalarDiv<<<grid,threads>>>(gpuWfc,renorm_factor_1d,gpuWfc);
-                angularOp<<<grid,threads>>>(omega_0, Dt, gpuWfc, (double*) gpu1dyPx, gpuWfc);
-                result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_FORWARD); // wfc_PxPy
-                scalarDiv<<<grid,threads>>>(gpuWfc,renorm_factor_1d,gpuWfc);
-                result = cufftExecZ2Z(plan_2d,gpuWfc,gpuWfc,CUFFT_INVERSE); //2D Inverse
-                scalarDiv<<<grid,threads>>>(gpuWfc,renorm_factor_2d,gpuWfc);
-                break;
+
+                    // wfc_xPy
+                    result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_FORWARD); 
+                    scalarDiv<<<grid,threads>>>(gpuWfc,renorm_factor_1d,gpuWfc);
+                    angularOp<<<grid,threads>>>(omega_0, Dt, gpuWfc, 
+                                                (double*) gpu1dxPy, gpuWfc);
+                    result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_INVERSE);
+                    scalarDiv<<<grid,threads>>>(gpuWfc,renorm_factor_1d,gpuWfc);
+    
+                    // 2D forward
+                    result = cufftExecZ2Z(plan_2d,gpuWfc,gpuWfc,CUFFT_FORWARD); 
+                    scalarDiv<<<grid,threads>>>(gpuWfc,renorm_factor_2d,gpuWfc);
+    
+                    // 1D inverse to wfc_yPx
+                    result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_INVERSE); 
+                    scalarDiv<<<grid,threads>>>(gpuWfc,renorm_factor_1d,gpuWfc);
+                    angularOp<<<grid,threads>>>(omega_0, Dt, gpuWfc, 
+                                                (double*) gpu1dyPx, gpuWfc);
+    
+                    // wfc_PxPy
+                    result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_FORWARD); 
+                    scalarDiv<<<grid,threads>>>(gpuWfc,renorm_factor_1d,gpuWfc);
+    
+                    // 2D Inverse
+                    result = cufftExecZ2Z(plan_2d,gpuWfc,gpuWfc,CUFFT_INVERSE);
+                    scalarDiv<<<grid,threads>>>(gpuWfc,renorm_factor_2d,gpuWfc);
+                    break;
                 
                 case 1:    //Groundstate solver, odd step
-                result = cufftExecZ2Z(plan_2d,gpuWfc,gpuWfc,CUFFT_FORWARD); //2D forward
-                scalarDiv<<<grid,threads>>>(gpuWfc,renorm_factor_2d,gpuWfc);
-                result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_INVERSE); //1D inverse to wfc_yPx
-                scalarDiv<<<grid,threads>>>(gpuWfc,renorm_factor_1d,gpuWfc);
-                angularOp<<<grid,threads>>>(omega_0, Dt, gpuWfc, (double*) gpu1dyPx, gpuWfc);
-                result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_FORWARD); // wfc_PxPy
-                scalarDiv<<<grid,threads>>>(gpuWfc,renorm_factor_1d,gpuWfc);
-                result = cufftExecZ2Z(plan_2d,gpuWfc,gpuWfc,CUFFT_INVERSE); //2D Inverse
-                scalarDiv<<<grid,threads>>>(gpuWfc,renorm_factor_2d,gpuWfc);
-                
-                result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_FORWARD); // wfc_xPy
-                scalarDiv<<<grid,threads>>>(gpuWfc,renorm_factor_1d,gpuWfc);
-                angularOp<<<grid,threads>>>(omega_0, Dt, gpuWfc, (double*) gpu1dxPy, gpuWfc);
-                result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_INVERSE);
-                scalarDiv<<<grid,threads>>>(gpuWfc,renorm_factor_1d,gpuWfc);
-                break;
+
+                    // 2D forward
+                    result = cufftExecZ2Z(plan_2d,gpuWfc,gpuWfc,CUFFT_FORWARD); 
+                    scalarDiv<<<grid,threads>>>(gpuWfc,renorm_factor_2d,gpuWfc);
+
+                    // 1D inverse to wfc_yPx
+                    result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_INVERSE);
+                    scalarDiv<<<grid,threads>>>(gpuWfc,renorm_factor_1d,gpuWfc);
+                    angularOp<<<grid,threads>>>(omega_0, Dt, gpuWfc, 
+                                                (double*) gpu1dyPx, gpuWfc);
+
+                    // wfc_PxPy
+                    result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_FORWARD); 
+                    scalarDiv<<<grid,threads>>>(gpuWfc,renorm_factor_1d,gpuWfc);
+
+                    // 2D inverse
+                    result = cufftExecZ2Z(plan_2d,gpuWfc,gpuWfc,CUFFT_INVERSE); 
+                    scalarDiv<<<grid,threads>>>(gpuWfc,renorm_factor_2d,gpuWfc);
+                    
+                    // wfc_xPy
+                    result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_FORWARD); 
+                    scalarDiv<<<grid,threads>>>(gpuWfc,renorm_factor_1d,gpuWfc);
+                    angularOp<<<grid,threads>>>(omega_0, Dt, gpuWfc, 
+                                                (double*) gpu1dxPy, gpuWfc);
+                    result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_INVERSE);
+                    scalarDiv<<<grid,threads>>>(gpuWfc,renorm_factor_1d,gpuWfc);
+                    break;
                 
                 case 2: //Real time evolution, even step
-                result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_FORWARD); // wfc_xPy
-                scalarDiv<<<grid,threads>>>(gpuWfc,renorm_factor_1d,gpuWfc);
-                cMult<<<grid,threads>>>(gpuWfc, (cufftDoubleComplex*) gpu1dxPy, gpuWfc);
-                result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_INVERSE);
-                scalarDiv<<<grid,threads>>>(gpuWfc,renorm_factor_1d,gpuWfc);
-            
-                result = cufftExecZ2Z(plan_2d,gpuWfc,gpuWfc,CUFFT_FORWARD); //2D forward
-                scalarDiv<<<grid,threads>>>(gpuWfc,renorm_factor_2d,gpuWfc);
-                result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_INVERSE); //1D inverse to wfc_yPx
-                scalarDiv<<<grid,threads>>>(gpuWfc,renorm_factor_1d,gpuWfc);
-                cMult<<<grid,threads>>>(gpuWfc, (cufftDoubleComplex*) gpu1dyPx, gpuWfc);
-                result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_FORWARD); // wfc_PxPy
-                scalarDiv<<<grid,threads>>>(gpuWfc,renorm_factor_1d,gpuWfc);
-                result = cufftExecZ2Z(plan_2d,gpuWfc,gpuWfc,CUFFT_INVERSE); //2D Inverse
-                scalarDiv<<<grid,threads>>>(gpuWfc,renorm_factor_2d,gpuWfc);
-                break;
+
+                    // wfc_xPy
+                    result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_FORWARD); 
+                    scalarDiv<<<grid,threads>>>(gpuWfc,renorm_factor_1d,gpuWfc);
+                    cMult<<<grid,threads>>>(gpuWfc, 
+                        (cufftDoubleComplex*) gpu1dxPy, gpuWfc);
+                    result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_INVERSE);
+                    scalarDiv<<<grid,threads>>>(gpuWfc,renorm_factor_1d,gpuWfc);
+                
+                    //2D forward
+                    result = cufftExecZ2Z(plan_2d,gpuWfc,gpuWfc,CUFFT_FORWARD);
+                    scalarDiv<<<grid,threads>>>(gpuWfc,renorm_factor_2d,gpuWfc);
+
+                    // 1D inverses to wfc_yPx
+                    result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_INVERSE);
+                    scalarDiv<<<grid,threads>>>(gpuWfc,renorm_factor_1d,gpuWfc);
+                    cMult<<<grid,threads>>>(gpuWfc, 
+                        (cufftDoubleComplex*) gpu1dyPx, gpuWfc);
+
+                    // wfc_PxPy
+                    result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_FORWARD); 
+                    scalarDiv<<<grid,threads>>>(gpuWfc,renorm_factor_1d,gpuWfc);
+
+                    // 2D Inverse
+                    result = cufftExecZ2Z(plan_2d,gpuWfc,gpuWfc,CUFFT_INVERSE);
+                    scalarDiv<<<grid,threads>>>(gpuWfc,renorm_factor_2d,gpuWfc);
+                    break;
                 
                 case 3:    //Real time evolution, odd step
-                result = cufftExecZ2Z(plan_2d,gpuWfc,gpuWfc,CUFFT_FORWARD); //2D forward
-                scalarDiv<<<grid,threads>>>(gpuWfc,renorm_factor_2d,gpuWfc);
-                result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_INVERSE); //1D inverse to wfc_yPx
-                scalarDiv<<<grid,threads>>>(gpuWfc,renorm_factor_1d,gpuWfc);
-                cMult<<<grid,threads>>>(gpuWfc, (cufftDoubleComplex*) gpu1dyPx, gpuWfc);
-                result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_FORWARD); // wfc_PxPy
-                scalarDiv<<<grid,threads>>>(gpuWfc,renorm_factor_1d,gpuWfc);
-                result = cufftExecZ2Z(plan_2d,gpuWfc,gpuWfc,CUFFT_INVERSE); //2D Inverse
-                scalarDiv<<<grid,threads>>>(gpuWfc,renorm_factor_2d,gpuWfc);
-                
-                result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_FORWARD); // wfc_xPy
-                scalarDiv<<<grid,threads>>>(gpuWfc,renorm_factor_1d,gpuWfc);
-                cMult<<<grid,threads>>>(gpuWfc, (cufftDoubleComplex*) gpu1dxPy, gpuWfc);
-                result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_INVERSE);
-                scalarDiv<<<grid,threads>>>(gpuWfc,renorm_factor_1d,gpuWfc);
-                break;
+
+                    // 2D forward
+                    result = cufftExecZ2Z(plan_2d,gpuWfc,gpuWfc,CUFFT_FORWARD); 
+                    scalarDiv<<<grid,threads>>>(gpuWfc,renorm_factor_2d,gpuWfc);
+
+                    // 1D inverse to wfc_yPx
+                    result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_INVERSE); 
+                    scalarDiv<<<grid,threads>>>(gpuWfc,renorm_factor_1d,gpuWfc);
+                    cMult<<<grid,threads>>>(gpuWfc, 
+                        (cufftDoubleComplex*) gpu1dyPx, gpuWfc);
+
+                    // wfc_PxPy
+                    result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_FORWARD);
+                    scalarDiv<<<grid,threads>>>(gpuWfc,renorm_factor_1d,gpuWfc);
+
+                    // 2D inverse
+                    result = cufftExecZ2Z(plan_2d,gpuWfc,gpuWfc,CUFFT_INVERSE); 
+                    scalarDiv<<<grid,threads>>>(gpuWfc,renorm_factor_2d,gpuWfc);
+                    
+                    // wfc_xPy
+                    result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_FORWARD); 
+                    scalarDiv<<<grid,threads>>>(gpuWfc,renorm_factor_1d,gpuWfc);
+                    cMult<<<grid,threads>>>(gpuWfc, 
+                        (cufftDoubleComplex*) gpu1dxPy, gpuWfc);
+                    result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_INVERSE);
+                    scalarDiv<<<grid,threads>>>(gpuWfc,renorm_factor_1d,gpuWfc);
+                    break;
             
             }
         }
@@ -626,29 +759,34 @@ int evolve( cufftDoubleComplex *gpuWfc,
 /*
  * Used to perform parallel summation on WFC for normalisation.
  */
-void parSum(double2* gpuWfc, double2* gpuParSum, int xDim, int yDim, int threads){
+void parSum(double2* gpuWfc, double2* gpuParSum, int xDim, int yDim, 
+            int threads){
         int grid_tmp = xDim*yDim;
         int block = grid_tmp/threads;
         int thread_tmp = threads;
         int pass = 0;
         while((double)grid_tmp/threads > 1.0){
             if(grid_tmp == xDim*yDim){
-                multipass<<<block,threads,threads*sizeof(double2)>>>(&gpuWfc[0],&gpuParSum[0],pass); 
+                multipass<<<block,threads,threads*sizeof(double2)>>>(&gpuWfc[0],
+                    &gpuParSum[0],pass); 
             }
             else{
-                multipass<<<block,thread_tmp,thread_tmp*sizeof(double2)>>>(&gpuParSum[0],&gpuParSum[0],pass);
+                multipass<<<block,thread_tmp,thread_tmp*sizeof(double2)>>>(
+                    &gpuParSum[0],&gpuParSum[0],pass);
             }
             grid_tmp /= threads;
             block = (int) ceil((double)grid_tmp/threads);
             pass++;
         }
         thread_tmp = grid_tmp;
-        multipass<<<1,thread_tmp,thread_tmp*sizeof(double2)>>>(&gpuParSum[0],&gpuParSum[0], pass);
+        multipass<<<1,thread_tmp,thread_tmp*sizeof(double2)>>>(&gpuParSum[0],
+            &gpuParSum[0], pass);
         scalarDiv_wfcNorm<<<grid,threads>>>(gpuWfc, dx*dy, gpuParSum, gpuWfc);
 }
 
 /**
-** Matches the optical lattice to the vortex lattice. Moire super-lattice project.
+** Matches the optical lattice to the vortex lattice. 
+** Moire super-lattice project.
 **/
 void optLatSetup(struct Vtx::Vortex centre, double* V, 
                  struct Vtx::Vortex *vArray, int num_vortices, double theta_opt,
@@ -661,7 +799,9 @@ void optLatSetup(struct Vtx::Vortex centre, double* V,
     /*
     * Defining the necessary k vectors for the optical lattice
     */
-    double k_mag = ((2*PI/(sepMin*dx))/2)*(2/sqrt(3)); // Additional /2 as a result of lambda/2 period
+
+    // Additional /2 as a result of lambda/2 period
+    double k_mag = ((2*PI/(sepMin*dx))/2)*(2/sqrt(3));
     double2* k = (double2*) malloc(sizeof(double2)*3);
     par.store("kmag",(double)k_mag);
     k[0].x = k_mag * cos(0*PI/3 + theta_opt);
@@ -686,8 +826,11 @@ void optLatSetup(struct Vtx::Vortex centre, double* V,
     par.store("k[2].x",(double)k[2].x);
     par.store("k[2].y",(double)k[2].y);
 
-    double x_shift = dx*(9+(0.5*xDim-1) - centre.coords.x);//sin(theta_opt)*(sepMin);
-    double y_shift = dy*(0+(0.5*yDim-1) - centre.coords.y);//cos(theta_opt)*(sepMin);
+    // sin(theta_opt)*(sepMin);
+    double x_shift = dx*(9+(0.5*xDim-1) - centre.coords.x);
+
+    // cos(theta_opt)*(sepMin);
+    double y_shift = dy*(0+(0.5*yDim-1) - centre.coords.y);
 
     printf("Xs=%e\nYs=%e\n",x_shift,y_shift);
 
@@ -695,15 +838,24 @@ void optLatSetup(struct Vtx::Vortex centre, double* V,
     for ( j=0; j<yDim; ++j ){
         for ( i=0; i<xDim; ++i ){
             v_opt[j*xDim + i] = intensity*(
-                              pow( ( cos( k[0].x*( x[i] + x_shift ) + k[0].y*( y[j] + y_shift ) ) ), 2)
-                          + pow( ( cos( k[1].x*( x[i] + x_shift ) + k[1].y*( y[j] + y_shift ) ) ), 2)
-                          + pow( ( cos( k[2].x*( x[i] + x_shift ) + k[2].y*( y[j] + y_shift ) ) ), 2)
-            /*                  pow( abs( cos( k[0].x*( r_opt[i].x + x_shift ) + k[0].y*( r_opt[j].y + y_shift ) ) ), 2)
-                          + pow( abs( cos( k[1].x*( r_opt[i].x + x_shift ) + k[1].y*( r_opt[j].y + y_shift ) ) ), 2)
-                          + pow( abs( cos( k[2].x*( r_opt[i].x + x_shift ) + k[2].y*( r_opt[j].y + y_shift ) ) ), 2)
-            */            );
-            EV_opt[(j*xDim + i)].x=cos( -(V[(j*xDim + i)] + v_opt[j*xDim + i])*(dt/(2*HBAR)));
-            EV_opt[(j*xDim + i)].y=sin( -(V[(j*xDim + i)] + v_opt[j*xDim + i])*(dt/(2*HBAR)));
+                                pow( ( cos( k[0].x*( x[i] + x_shift ) + 
+                                       k[0].y*( y[j] + y_shift ) ) ), 2) +
+                                pow( ( cos( k[1].x*( x[i] + x_shift ) + 
+                                       k[1].y*( y[j] + y_shift ) ) ), 2) +
+                                pow( ( cos( k[2].x*( x[i] + x_shift ) + 
+                                       k[2].y*( y[j] + y_shift ) ) ), 2)
+/*                  
+                              + pow( abs( cos( k[0].x*( r_opt[i].x + x_shift ) +
+                                     k[0].y*( r_opt[j].y + y_shift ) ) ), 2)
+                              + pow( abs( cos( k[1].x*( r_opt[i].x + x_shift ) +
+                                     k[1].y*( r_opt[j].y + y_shift ) ) ), 2)
+                              + pow( abs( cos( k[2].x*( r_opt[i].x + x_shift ) +
+                                     k[2].y*( r_opt[j].y + y_shift ) ) ), 2)
+*/              );
+            EV_opt[(j*xDim + i)].x=cos( -(V[(j*xDim + i)] + 
+                                   v_opt[j*xDim + i])*(dt/(2*HBAR)));
+            EV_opt[(j*xDim + i)].y=sin( -(V[(j*xDim + i)] + 
+                                   v_opt[j*xDim + i])*(dt/(2*HBAR)));
         }
     }
 }
@@ -711,7 +863,9 @@ void optLatSetup(struct Vtx::Vortex centre, double* V,
 /**
 ** Calculates energy and angular momentum of current state. Implementation not fully finished.
 **/
-double energy_angmom(double *Energy, double* Energy_gpu, double2 *V_op, double2 *K_op, double dx, double dy, double2 *gpuWfc, int gState){
+double energy_angmom(double *Energy, double* Energy_gpu, double2 *V_op, 
+                     double2 *K_op, double dx, double dy, double2 *gpuWfc, 
+                     int gState){
     double renorm_factor_2d=1.0/pow(xDim*yDim,0.5);
     double result=0;
 
@@ -722,15 +876,18 @@ double energy_angmom(double *Energy, double* Energy_gpu, double2 *V_op, double2 
     
 /*    cudaMalloc((void**) &energy_gpu, sizeof(double2) * xDim*yDim);
 
-    energyCalc<<<grid,threads>>>( gpuWfc, V_op, 0.5*dt, energy_gpu, gState,1,i 0.5*sqrt(omegaZ/mass));
+    energyCalc<<<grid,threads>>>( gpuWfc, V_op, 0.5*dt, energy_gpu, gState,1,
+                                  i 0.5*sqrt(omegaZ/mass));
     result = cufftExecZ2Z( plan_2d, gpuWfc, gpuWfc, CUFFT_FORWARD );
     scalarDiv<<<grid,threads>>>( gpuWfc, renorm_factor_2d, gpuWfc ); //Normalise
 
-    energyCalc<<<grid,threads>>>( gpuWfc, K_op, dt, energy_gpu, gState,0, 0.5*sqrt(omegaZ/mass));
+    energyCalc<<<grid,threads>>>( gpuWfc, K_op, dt, energy_gpu, gState,0, 
+                                  0.5*sqrt(omegaZ/mass));
     result = cufftExecZ2Z( plan_2d, gpuWfc, gpuWfc, CUFFT_INVERSE );
     scalarDiv<<<grid,threads>>>( gpuWfc, renorm_factor_2d, gpuWfc ); //Normalise
     
-    err=cudaMemcpy(energy, energy_gpu, sizeof(cufftDoubleComplex)*xDim*yDim, cudaMemcpyDeviceToHost);
+    err=cudaMemcpy(energy, energy_gpu, sizeof(cufftDoubleComplex)*xDim*yDim, 
+                   cudaMemcpyDeviceToHost);
     
     for(int i=0; i<xDim*yDim; i++){
         result += energy[i].x;
@@ -748,25 +905,30 @@ double energy_angmom(double *Energy, double* Energy_gpu, double2 *V_op, double2 
 /*
  * Used to perform parallel summation using templates from c++
  */
-template<typename T> void parSum(T *gpuToSumArr, T *gpuParSum, int xDim, int yDim, int threads){
-                int grid_tmp = xDim*yDim;
-                int block = grid_tmp/threads;
-                int thread_tmp = threads;
-                int pass = 0;
-                while((double)grid_tmp/threads > 1.0){
-                        if(grid_tmp == xDim*yDim){
-                                multipass<<<block,threads,threads*sizeof(T)>>>(&gpuToSumArr[0],&gpuParSum[0],pass);
-                        }
-                        else{
-                                multipass<<<block,thread_tmp,thread_tmp*sizeof(T)>>>(&gpuParSum[0],&gpuParSum[0],pass);
-                        }
-                        grid_tmp /= threads;
-                        block = (int) ceil((double)grid_tmp/threads);
-                        pass++;
-                }
-                thread_tmp = grid_tmp;
-                multipass<<<1,thread_tmp,thread_tmp*sizeof(double2)>>>(&gpuParSum[0],&gpuParSum[0], pass);
-                scalarDiv_wfcNorm<<<grid,threads>>>(gpuToSumArr, dx*dy, gpuParSum, gpuToSumArr);
+template<typename T> void parSum(T *gpuToSumArr, T *gpuParSum, int xDim, 
+                                 int yDim, int threads){
+    int grid_tmp = xDim*yDim;
+    int block = grid_tmp/threads;
+    int thread_tmp = threads;
+    int pass = 0;
+    while((double)grid_tmp/threads > 1.0){
+        if(grid_tmp == xDim*yDim){
+            multipass<<<block,threads,threads*sizeof(T)>>>(
+                &gpuToSumArr[0],&gpuParSum[0],pass);
+             }
+        else{
+            multipass<<<block,thread_tmp,thread_tmp*sizeof(T)>>>(
+                &gpuParSum[0],&gpuParSum[0],pass);
+        }
+        grid_tmp /= threads;
+        block = (int) ceil((double)grid_tmp/threads);
+        pass++;
+    }
+    thread_tmp = grid_tmp;
+    multipass<<<1,thread_tmp,thread_tmp*sizeof(double2)>>>(&gpuParSum[0],
+                                                           &gpuParSum[0], pass);
+    scalarDiv_wfcNorm<<<grid,threads>>>(gpuToSumArr, dx*dy, gpuParSum, 
+                                        gpuToSumArr);
 }
 //##############################################################################
 //##############################################################################
@@ -774,9 +936,12 @@ template<typename T> void parSum(T *gpuToSumArr, T *gpuParSum, int xDim, int yDi
 void delta_define(double *x, double *y, double x0, double y0, double *delta){
     for (int i=0; i<xDim; ++i){
         for (int j=0; j<yDim; ++j){
-            delta[j*xDim + i] = 1e6*HBAR*exp( -( pow( x[i] - x0, 2)  +  pow( y[j] - y0, 2) )/(5*dx*dx) );
-            EV_opt[(j*xDim + i)].x=cos( -(V[(j*xDim + i)] + delta[j*xDim + i])*(dt/(2*HBAR)));
-            EV_opt[(j*xDim + i)].y=sin( -(V[(j*xDim + i)] + delta[j*xDim + i])*(dt/(2*HBAR)));
+            delta[j*xDim + i] = 1e6*HBAR*exp( -( pow( x[i] - x0, 2) + 
+                                pow( y[j] - y0, 2) )/(5*dx*dx) );
+            EV_opt[(j*xDim + i)].x = cos( -(V[(j*xDim + i)] + 
+                                     delta[j*xDim + i])*(dt/(2*HBAR)));
+            EV_opt[(j*xDim + i)].y = sin( -(V[(j*xDim + i)] + 
+                                     delta[j*xDim + i])*(dt/(2*HBAR)));
         }
     }
 }
@@ -800,7 +965,7 @@ int main(int argc, char **argv){
     //strcpy(paramS->data,"INIT");
     //paramS->next=NULL;
 
-    initialise(omegaX,omegaY,atoms,par);
+    initialise(par);
     timeTotal = 0.0;
     //************************************************************//
     /*
@@ -828,24 +993,31 @@ int main(int argc, char **argv){
     printf("l=%e\n",l);
 */
     if(gsteps > 0){
-        err=cudaMemcpy(K_gpu, GK, sizeof(cufftDoubleComplex)*xDim*yDim, cudaMemcpyHostToDevice);
+        err=cudaMemcpy(K_gpu, GK, sizeof(cufftDoubleComplex)*xDim*yDim, 
+                       cudaMemcpyHostToDevice);
         if(err!=cudaSuccess)
             exit(1);
-        err=cudaMemcpy(V_gpu, GV, sizeof(cufftDoubleComplex)*xDim*yDim, cudaMemcpyHostToDevice);
+        err=cudaMemcpy(V_gpu, GV, sizeof(cufftDoubleComplex)*xDim*yDim, 
+                       cudaMemcpyHostToDevice);
         if(err!=cudaSuccess)
             exit(1);
-        err=cudaMemcpy(xPy_gpu, xPy, sizeof(double)*xDim*yDim, cudaMemcpyHostToDevice);
+        err=cudaMemcpy(xPy_gpu, xPy, sizeof(double)*xDim*yDim, 
+                       cudaMemcpyHostToDevice);
         if(err!=cudaSuccess)
             exit(1);
-        err=cudaMemcpy(yPx_gpu, yPx, sizeof(double)*xDim*yDim, cudaMemcpyHostToDevice);
+        err=cudaMemcpy(yPx_gpu, yPx, sizeof(double)*xDim*yDim, 
+                       cudaMemcpyHostToDevice);
         if(err!=cudaSuccess)
             exit(1);
-        err=cudaMemcpy(wfc_gpu, wfc, sizeof(cufftDoubleComplex)*xDim*yDim, cudaMemcpyHostToDevice);
+        err=cudaMemcpy(wfc_gpu, wfc, sizeof(cufftDoubleComplex)*xDim*yDim, 
+                       cudaMemcpyHostToDevice);
         if(err!=cudaSuccess)
             exit(1);
         
-        evolve(wfc_gpu, K_gpu, V_gpu, yPx_gpu, xPy_gpu, par_sum, xDim*yDim, gsteps, 128, 0, ang_mom, gpe, print, atoms, 0, par);
-        cudaMemcpy(wfc, wfc_gpu, sizeof(cufftDoubleComplex)*xDim*yDim, cudaMemcpyDeviceToHost);
+        evolve(wfc_gpu, K_gpu, V_gpu, yPx_gpu, xPy_gpu, par_sum, 
+               par.ival("gsteps"), 128, 0, 0, par);
+        cudaMemcpy(wfc, wfc_gpu, sizeof(cufftDoubleComplex)*xDim*yDim, 
+                   cudaMemcpyDeviceToHost);
     }
 
     free(GV); free(GK); free(xPy); free(yPx);
@@ -856,36 +1028,46 @@ int main(int argc, char **argv){
     */
     //************************************************************//
     if(esteps > 0){
-        err=cudaMemcpy(xPy_gpu, ExPy, sizeof(cufftDoubleComplex)*xDim*yDim, cudaMemcpyHostToDevice);
+        err=cudaMemcpy(xPy_gpu, ExPy, sizeof(cufftDoubleComplex)*xDim*yDim, 
+                       cudaMemcpyHostToDevice);
         if(err!=cudaSuccess)
             exit(1);
-        err=cudaMemcpy(yPx_gpu, EyPx, sizeof(cufftDoubleComplex)*xDim*yDim, cudaMemcpyHostToDevice);
+        err=cudaMemcpy(yPx_gpu, EyPx, sizeof(cufftDoubleComplex)*xDim*yDim, 
+                       cudaMemcpyHostToDevice);
         if(err!=cudaSuccess)
             exit(1);
-        err=cudaMemcpy(xPy_gpu, ExPy, sizeof(cufftDoubleComplex)*xDim*yDim, cudaMemcpyHostToDevice);
+        err=cudaMemcpy(xPy_gpu, ExPy, sizeof(cufftDoubleComplex)*xDim*yDim, 
+                       cudaMemcpyHostToDevice);
         if(err!=cudaSuccess)
             exit(1);
-        err=cudaMemcpy(yPx_gpu, EyPx, sizeof(cufftDoubleComplex)*xDim*yDim, cudaMemcpyHostToDevice);
+        err=cudaMemcpy(yPx_gpu, EyPx, sizeof(cufftDoubleComplex)*xDim*yDim, 
+                       cudaMemcpyHostToDevice);
         if(err!=cudaSuccess)
             exit(1);
-        err=cudaMemcpy(K_gpu, EK, sizeof(cufftDoubleComplex)*xDim*yDim, cudaMemcpyHostToDevice);
+        err=cudaMemcpy(K_gpu, EK, sizeof(cufftDoubleComplex)*xDim*yDim, 
+                       cudaMemcpyHostToDevice);
         if(err!=cudaSuccess)
             exit(1);
-        err=cudaMemcpy(V_gpu, EV, sizeof(cufftDoubleComplex)*xDim*yDim, cudaMemcpyHostToDevice);
+        err=cudaMemcpy(V_gpu, EV, sizeof(cufftDoubleComplex)*xDim*yDim, 
+                       cudaMemcpyHostToDevice);
         if(err!=cudaSuccess)
             exit(1);
-        err=cudaMemcpy(wfc_gpu, wfc, sizeof(cufftDoubleComplex)*xDim*yDim, cudaMemcpyHostToDevice);
+        err=cudaMemcpy(wfc_gpu, wfc, sizeof(cufftDoubleComplex)*xDim*yDim, 
+                       cudaMemcpyHostToDevice);
         if(err!=cudaSuccess)
             exit(1);
             
-        //delta_define(x, y, (523.6667 - 512 + x0_shift)*dx, (512.6667 - 512  + y0_shift)*dy, V_opt);
+        // delta_define(x, y, (523.6667 - 512 + x0_shift)*dx, 
+        //              (512.6667 - 512 + y0_shift)*dy, V_opt);
         FileIO::writeOutDouble(buffer,"V_opt",V_opt,xDim*yDim,0);
-        evolve(wfc_gpu, K_gpu, V_gpu, yPx_gpu, xPy_gpu, par_sum, xDim*yDim, esteps, 128, 1, ang_mom, gpe, print, atoms, 0, par);
+        evolve(wfc_gpu, K_gpu, V_gpu, yPx_gpu, xPy_gpu, par_sum, 
+               par.ival("esteps"), 128, 1, 0, par);
     
     }
     free(EV); free(EK); free(ExPy); free(EyPx);
     free(x);free(y);
-    cudaFree(wfc_gpu); cudaFree(K_gpu); cudaFree(V_gpu); cudaFree(yPx_gpu); cudaFree(xPy_gpu); cudaFree(par_sum);
+    cudaFree(wfc_gpu); cudaFree(K_gpu); cudaFree(V_gpu); cudaFree(yPx_gpu); 
+    cudaFree(xPy_gpu); cudaFree(par_sum);
 
     time(&fin);
     //appendData(&params,ctime(&fin),0.0);

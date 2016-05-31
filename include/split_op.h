@@ -116,6 +116,7 @@ int threads;
 
 /* */
 double l;
+
 /* Function declarations */
 /*
  * arg1 = Function result code from CUDA CUFFT calls.
@@ -141,7 +142,8 @@ int isError(int result, char* c); //Checks to see if an error has occurred.
 * @param	threads Number of CUDA threads for operation
 * @return	0 for success. See CUDA failure codes in cuda.h for other values.
 */
-void parSum(double2* gpuWfc, double2* gpuParSum, int xDim, int yDim, int threads);
+void parSum(double2* gpuWfc, double2* gpuParSum, int xDim, int yDim, 
+            int threads);
 
 /**
 * @brief	Creates the optical lattice to match the vortex lattice constant
@@ -156,7 +158,10 @@ void parSum(double2* gpuWfc, double2* gpuParSum, int xDim, int yDim, int threads
 * @param	x X grid array
 * @param	y Y grid array
 */
-void optLatSetup(struct Vtx::Vortex centre, double* V, struct Vtx::Vortex *vArray, int num_vortices, double theta_opt, double intensity, double* v_opt, double *x, double *y, Grid &par);
+void optLatSetup(struct Vtx::Vortex centre, double* V, 
+                 struct Vtx::Vortex *vArray, int num_vortices, double theta_opt,
+                 double intensity, double* v_opt, double *x, double *y, 
+                 Grid &par);
 
 /**
 * @brief	Calculates the energy of the condensate. Not implemented.
@@ -171,6 +176,8 @@ void optLatSetup(struct Vtx::Vortex centre, double* V, struct Vtx::Vortex *vArra
 * @param	gState Indicate if imaginary or real time evolution
 * @return	$\langle \Psi | H | \Psi \rangle$
 */
-double energy_angmom(double* Energy, double* Energy_gpu, double2 *V_op, double2 *K_op, double dx, double dy, double2 *gpuWfc, int gState);
+double energy_angmom(double* Energy, double* Energy_gpu, double2 *V_op, 
+                     double2 *K_op, double dx, double dy, double2 *gpuWfc, 
+                     int gState);
 
 #endif
