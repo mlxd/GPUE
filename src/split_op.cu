@@ -44,6 +44,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../include/edge.h"
 #include "../include/manip.h"
 #include "../include/vort.h"
+//#include "../include/evolution.h"
 #include <string>
 #include <iostream>
 
@@ -82,9 +83,20 @@ int initialise(Grid &par){
 
     double omegaX = par.dval("omegaX");
     double omegaY = par.dval("omegaY");
-    int N = par.ival("atoms");
     unsigned int xD=1,yD=1,zD=1;
     threads = 128;
+
+    // Re-establishing variables from parsed Grid class
+    double omega = par.dval("omega");
+    double angle_sweep = par.dval("angle_sweep");
+    int kick_it = par.ival("kick_it");
+    int graph = par.ival("graph");
+    int N = par.ival("atoms");
+    int printSteps = par.ival("print");
+    int nonlin = par.ival("gpe");
+    int lz = par.ival("ang_mom");
+    int xDim = par.ival("xDim");
+    int yDim = par.ival("yDim");
 
     // number of blocks in simulation
     unsigned int b = xDim*yDim/threads;
@@ -330,8 +342,8 @@ int initialise(Grid &par){
 
 int evolve( cufftDoubleComplex *gpuWfc, cufftDoubleComplex *gpuMomentumOp,
             cufftDoubleComplex *gpuPositionOp, void *gpu1dyPx, void *gpu1dxPy,
-            cufftDoubleComplex *gpuParSum, int numSteps,
-            int threads, unsigned int gstate, unsigned int ramp, Grid &par){
+            cufftDoubleComplex *gpuParSum, int numSteps, int threads,
+            unsigned int gstate, unsigned int ramp, Grid &par, char *buffer){
 
     // Re-establishing variables from parsed Grid class
     int N = par.ival("atoms");
@@ -467,7 +479,8 @@ int evolve( cufftDoubleComplex *gpuWfc, cufftDoubleComplex *gpuMomentumOp,
                                     vort_angle + PI * angle_sweep / 180.0,
                                     laser_power * HBAR * sqrt(omegaX * omegaY),
                                     V_opt, x, y, par);
-                        sepAvg = Tracker::vortSepAvg(vortCoords, central_vortex,                                                     num_vortices[0]);
+                        sepAvg = Tracker::vortSepAvg(vortCoords, central_vortex,
+                                                     num_vortices[0]);
                         if (kick_it == 2) {
                             printf("Kicked it 1\n");
                             cudaMemcpy(V_gpu, EV_opt, 
@@ -861,7 +874,8 @@ void optLatSetup(struct Vtx::Vortex centre, double* V,
 }
 
 /**
-** Calculates energy and angular momentum of current state. Implementation not fully finished.
+** Calculates energy and angular momentum of current state. 
+** Implementation not fully finished.
 **/
 double energy_angmom(double *Energy, double* Energy_gpu, double2 *V_op, 
                      double2 *K_op, double dx, double dy, double2 *gpuWfc, 
@@ -1015,7 +1029,7 @@ int main(int argc, char **argv){
             exit(1);
         
         evolve(wfc_gpu, K_gpu, V_gpu, yPx_gpu, xPy_gpu, par_sum, 
-               par.ival("gsteps"), 128, 0, 0, par);
+               par.ival("gsteps"), 128, 0, 0, par, buffer);
         cudaMemcpy(wfc, wfc_gpu, sizeof(cufftDoubleComplex)*xDim*yDim, 
                    cudaMemcpyDeviceToHost);
     }
@@ -1061,7 +1075,7 @@ int main(int argc, char **argv){
         //              (512.6667 - 512 + y0_shift)*dy, V_opt);
         FileIO::writeOutDouble(buffer,"V_opt",V_opt,xDim*yDim,0);
         evolve(wfc_gpu, K_gpu, V_gpu, yPx_gpu, xPy_gpu, par_sum, 
-               par.ival("esteps"), 128, 1, 0, par);
+               par.ival("esteps"), 128, 1, 0, par, buffer);
     
     }
     free(EV); free(EK); free(ExPy); free(EyPx);
