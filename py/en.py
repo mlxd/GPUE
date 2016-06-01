@@ -69,8 +69,9 @@ V = np.reshape(np.array(open('V_0').read().splitlines(),dtype='f8'),(xDim,yDim))
 X = np.array(open('x_0').read().splitlines(),dtype='f8')
 Y = np.array(open('y_0').read().splitlines(),dtype='f8')
 XM,YM = np.meshgrid(X,Y)
-R = np.sqrt(XM**2+YM**2)
-Q = np.sqrt(XM**2-YM**2)
+R = (XM**2+YM**2)
+macheps = 7./3. - 4./3. - 1. #http://rstudio-pubs-static.s3.amazonaws.com/13303_daf1916bee714161ac78d3318de808a9.html
+Q = (XM**2-YM**2)
 
 def expectValueR(dataName,i,Val):
 	real=open(dataName + '_' + str(i)).read().splitlines()
@@ -102,5 +103,5 @@ def energy_total(dataName,i):
 for ii in range(0,evMaxVal,incr):
 #	print "E(t={} s)={}".format(ii*dt,energy_total('wfc_ev',ii))	
 	#print "R(t={} s)={}".format(ii*dt,rad('wfc_ev',ii))	
-	print "{},{}".format(ii*dt,expectValueR('wfc_ev',ii,Q))	
+	print "{},{}".format(ii*dt,expectValueR('wfc_ev',ii,R))	
 
