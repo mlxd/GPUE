@@ -73,49 +73,49 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 extern struct Params *paramS;
 
 /* Error variable & return variables */
-cudaError_t err;
-cufftResult result;
+extern cudaError_t err;
+extern cufftResult result;
 
 /* Define operating modes */
-int ang_mom = 0;
-int gpe = 0;
+extern int ang_mom;
+extern int gpe;
 
 /* Allocating global variables */
-double mass, a_s, omegaX, omegaY, omegaZ;
-double xi; //Healing length minimum value defined at central density.
+extern double mass, a_s, omegaX, omegaY, omegaZ;
+extern double xi; //Healing length minimum value defined at central density.
 
 /* Evolution timestep */
-double dt, gdt;
+extern double dt, gdt;
 
 /* Grid dimensions vector. xyz are dim length, w is total grid size (x*y*z) */
-int xDim, yDim, read_wfc, print, write_it;
-long  gsteps, esteps, atoms;
-double *x,*y,*xp,*yp,*px,*py,dx,dy,xMax,yMax;
+extern int xDim, yDim, read_wfc, print, write_it;
+extern long gsteps, esteps, atoms;
+extern double *x,*y,*xp,*yp,*px,*py,dx,dy,xMax,yMax;
 
 /* CuFFT plans for forward and inverse. May only need to use 1 for both */
-cufftHandle plan_2d, plan_1d;
+extern cufftHandle plan_2d, plan_1d;
 
 /* Arrays for storing wavefunction, momentum and position op, etc */
-cufftDoubleComplex *wfc, *wfc0, *wfc_backup, *GK, *GV_half, *GV, *EK, *EV, *EV_opt, *GxPy, *GyPx, *ExPy, *EyPx, *EappliedField;
-double *Energy, *Energy_gpu, *r, *Phi, *V, *V_opt, *K, *xPy, *yPx, *xPy_gpu, *yPx_gpu;
+extern cufftDoubleComplex *wfc, *wfc0, *wfc_backup, *GK, *GV_half, *GV, *EK, *EV, *EV_opt, *GxPy, *GyPx, *ExPy, *EyPx, *EappliedField;
+extern double *Energy, *Energy_gpu, *r, *Phi, *V, *V_opt, *K, *xPy, *yPx, *xPy_gpu, *yPx_gpu;
 
 /* CUDA data buffers for FFT */
-cufftDoubleComplex *wfc_gpu, *K_gpu, *V_gpu, *par_sum;
-double *Phi_gpu;
+extern cufftDoubleComplex *wfc_gpu, *K_gpu, *V_gpu, *par_sum;
+extern double *Phi_gpu;
 
 /* CUDA streams */
-cudaStream_t streamA, streamB, streamC, streamD;
+extern cudaStream_t streamA, streamB, streamC, streamD;
 
 /* Scaling the interaction */
-double interaction;
-double laser_power;
+extern double interaction;
+extern double laser_power;
 
 /* Define global dim3 and threads for grid and thread dim calculation */
-dim3 grid;
-int threads;
+extern dim3 grid;
+extern int threads;
 
 /* */
-double l;
+extern double l;
 
 /* Function declarations */
 /*

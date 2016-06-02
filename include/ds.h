@@ -70,7 +70,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // NOTE: I do not like this integer double split for retrieval. Find solution.
 class Grid{
     // Here we keep our variable map (unordered for performance)
-    // and also grid information
+    // and also grid information. Note that dx dy, and dz are in param_double
     private:
         std::unordered_map<std::string, double> param_double;
         std::unordered_map<std::string, int> param_int;

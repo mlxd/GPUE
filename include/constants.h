@@ -44,7 +44,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *  @section DESCRIPTION
  *  This file maintains macros for physical constants.
  */
- //##############################################################################
+ //#############################################################################
 
 #ifndef CONSTANTS_H
 #define CONSTANTS_H

@@ -1,4 +1,4 @@
-CUDA_HOME = /opt/cuda
+CUDA_HOME = /apps/free/cuda/7.5.18/
 GPU_ARCH	= sm_30
 OS:=	$(shell uname)
 ifeq ($(OS),Darwin)
@@ -20,12 +20,14 @@ INCFLAGS	= -I$(CUDA_HEADER)
 LDFLAGS		= -L$(CUDA_LIB) 
 EXECS		= gpue # BINARY NAME HERE
 
-gpue: fileIO.o kernels.o split_op.o tracker.o minions.o ds.o edge.o node.o lattice.o manip.o vort.o parser.o
-#node.o edge.o lattice.o
+gpue: fileIO.o kernels.o split_op.o tracker.o minions.o ds.o edge.o node.o lattice.o manip.o vort.o parser.o evolution.o init.o
 	$(CC) *.o $(INCFLAGS) $(CFLAGS) $(LDFLAGS) $(CHOSTFLAGS) -lm -lcufft -lcudart -o gpue
 	#rm -rf ./*.o
 
-split_op.o: ./src/split_op.cu ./include/split_op.h ./include/kernels.h ./include/constants.h ./include/fileIO.h ./include/minions.h ./include/parser.h Makefile
+init.o: ./src/init.cu ./include/split_op.h ./include/kernels.h ./include/constants.h ./include/fileIO.h ./include/minions.h ./include/parser.h ./include/evolution.h Makefile
+	$(CC) -c  ./src/init.cu -o $@ $(INCFLAGS) $(CFLAGS) $(LDFLAGS) -Xcompiler "-fopenmp" -arch=$(GPU_ARCH)
+
+split_op.o: ./src/split_op.cu ./include/split_op.h ./include/kernels.h ./include/constants.h ./include/fileIO.h ./include/minions.h
 	$(CC) -c  ./src/split_op.cu -o $@ $(INCFLAGS) $(CFLAGS) $(LDFLAGS) -Xcompiler "-fopenmp" -arch=$(GPU_ARCH)
 
 kernels.o: ./include/split_op.h Makefile ./include/constants.h ./include/kernels.h ./src/kernels.cu
@@ -42,6 +44,9 @@ minions.o: ./src/minions.cc ./include/minions.h
 
 parser.o: ./src/parser.cc ./include/parser.h
 	 $(CC) -c ./src/parser.cc -o $@ $(INCFLAGS) $(CFLAGS) $(LDFLAGS) $(CHOSTFLAGS)
+
+evolution.o: ./src/evolution.cu ./include/evolution.h ./include/split_op.h ./include/constants.h ./include/kernels.h ./include/fileIO.h 
+	$(CC) -c ./src/evolution.cu -o $@ $(INCFLAGS) $(CFLAGS) $(LDFLAGS) -Xcompiler "-fopenmp" -arch=$(GPU_ARCH)
 
 ds.o: ./src/ds.cc ./include/ds.h
 	$(CC) -c ./src/ds.cc -o $@ $(INCFLAGS) $(CFLAGS) $(LDFLAGS) $(CHOSTFLAGS)

@@ -77,7 +77,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * @param	c Descriptor of CUDA operation
  * @return	0 for success. See CUDA failure codes in cuda.h for other values.
  */
-int evolve( cufftDoubleComplex *gpuWfc, cufftDoubleComplex *gpuMomentumOp,
+void evolve( cufftDoubleComplex *gpuWfc, cufftDoubleComplex *gpuMomentumOp,
             cufftDoubleComplex *gpuPositionOp, void *gpu1dyPx, void *gpu1dxPy,
             cufftDoubleComplex *gpuParSum, int numSteps, int threads,
             unsigned int gstate, unsigned int ramp, Grid &par, char *buffer);

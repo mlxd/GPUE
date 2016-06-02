@@ -32,15 +32,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include "../include/evolution.h"
-#include "../include/lattice.h"
-#include "../include/fileIO.h"
-#include "../include/manip.h"
+#include "../include/split_op.h"
+#include "../include/kernels.h"
 #include "../include/constants.h"
-#include "../include/minions.h"
+#include "../include/fileIO.h"
+#include "../include/lattice.h"
+#include "../include/manip.h"
 #include <string>
-#include <iostream>
 
-int evolve( cufftDoubleComplex *gpuWfc, cufftDoubleComplex *gpuMomentumOp,
+void evolve( cufftDoubleComplex *gpuWfc, cufftDoubleComplex *gpuMomentumOp,
             cufftDoubleComplex *gpuPositionOp, void *gpu1dyPx, void *gpu1dxPy,
             cufftDoubleComplex *gpuParSum, int numSteps, int threads,
             unsigned int gstate, unsigned int ramp, Grid &par, char *buffer){
@@ -291,7 +291,8 @@ int evolve( cufftDoubleComplex *gpuWfc, cufftDoubleComplex *gpuMomentumOp,
             }
             // printf("Energy[t@%d]=%E\n",i,energy_angmom(gpuPositionOp, 
             //        gpuMomentumOp, dx, dy, gpuWfc,gstate));
-/*            cudaMemcpy(V_gpu, V, sizeof(double)*xDim*yDim, 
+/*
+            cudaMemcpy(V_gpu, V, sizeof(double)*xDim*yDim, 
                          cudaMemcpyHostToDevice);
             cudaMemcpy(K_gpu, K, sizeof(double)*xDim*yDim, 
                        cudaMemcpyHostToDevice);
@@ -476,6 +477,5 @@ int evolve( cufftDoubleComplex *gpuWfc, cufftDoubleComplex *gpuMomentumOp,
             parSum(gpuWfc, gpuParSum, xDim, yDim, threads);
         }
     }
-    return 0;
 }
 
