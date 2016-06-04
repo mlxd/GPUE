@@ -1,3 +1,5 @@
+[![Coverage Status](https://coveralls.io/repos/github/mlxd/GPUE/badge.svg?branch=master)](https://coveralls.io/github/mlxd/GPUE?branch=master)
+[![Code Climate](https://codeclimate.com/github/mlxd/GPUE/badges/gpa.svg)](https://codeclimate.com/github/mlxd/GPUE)
 ###############################################################################
 ###############################################################################
  
