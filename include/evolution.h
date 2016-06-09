@@ -79,7 +79,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 void evolve( cufftDoubleComplex *gpuWfc, cufftDoubleComplex *gpuMomentumOp,
             cufftDoubleComplex *gpuPositionOp, void *gpu1dyPx, void *gpu1dxPy,
-            cufftDoubleComplex *gpuParSum, int numSteps, int threads,
+            cufftDoubleComplex *gpuParSum, int numSteps, Cuda cupar,
             unsigned int gstate, unsigned int ramp, Grid &par, char *buffer);
 
 #endif

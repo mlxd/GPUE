@@ -57,6 +57,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <unordered_map>
 #include <vector>
 #include <fstream>
+#include <cuda.h>
+#include <cuda_runtime.h>
+#include <cufft.h>
+#include <typeinfo>
+#include <iostream>
 
 /*----------------------------------------------------------------------------//
 * CLASSES
@@ -68,20 +73,39 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 // NOTE: This is necessary if we ever want to do dynamic grid manipulation.
 // NOTE: I do not like this integer double split for retrieval. Find solution.
+// NOTE: Consider changing unordered maps to switches for performance
+// NOTE: Add FileIO to public functions
 class Grid{
     // Here we keep our variable map (unordered for performance)
     // and also grid information. Note that dx dy, and dz are in param_double
     private:
-        std::unordered_map<std::string, double> param_double;
         std::unordered_map<std::string, int> param_int;
+        std::unordered_map<std::string, double> param_double;
+        std::unordered_map<std::string, double*> param_dstar;
+
+        // List of all strings for parsing into the appropriate param map
+        // 1 -> int, 2 -> double, 3 -> double*
+        std::unordered_map<std::string, int> id_list;
 
     // Here we keep the functions to store variables and access grid data
     public:
+/*
+        // Template for retrieving data
+        template <typename arbitrary>
+        arbitrary val(std::string id);
+*/
+
+        // placing grid parameters in public for now
+        double *x, *y, *z, *xp, *yp, *zp;
+
         // Function to store integer into param_int
         void store(std::string id, int iparam);
 
         // Function to store double into param_double
         void store(std::string id, double dparam);
+
+        // Function to store double* into param_dstar
+        void store(std::string id, double *dsparam);
 
         // Function to retrieve integer value from param_int
         int ival(std::string id);
@@ -93,6 +117,49 @@ class Grid{
         void write(std::string filename);
 };
 typedef class Grid Grid;
+
+/**
+ * @brief        Class to hold CUDA-specific variables and features
+ * @ingroup      data
+ */
+class Cuda{
+    private:
+        cudaError_t err;
+        cufftResult result;
+        cufftHandle plan_1d, plan_2d;
+        cudaStream_t streamA, streamB, streamC, streamD;
+        dim3 grid;
+        int threads;
+    public:
+        // Failed attempt at template functions...
+        /*
+        // Template for retrieving data
+        template <typename arbitrary = int> 
+        arbitrary val(std::string id);
+
+        // Function to store data
+        template <typename arbitrary = int> 
+        void store(std::string id, arbitrary data);
+        */
+
+        // Functions to store data
+        void store(std::string id, cudaError_t errin);
+        void store(std::string id, cufftHandle planin);
+        void store(std::string id, cudaStream_t streamin);
+        void store(std::string id, dim3 gridin);
+        //void store(std::string id, int threadsin);
+
+        // Functions to retrieve data
+        cudaError_t cudaError_tval(std::string id);
+        cufftResult cufftResultval(std::string id);
+        cufftHandle cufftHandleval(std::string id);
+        cudaStream_t cudaStream_tval(std::string id);
+        dim3 dim3val(std::string id);
+        int ival(std::string id);
+
+
+};
+//typedef class Cuda Cuda;
 
 // NOTE: We may need to store the operators as a 3 1d vectors 
 //       instead of 1 3d one.

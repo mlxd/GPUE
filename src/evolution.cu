@@ -42,7 +42,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 void evolve( cufftDoubleComplex *gpuWfc, cufftDoubleComplex *gpuMomentumOp,
             cufftDoubleComplex *gpuPositionOp, void *gpu1dyPx, void *gpu1dxPy,
-            cufftDoubleComplex *gpuParSum, int numSteps, int threads,
+            cufftDoubleComplex *gpuParSum, int numSteps, Cuda cupar,
             unsigned int gstate, unsigned int ramp, Grid &par, char *buffer){
 
     // Re-establishing variables from parsed Grid class
@@ -53,6 +53,11 @@ void evolve( cufftDoubleComplex *gpuWfc, cufftDoubleComplex *gpuMomentumOp,
     double omegaX = par.dval("omegaX");
     double omegaY = par.dval("omegaY");
     double omegaZ = par.dval("omegaZ");
+    double mass = par.dval("mass");
+    double dx = par.dval("dx");
+    double dy = par.dval("dy");
+    double interaction = par.dval("interaction");
+    double laser_power = par.dval("laser_power");
     int kick_it = par.ival("kick_it");
     int write_it = par.ival("write_it");
     int graph = par.ival("graph");
@@ -63,6 +68,19 @@ void evolve( cufftDoubleComplex *gpuWfc, cufftDoubleComplex *gpuMomentumOp,
     int xDim = par.ival("xDim");
     int yDim = par.ival("yDim");
     int gridSize = xDim * yDim;
+
+    // getting data from Cuda class
+    cufftResult result = cupar.cufftResultval("result");
+    cufftHandle plan_1d = cupar.cufftHandleval("plan_1d");
+    cufftHandle plan_2d = cupar.cufftHandleval("plan_2d");
+    int threads = par.ival("threads");
+    dim3 grid = cupar.dim3val("grid");
+/*
+    cufftResult result = cupar.result;
+    cufftHandle plan_1d = cupar.plan_1d;
+    cufftHandle plan_2d = cupar.plan_2d;
+    int threads = cupar.threads;
+*/
 
     // Because no two operations are created equally. 
     // Multiplication is faster than divisions.
@@ -162,8 +180,8 @@ void evolve( cufftDoubleComplex *gpuWfc, cufftDoubleComplex *gpuMomentumOp,
                 case 2: //Real-time evolution, constant Omega value.
                     fileName = "wfc_ev";
                     vortexLocation = (int *) calloc(xDim * yDim, sizeof(int));
-                    num_vortices[0] = Tracker::findVortex(vortexLocation, 
-                                                         wfc, 1e-4, xDim, x, i);
+                    num_vortices[0] = Tracker::findVortex(vortexLocation, wfc,
+                                                         1e-4, xDim, par.x, i);
 
                     // If initial step, locate vortices, least-squares to find
                     // exact centre, calculate lattice angle, generate optical 
@@ -188,7 +206,7 @@ void evolve( cufftDoubleComplex *gpuWfc, cufftDoubleComplex *gpuMomentumOp,
                                     num_vortices[0], 
                                     vort_angle + PI * angle_sweep / 180.0,
                                     laser_power * HBAR * sqrt(omegaX * omegaY),
-                                    V_opt, x, y, par);
+                                    V_opt, par.x, par.y, par);
                         sepAvg = Tracker::vortSepAvg(vortCoords, central_vortex,
                                                      num_vortices[0]);
                         if (kick_it == 2) {
@@ -239,7 +257,7 @@ void evolve( cufftDoubleComplex *gpuWfc, cufftDoubleComplex *gpuMomentumOp,
                         if(i==0) {
                             //Lambda for vortex annihilation/creation.
                             auto killIt=[&](int idx) {
-                                WFC::phaseWinding(Phi, 1, x, y, dx, dy, 
+                                WFC::phaseWinding(Phi, 1, par.x, par.y, dx, dy,
                                                   lattice.getVortexUid(idx)->
                                                       getData().coordsD.x,
                                                   lattice.getVortexUid(idx)->
@@ -474,7 +492,7 @@ void evolve( cufftDoubleComplex *gpuWfc, cufftDoubleComplex *gpuMomentumOp,
         /**************************************************************/
     
         if(gstate==0){
-            parSum(gpuWfc, gpuParSum, xDim, yDim, threads);
+            parSum(gpuWfc, gpuParSum, threads, par, cupar);
         }
     }
 }

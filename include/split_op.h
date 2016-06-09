@@ -69,31 +69,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 	//printf("OpenMP support disabled due to Clang/LLVM being behind the trend.",);
 #endif
 
-/* Keep track of all params for reading/writing to file*/
-extern struct Params *paramS;
-
 /* Error variable & return variables */
-extern cudaError_t err;
-extern cufftResult result;
-
-/* Define operating modes */
-extern int ang_mom;
-extern int gpe;
-
-/* Allocating global variables */
-extern double mass, a_s, omegaX, omegaY, omegaZ;
-extern double xi; //Healing length minimum value defined at central density.
-
-/* Evolution timestep */
-extern double dt, gdt;
-
-/* Grid dimensions vector. xyz are dim length, w is total grid size (x*y*z) */
-extern int xDim, yDim, read_wfc, print, write_it;
-extern long gsteps, esteps, atoms;
-extern double *x,*y,*xp,*yp,*px,*py,dx,dy,xMax,yMax;
+//extern cufftResult result;
 
 /* CuFFT plans for forward and inverse. May only need to use 1 for both */
-extern cufftHandle plan_2d, plan_1d;
+//extern cufftHandle plan_2d, plan_1d;
 
 /* Arrays for storing wavefunction, momentum and position op, etc */
 extern cufftDoubleComplex *wfc, *wfc0, *wfc_backup, *GK, *GV_half, *GV, *EK, *EV, *EV_opt, *GxPy, *GyPx, *ExPy, *EyPx, *EappliedField;
@@ -104,18 +84,11 @@ extern cufftDoubleComplex *wfc_gpu, *K_gpu, *V_gpu, *par_sum;
 extern double *Phi_gpu;
 
 /* CUDA streams */
-extern cudaStream_t streamA, streamB, streamC, streamD;
-
-/* Scaling the interaction */
-extern double interaction;
-extern double laser_power;
+//extern cudaStream_t streamA, streamB, streamC, streamD;
 
 /* Define global dim3 and threads for grid and thread dim calculation */
-extern dim3 grid;
-extern int threads;
-
-/* */
-extern double l;
+//extern dim3 grid;
+//extern int threads;
 
 /* Function declarations */
 /*
@@ -142,8 +115,8 @@ int isError(int result, char* c); //Checks to see if an error has occurred.
 * @param	threads Number of CUDA threads for operation
 * @return	0 for success. See CUDA failure codes in cuda.h for other values.
 */
-void parSum(double2* gpuWfc, double2* gpuParSum, int xDim, int yDim, 
-            int threads);
+void parSum(double2* gpuWfc, double2* gpuParSum, int threads, Grid &par,
+            Cuda &cupar);
 
 /**
 * @brief	Creates the optical lattice to match the vortex lattice constant
@@ -177,7 +150,7 @@ void optLatSetup(struct Vtx::Vortex centre, double* V,
 * @return	$\langle \Psi | H | \Psi \rangle$
 */
 double energy_angmom(double* Energy, double* Energy_gpu, double2 *V_op, 
-                     double2 *K_op, double dx, double dy, double2 *gpuWfc, 
-                     int gState);
+                     double2 *K_op, double2 *gpuWfc, 
+                     int gState, Grid &par);
 
 #endif

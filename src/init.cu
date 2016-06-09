@@ -48,27 +48,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string>
 #include <iostream>
 
-/*
-unsigned int LatticeGraph::Edge::suid = 0;
-unsigned int LatticeGraph::Node::suid = 0;
-    
-char buffer[100]; 
-int verbose; //Print more info. Not curently implemented.
-int device; //GPU ID choice.
-int kick_it; //Kicking mode: 0 = off, 1 = multiple, 2 = single
-int graph=0; //Generate graph from vortex lattice.
-double gammaY; //Aspect ratio of trapping geometry.
-double omega; //Rotation rate of condensate
-double timeTotal; 
-double angle_sweep; //Rotation angle of condensate relative to x-axis
-Params *paramS;
-//Array params;
-double x0_shift, y0_shift; //Optical lattice shift parameters.
-double Rxy; //Condensate scaling factor.
-double a0x, a0y; //Harmonic oscillator length in x and y directions
-double sepMinEpsilon=0.0; //Minimum separation for epsilon.
-*/
-
 /* Error variable & return variables */
 cudaError_t err;
 cufftResult result;
@@ -391,6 +370,7 @@ int main(int argc, char **argv){
     //initArr(&params,32);
     //appendData(&params,ctime(&start),0.0);
     Grid par = parseArgs(argc,argv);
+    Cuda cupar;
     int device = par.ival("device");
     cudaSetDevice(device);
     //************************************************************//
@@ -451,7 +431,7 @@ int main(int argc, char **argv){
             exit(1);
         
         evolve(wfc_gpu, K_gpu, V_gpu, yPx_gpu, xPy_gpu, par_sum, 
-               par.ival("gsteps"), 128, 0, 0, par, buffer);
+               par.ival("gsteps"), cupar, 0, 0, par, buffer);
         cudaMemcpy(wfc, wfc_gpu, sizeof(cufftDoubleComplex)*xDim*yDim, 
                    cudaMemcpyDeviceToHost);
     }
@@ -497,7 +477,7 @@ int main(int argc, char **argv){
         //              (512.6667 - 512 + y0_shift)*dy, V_opt);
         FileIO::writeOutDouble(buffer,"V_opt",V_opt,xDim*yDim,0);
         evolve(wfc_gpu, K_gpu, V_gpu, yPx_gpu, xPy_gpu, par_sum, 
-               par.ival("esteps"), 128, 1, 0, par, buffer);
+               par.ival("esteps"), cupar, 1, 0, par, buffer);
     
     }
     free(EV); free(EK); free(ExPy); free(EyPx);

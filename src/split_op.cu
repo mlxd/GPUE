@@ -59,8 +59,6 @@ double gammaY; //Aspect ratio of trapping geometry.
 double omega; //Rotation rate of condensate
 double timeTotal;
 double angle_sweep; //Rotation angle of condensate relative to x-axis
-Params *paramS;
-//Array params;
 double x0_shift, y0_shift; //Optical lattice shift parameters.
 double Rxy; //Condensate scaling factor.
 double a0x, a0y; //Harmonic oscillator length in x and y directions
@@ -81,29 +79,35 @@ int isError(int result, char* c){
 /*
  * Used to perform parallel summation on WFC for normalisation.
  */
-void parSum(double2* gpuWfc, double2* gpuParSum, int xDim, int yDim, 
-            int threads){
-        int grid_tmp = xDim*yDim;
-        int block = grid_tmp/threads;
-        int thread_tmp = threads;
-        int pass = 0;
-        while((double)grid_tmp/threads > 1.0){
-            if(grid_tmp == xDim*yDim){
-                multipass<<<block,threads,threads*sizeof(double2)>>>(&gpuWfc[0],
-                    &gpuParSum[0],pass); 
-            }
-            else{
-                multipass<<<block,thread_tmp,thread_tmp*sizeof(double2)>>>(
-                    &gpuParSum[0],&gpuParSum[0],pass);
-            }
-            grid_tmp /= threads;
-            block = (int) ceil((double)grid_tmp/threads);
-            pass++;
+void parSum(double2* gpuWfc, double2* gpuParSum, int threads, Grid &par, 
+            Cuda &cupar){ 
+    // May need to add double l
+    double dx = par.dval("dx");
+    double dy = par.dval("dy");
+    int xDim = par.ival("xDim");
+    int yDim = par.ival("yDim");
+    int grid_tmp = xDim*yDim;
+    int block = grid_tmp/threads;
+    int thread_tmp = threads;
+    int pass = 0;
+    dim3 grid = cupar.dim3val("grid");
+    while((double)grid_tmp/threads > 1.0){
+        if(grid_tmp == xDim*yDim){
+            multipass<<<block,threads,threads*sizeof(double2)>>>(&gpuWfc[0],
+                &gpuParSum[0],pass); 
         }
-        thread_tmp = grid_tmp;
-        multipass<<<1,thread_tmp,thread_tmp*sizeof(double2)>>>(&gpuParSum[0],
-            &gpuParSum[0], pass);
-        scalarDiv_wfcNorm<<<grid,threads>>>(gpuWfc, dx*dy, gpuParSum, gpuWfc);
+        else{
+            multipass<<<block,thread_tmp,thread_tmp*sizeof(double2)>>>(
+                &gpuParSum[0],&gpuParSum[0],pass);
+        }
+        grid_tmp /= threads;
+        block = (int) ceil((double)grid_tmp/threads);
+        pass++;
+    }
+    thread_tmp = grid_tmp;
+    multipass<<<1,thread_tmp,thread_tmp*sizeof(double2)>>>(&gpuParSum[0],
+                                                           &gpuParSum[0], pass);
+    scalarDiv_wfcNorm<<<grid,threads>>>(gpuWfc, dx*dy, gpuParSum, gpuWfc);
 }
 
 /**
@@ -114,6 +118,11 @@ void optLatSetup(struct Vtx::Vortex centre, double* V,
                  struct Vtx::Vortex *vArray, int num_vortices, double theta_opt,
                  double intensity, double* v_opt, double *x, double *y,
                  Grid &par){
+    int xDim = par.ival("xDim");
+    int yDim = par.ival("yDim");
+    double dx = par.dval("dx");
+    double dy = par.dval("dy");
+    double dt = par.dval("dt");
     int i,j;
     double sepMin = Tracker::vortSepAvg(vArray,centre,num_vortices);
     sepMin = sepMin*(1 + sepMinEpsilon);
@@ -187,8 +196,14 @@ void optLatSetup(struct Vtx::Vortex centre, double* V,
 ** Implementation not fully finished.
 **/
 double energy_angmom(double *Energy, double* Energy_gpu, double2 *V_op, 
-                     double2 *K_op, double dx, double dy, double2 *gpuWfc, 
-                     int gState){
+                     double2 *K_op, double2 *gpuWfc, 
+                     int gState, Grid &par){
+    int xDim = par.ival("xDim");
+    int yDim = par.ival("yDim");
+    double dx = par.dval("dx");
+    double dy = par.dval("dy");
+    double dt = par.dval("dt");
+
     double renorm_factor_2d=1.0/pow(xDim*yDim,0.5);
     double result=0;
 
@@ -228,12 +243,17 @@ double energy_angmom(double *Energy, double* Energy_gpu, double2 *V_op,
 /*
  * Used to perform parallel summation using templates from c++
  */
-template<typename T> void parSum(T *gpuToSumArr, T *gpuParSum, int xDim, 
-                                 int yDim, int threads){
+template<typename T> void parSum(T *gpuToSumArr, T *gpuParSum, int threads,
+                                 Grid &par, Cuda &cupar){
+    int xDim = par.ival("xDim");
+    int yDim = par.ival("yDim");
+    double dx = par.dval("dx");
+    double dy = par.dval("dy");
     int grid_tmp = xDim*yDim;
     int block = grid_tmp/threads;
     int thread_tmp = threads;
     int pass = 0;
+    dim3 grid = cupar.dim3val("grid");
     while((double)grid_tmp/threads > 1.0){
         if(grid_tmp == xDim*yDim){
             multipass<<<block,threads,threads*sizeof(T)>>>(
@@ -256,7 +276,13 @@ template<typename T> void parSum(T *gpuToSumArr, T *gpuParSum, int xDim,
 //##############################################################################
 //##############################################################################
 
-void delta_define(double *x, double *y, double x0, double y0, double *delta){
+void delta_define(double *x, double *y, double x0, double y0, double *delta,
+                  Grid &par){
+    int xDim = par.ival("xDim");
+    int yDim = par.ival("yDim");
+    double dx = par.dval("dx");
+    double dt = par.dval("dt");
+
     for (int i=0; i<xDim; ++i){
         for (int j=0; j<yDim; ++j){
             delta[j*xDim + i] = 1e6*HBAR*exp( -( pow( x[i] - x0, 2) + 

@@ -33,15 +33,45 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "../include/ds.h"
 
+// Unfortunately, I only know how to do this as a macro...
+// Turns variable name into string
+#define STR(a) #a
+
 // Function to store integer into Grid->param_int
 void Grid::store(std::string id, int iparam){
     param_int[id] = iparam;
+    id_list[id] = 1;
 }
 
 // Function to store double into Grid->param_double
 void Grid::store(std::string id, double dparam){
     param_double[id] = dparam;
+    id_list[id] = 2;
 }
+
+// Function to store double* into param_dstar
+void Grid::store(std::string id, double *dsparam){
+    param_dstar[id] = dsparam;
+    id_list[id] = 3;
+}
+
+/*
+// Defining template and function to return values from parameter maps.
+template <typename arbitrary> 
+arbitrary Grid::val(std::string id){
+    switch (id_list[id]){
+        case 1:
+            return param_int[id];
+            break;
+        case 2:
+            return param_double[id];
+            break;
+        case 3:
+            return param_dstar[id];
+            break;
+    }
+}
+*/
 
 // Function to retrieve integer from Grid->param_int
 int Grid::ival(std::string id){
@@ -69,6 +99,139 @@ void Grid::write(std::string filename){
     output.close();
 }
 
+// Failed template attempt for the Cuda class. I spent too much time on it, may
+// return to it later
+/*
+// Not necessary because everything is public for now...
+// Function to evaluate arbitrary value from Cuda class
+template <typename arbitrary = int> 
+arbitrary Cuda::val(std::string id){
+    switch (id){
+        case "err":
+            return err;
+            break;
+        case "result":
+            return result;
+            break;
+        case "plan_1d":
+            return plan_1d;
+            break;
+        case "plan_2d":
+            return plan_2d;
+            break;
+        case "streamA":
+            return streamA;
+            break;
+        case "streamB":
+            return streamB;
+            break;
+        case "streamC":
+            return streamC;
+            break;
+        case "streamD":
+            return streamD;
+            break;
+        case "grid":
+            return grid;
+            break;
+        case "threads":
+            return threads;
+            break;
+    }
+}
+
+template <class arbitrary> arbitrary Cuda::store(arbitrary data){
+    this->data = data;
+}
+*/
+
+// Functions to store data in Cuda class
+void Cuda::store(std::string id, cudaError_t errin){
+    err = errin;
+}
+void Cuda::store(std::string id, cufftHandle planin){
+    if (id == "plan_1d"){
+        plan_1d = planin;
+    }
+    else if (id == "plan_2d"){
+        plan_2d = planin;
+    }
+    else{
+        std::cout << "ERROR: plan not found!" << '\n';
+    }
+}
+void Cuda::store(std::string id, cudaStream_t streamin){
+    if (id == "streamA"){
+        streamA = streamin;
+    }
+    else if (id == "streamB"){
+        streamB = streamin;
+    }
+    else if (id == "streamC"){
+        streamC = streamin;
+    }
+    else if (id == "streamD"){
+        streamD = streamin;
+    }
+    else{
+        std::cout << "ERROR: stream not found!" << '\n';
+    }
+}
+void Cuda::store(std::string id, dim3 gridin){
+    grid = gridin;
+}
+/*
+void Cuda::store(std::string id, int threadsin){
+    threads = threadsin;
+}
+*/
+
+// Functions to retrieve data
+// Note: There are definitely more elegant ways to do this.
+cudaError_t Cuda::cudaError_tval(std::string id){
+    return err;
+}
+cufftResult Cuda::cufftResultval(std::string id){
+    return result;
+}
+
+// Returns nothing if called incorrectly.
+cufftHandle Cuda::cufftHandleval(std::string id){
+    if (id == "plan_1d"){
+        return plan_1d;
+    }
+    else if (id == "plan_2d"){
+        return plan_2d;
+    }
+    else{
+        std::cout << "ERROR: plan not found!" << '\n';
+    }
+}
+
+// Returns nothing if called incorrectly
+cudaStream_t Cuda::cudaStream_tval(std::string id){
+    if (id == "streamA"){
+        return streamA;
+    }
+    else if (id == "streamB"){
+        return streamB;
+    }
+    else if (id == "streamC"){
+        return streamC;
+    }
+    else if (id == "streamD"){
+        return streamD;
+    }
+    else{
+        std::cout << "ERROR: stream not found!" << '\n';
+    }
+}
+dim3 Cuda::dim3val(std::string id){
+    return grid;
+}
+int Cuda::ival(std::string id){
+    return threads;
+}
 /*----------------------------------------------------------------------------//
 * DEPRECATION WARNING
 *-----------------------------------------------------------------------------*/
