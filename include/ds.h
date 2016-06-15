@@ -122,6 +122,8 @@ typedef class Grid Grid;
  * @brief        Class to hold CUDA-specific variables and features
  * @ingroup      data
  */
+// I will not be using the unordered map for this one because the number of 
+// variables stored is small
 class Cuda{
     private:
         cudaError_t err;
@@ -155,8 +157,7 @@ class Cuda{
         cufftHandle cufftHandleval(std::string id);
         cudaStream_t cudaStream_tval(std::string id);
         dim3 dim3val(std::string id);
-        int ival(std::string id);
-
+        //int ival(std::string id);
 
 };
 //typedef class Cuda Cuda;
@@ -170,8 +171,20 @@ class Cuda{
  */
 class Op{
     private:
-        std::vector<double> potential, kinetic, momentum;
+        std::unordered_map<std::string, double*> Op_dstar;
+        std::unordered_map<std::string, cufftDoubleComplex*> Op_cdc;
+        // double *V, *V_opt, *K, *xPy, *yPx, *xPy_gpu, *yPx_gpu;
+        //cufftDoubleComplex *GK,*GV_half,*GV,*EK,*EV,*EV_opt,*GxPy,*GyPx,
+        //                   *ExPy,*EyPx,*EappliedField,*K_gpu,*V_gpu;
     public:
+
+        // Functions to store data
+        void store(std::string id, double *data);
+        void store(std::string id, cufftDoubleComplex *data);
+
+        // Functions to retrieve data
+        double *dsval(std::string id);
+        cufftDoubleComplex *cufftDoubleComplexval(std::string id);
 };
 typedef class Op Op;
 
@@ -180,9 +193,20 @@ typedef class Op Op;
  * @ingroup     data
  */
 class Wave{
-    public:
-        std::vector<double> wfc;
     private:
+        std::unordered_map<std::string, double*> Wave_dstar;
+        std::unordered_map<std::string, cufftDoubleComplex*> Wave_cdc;
+        //double *Energy, *energy_gpu, *r, *Phi, *Phi_gpu;
+        //cufftDoubleComplex *wfc, *wfc0, *wfc_backup, *wfc_gpu, *par_sum;
+    public:
+
+        // functions to store data
+        void store(std::string id, double *data);
+        void store(std::string id, cufftDoubleComplex *data);
+
+        // Functions to retrieve data
+        double *dsval(std::string id);
+        cufftDoubleComplex *cufftDoubleComplexval(std::string id);
 };
 typedef class Wave Wave;
 

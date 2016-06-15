@@ -69,27 +69,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 	//printf("OpenMP support disabled due to Clang/LLVM being behind the trend.",);
 #endif
 
-/* Error variable & return variables */
-//extern cufftResult result;
-
-/* CuFFT plans for forward and inverse. May only need to use 1 for both */
-//extern cufftHandle plan_2d, plan_1d;
-
-/* Arrays for storing wavefunction, momentum and position op, etc */
-extern cufftDoubleComplex *wfc, *wfc0, *wfc_backup, *GK, *GV_half, *GV, *EK, *EV, *EV_opt, *GxPy, *GyPx, *ExPy, *EyPx, *EappliedField;
-extern double *Energy, *Energy_gpu, *r, *Phi, *V, *V_opt, *K, *xPy, *yPx, *xPy_gpu, *yPx_gpu;
-
-/* CUDA data buffers for FFT */
-extern cufftDoubleComplex *wfc_gpu, *K_gpu, *V_gpu, *par_sum;
-extern double *Phi_gpu;
-
-/* CUDA streams */
-//extern cudaStream_t streamA, streamB, streamC, streamD;
-
-/* Define global dim3 and threads for grid and thread dim calculation */
-//extern dim3 grid;
-//extern int threads;
-
 /* Function declarations */
 /*
  * arg1 = Function result code from CUDA CUFFT calls.
@@ -115,7 +94,7 @@ int isError(int result, char* c); //Checks to see if an error has occurred.
 * @param	threads Number of CUDA threads for operation
 * @return	0 for success. See CUDA failure codes in cuda.h for other values.
 */
-void parSum(double2* gpuWfc, double2* gpuParSum, int threads, Grid &par,
+void parSum(double2* gpuWfc, double2* gpuParSum, Grid &par,
             Cuda &cupar);
 
 /**
@@ -134,7 +113,7 @@ void parSum(double2* gpuWfc, double2* gpuParSum, int threads, Grid &par,
 void optLatSetup(struct Vtx::Vortex centre, double* V, 
                  struct Vtx::Vortex *vArray, int num_vortices, double theta_opt,
                  double intensity, double* v_opt, double *x, double *y, 
-                 Grid &par);
+                 Grid &par, Op &opr);
 
 /**
 * @brief	Calculates the energy of the condensate. Not implemented.

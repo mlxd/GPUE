@@ -79,11 +79,12 @@ int isError(int result, char* c){
 /*
  * Used to perform parallel summation on WFC for normalisation.
  */
-void parSum(double2* gpuWfc, double2* gpuParSum, int threads, Grid &par, 
+void parSum(double2* gpuWfc, double2* gpuParSum, Grid &par, 
             Cuda &cupar){ 
     // May need to add double l
     double dx = par.dval("dx");
     double dy = par.dval("dy");
+    int threads = par.ival("threads");
     int xDim = par.ival("xDim");
     int yDim = par.ival("yDim");
     int grid_tmp = xDim*yDim;
@@ -117,12 +118,13 @@ void parSum(double2* gpuWfc, double2* gpuParSum, int threads, Grid &par,
 void optLatSetup(struct Vtx::Vortex centre, double* V, 
                  struct Vtx::Vortex *vArray, int num_vortices, double theta_opt,
                  double intensity, double* v_opt, double *x, double *y,
-                 Grid &par){
+                 Grid &par, Op &opr){
     int xDim = par.ival("xDim");
     int yDim = par.ival("yDim");
     double dx = par.dval("dx");
     double dy = par.dval("dy");
     double dt = par.dval("dt");
+    cufftDoubleComplex *EV_opt = opr.cufftDoubleComplexval("EV_opt");
     int i,j;
     double sepMin = Tracker::vortSepAvg(vArray,centre,num_vortices);
     sepMin = sepMin*(1 + sepMinEpsilon);
@@ -243,6 +245,7 @@ double energy_angmom(double *Energy, double* Energy_gpu, double2 *V_op,
 /*
  * Used to perform parallel summation using templates from c++
  */
+/*
 template<typename T> void parSum(T *gpuToSumArr, T *gpuParSum, int threads,
                                  Grid &par, Cuda &cupar){
     int xDim = par.ival("xDim");
@@ -273,13 +276,16 @@ template<typename T> void parSum(T *gpuToSumArr, T *gpuParSum, int threads,
     scalarDiv_wfcNorm<<<grid,threads>>>(gpuToSumArr, dx*dy, gpuParSum, 
                                         gpuToSumArr);
 }
+*/
 //##############################################################################
 //##############################################################################
 
 void delta_define(double *x, double *y, double x0, double y0, double *delta,
-                  Grid &par){
+                  Grid &par, Op &opr){
     int xDim = par.ival("xDim");
     int yDim = par.ival("yDim");
+    cufftDoubleComplex *EV_opt = opr.cufftDoubleComplexval("EV_opt");
+    double *V = opr.dsval("V");
     double dx = par.dval("dx");
     double dt = par.dval("dt");
 

@@ -394,6 +394,8 @@ int main(int argc, char **argv){
         wfc=FileIO::readIn("wfc_load","wfci_load",xDim, yDim);
         printf("Wavefunction loaded.\n");
     }
+    Wave wave;
+    Op opr;
     
 /*
     double x_0,y_0;
@@ -430,7 +432,9 @@ int main(int argc, char **argv){
         if(err!=cudaSuccess)
             exit(1);
         
-        evolve(wfc_gpu, K_gpu, V_gpu, yPx_gpu, xPy_gpu, par_sum, 
+        //evolve(wfc_gpu, K_gpu, V_gpu, yPx_gpu, xPy_gpu, par_sum, 
+        //       par.ival("gsteps"), cupar, 0, 0, par, buffer);
+        evolve(wave, opr, par_sum,
                par.ival("gsteps"), cupar, 0, 0, par, buffer);
         cudaMemcpy(wfc, wfc_gpu, sizeof(cufftDoubleComplex)*xDim*yDim, 
                    cudaMemcpyDeviceToHost);
@@ -476,7 +480,9 @@ int main(int argc, char **argv){
         // delta_define(x, y, (523.6667 - 512 + x0_shift)*dx, 
         //              (512.6667 - 512 + y0_shift)*dy, V_opt);
         FileIO::writeOutDouble(buffer,"V_opt",V_opt,xDim*yDim,0);
-        evolve(wfc_gpu, K_gpu, V_gpu, yPx_gpu, xPy_gpu, par_sum, 
+        //evolve(wfc_gpu, K_gpu, V_gpu, yPx_gpu, xPy_gpu, par_sum, 
+        //       par.ival("esteps"), cupar, 1, 0, par, buffer);
+        evolve(wave, opr, par_sum,
                par.ival("esteps"), cupar, 1, 0, par, buffer);
     
     }

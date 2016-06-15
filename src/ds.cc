@@ -180,6 +180,7 @@ void Cuda::store(std::string id, cudaStream_t streamin){
 void Cuda::store(std::string id, dim3 gridin){
     grid = gridin;
 }
+
 /*
 void Cuda::store(std::string id, int threadsin){
     threads = threadsin;
@@ -229,8 +230,44 @@ cudaStream_t Cuda::cudaStream_tval(std::string id){
 dim3 Cuda::dim3val(std::string id){
     return grid;
 }
+
+/*
 int Cuda::ival(std::string id){
     return threads;
+}
+*/
+
+// Functions to store data in the Op class
+void Op::store(std::string id, double *data){
+    Op_dstar[id] = data;
+}
+
+void Op::store(std::string id, cufftDoubleComplex *data){
+    Op_cdc[id] = data;
+}
+
+// Functions to retrieve data from the Op class
+double *Op::dsval(std::string id){
+    return Op_dstar[id];
+}
+cufftDoubleComplex *Op::cufftDoubleComplexval(std::string id){
+    return Op_cdc[id];
+}
+
+// Functions to store data in the Wave class
+void Wave::store(std::string id, double *data){
+    Wave_dstar[id] = data;
+}
+void Wave::store(std::string id, cufftDoubleComplex *data){
+    Wave_cdc[id] = data;
+}
+
+// Functions to retrieve data from the Wave class
+double *Wave::dsval(std::string id){
+    return Wave_dstar[id];
+}
+cufftDoubleComplex *Wave::cufftDoubleComplexval(std::string id){
+    return Wave_cdc[id];
 }
 /*----------------------------------------------------------------------------//
 * DEPRECATION WARNING
