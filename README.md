@@ -1,25 +1,16 @@
 [![Coverage Status](https://coveralls.io/repos/github/mlxd/GPUE/badge.svg?branch=master)](https://coveralls.io/github/mlxd/GPUE?branch=master)
 [![Code Climate](https://codeclimate.com/github/mlxd/GPUE/badges/gpa.svg)](https://codeclimate.com/github/mlxd/GPUE)
+![GPUE version](https://img.shields.io/badge/v-0.abs(exp(1i*pi))-blue.svg)
 ###############################################################################
 ###############################################################################
  
-                                    (
-                           (        )\ )               )
-                           )\ )    (()/(   (    (     ((
-                          (()/(     /(_))  )\   )\   /))
-                          /(_))_   (_))   ((_) ((_) ()/(_)
-                          ██████╗ ██████╗ ██╗   ██╗███████╗
-                         ██╔════╝ ██╔══██╗██║   ██║██╔════╝
-                         ██║  ███╗██████╔╝██║   ██║█████╗
-                         ██║   ██║██╔═══╝ ██║   ██║██╔══╝
-                         ╚██████╔╝██║     ╚██████╔╝███████╗
-                          ╚═════╝ ╚═╝      ╚═════╝ ╚══════╝
+[logo]: https://github.com/mlxd/GPUE/blob/master/logo.png "GPUE"
+![GPUE - GPU Gross-Pitaevskii Equation solver][logo]
 
-                    GPUE - GPU Gross-Pitaevskii Equation solver
-                             Version 0.abs(exp(i*pi))
+***
 
-                        https://bitbucket.org/loriordan/gpue
-                        https://github.com/mlxd/gpue
+[bb]: https://bitbucket.org/loriordan/gpue "Bitbucket"
+[gh]: https://github.com/mlxd/gpue "GitHub"
 
 ###############################################################################
 ## 0. Introduction
