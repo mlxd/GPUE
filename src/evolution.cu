@@ -40,8 +40,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../include/manip.h"
 #include <string>
 
-void evolve( cufftDoubleComplex *gpuWfc, cufftDoubleComplex *gpuMomentumOp,
-            cufftDoubleComplex *gpuPositionOp, void *gpu1dyPx, void *gpu1dxPy,
+void evolve( Wave &wave, Op &opr,
             cufftDoubleComplex *gpuParSum, int numSteps, Cuda cupar,
             unsigned int gstate, unsigned int ramp, Grid &par, char *buffer){
 
@@ -58,6 +57,13 @@ void evolve( cufftDoubleComplex *gpuWfc, cufftDoubleComplex *gpuMomentumOp,
     double dy = par.dval("dy");
     double interaction = par.dval("interaction");
     double laser_power = par.dval("laser_power");
+    double *V = opr.dsval("V");
+    double *V_opt = opr.dsval("V_opt");
+    double *Phi = wave.dsval("Phi");
+    double *gpu1dyPx = opr.dsval("yPx_gpu");
+    double *gpu1dxPy = opr.dsval("xPy_gpu");
+    double *EV = opr.dsval("EV");
+    double *Phi_gpu = wave.dsval("Phi_gpu");
     int kick_it = par.ival("kick_it");
     int write_it = par.ival("write_it");
     int graph = par.ival("graph");
@@ -68,6 +74,14 @@ void evolve( cufftDoubleComplex *gpuWfc, cufftDoubleComplex *gpuMomentumOp,
     int xDim = par.ival("xDim");
     int yDim = par.ival("yDim");
     int gridSize = xDim * yDim;
+    cufftDoubleComplex *wfc = wave.cufftDoubleComplexval("wfc");
+    cufftDoubleComplex *V_gpu = opr.cufftDoubleComplexval("V_gpu");
+    cufftDoubleComplex *EV_opt = opr.cufftDoubleComplexval("EV_opt");
+    cufftDoubleComplex *gpuWfc = wave.cufftDoubleComplexval("wfc_gpu");
+    cufftDoubleComplex *gpuMomentumOp =
+        opr.cufftDoubleComplexval("K_gpu");
+    cufftDoubleComplex *gpuPositionOp =
+        opr.cufftDoubleComplexval("V_gpu");
 
     // getting data from Cuda class
     cufftResult result = cupar.cufftResultval("result");
@@ -75,12 +89,6 @@ void evolve( cufftDoubleComplex *gpuWfc, cufftDoubleComplex *gpuMomentumOp,
     cufftHandle plan_2d = cupar.cufftHandleval("plan_2d");
     int threads = par.ival("threads");
     dim3 grid = cupar.dim3val("grid");
-/*
-    cufftResult result = cupar.result;
-    cufftHandle plan_1d = cupar.plan_1d;
-    cufftHandle plan_2d = cupar.plan_2d;
-    int threads = cupar.threads;
-*/
 
     // Because no two operations are created equally. 
     // Multiplication is faster than divisions.
@@ -206,7 +214,7 @@ void evolve( cufftDoubleComplex *gpuWfc, cufftDoubleComplex *gpuMomentumOp,
                                     num_vortices[0], 
                                     vort_angle + PI * angle_sweep / 180.0,
                                     laser_power * HBAR * sqrt(omegaX * omegaY),
-                                    V_opt, par.x, par.y, par);
+                                    V_opt, par.x, par.y, par, opr);
                         sepAvg = Tracker::vortSepAvg(vortCoords, central_vortex,
                                                      num_vortices[0]);
                         if (kick_it == 2) {
@@ -492,8 +500,13 @@ void evolve( cufftDoubleComplex *gpuWfc, cufftDoubleComplex *gpuMomentumOp,
         /**************************************************************/
     
         if(gstate==0){
-            parSum(gpuWfc, gpuParSum, threads, par, cupar);
+            parSum(gpuWfc, gpuParSum, par, cupar);
         }
     }
+
+    // Storing wavefunctions for later
+    wave.store("wfc", wfc);
+    wave.store("wfc_gpu", gpuWfc);
+
 }
 

@@ -82,6 +82,7 @@ class Grid{
         std::unordered_map<std::string, int> param_int;
         std::unordered_map<std::string, double> param_double;
         std::unordered_map<std::string, double*> param_dstar;
+        std::unordered_map<std::string, std::vector<double>> param_vdouble;
 
         // List of all strings for parsing into the appropriate param map
         // 1 -> int, 2 -> double, 3 -> double*
@@ -89,11 +90,6 @@ class Grid{
 
     // Here we keep the functions to store variables and access grid data
     public:
-/*
-        // Template for retrieving data
-        template <typename arbitrary>
-        arbitrary val(std::string id);
-*/
 
         // placing grid parameters in public for now
         double *x, *y, *z, *xp, *yp, *zp;
@@ -107,11 +103,20 @@ class Grid{
         // Function to store double* into param_dstar
         void store(std::string id, double *dsparam);
 
+        // Function to store vector<double> into param_vdouble
+        void store(std::string id, std::vector<double> vdparam);
+
         // Function to retrieve integer value from param_int
         int ival(std::string id);
 
         // Function to retrieve double value from param_double
         double dval(std::string id);
+
+        // Function to retrieve double star values from param_dstar
+        double *dsval(std::string id);
+
+        // Function to retrieve vector<double> from param_vdouble
+        std::vector<double> vdval(std::string id);
 
         // Function for file writing
         void write(std::string filename);
@@ -133,19 +138,10 @@ class Cuda{
         dim3 grid;
         int threads;
     public:
-        // Failed attempt at template functions...
-        /*
-        // Template for retrieving data
-        template <typename arbitrary = int> 
-        arbitrary val(std::string id);
-
-        // Function to store data
-        template <typename arbitrary = int> 
-        void store(std::string id, arbitrary data);
-        */
 
         // Functions to store data
         void store(std::string id, cudaError_t errin);
+        void store(std::string id, cufftResult resultin);
         void store(std::string id, cufftHandle planin);
         void store(std::string id, cudaStream_t streamin);
         void store(std::string id, dim3 gridin);
@@ -172,7 +168,10 @@ class Cuda{
 class Op{
     private:
         std::unordered_map<std::string, double*> Op_dstar;
+        std::unordered_map<std::string, std::vector<double>> Op_vdouble;
         std::unordered_map<std::string, cufftDoubleComplex*> Op_cdc;
+        std::unordered_map<std::string, std::vector<cufftDoubleComplex>>
+            Op_vcdc;
         // double *V, *V_opt, *K, *xPy, *yPx, *xPy_gpu, *yPx_gpu;
         //cufftDoubleComplex *GK,*GV_half,*GV,*EK,*EV,*EV_opt,*GxPy,*GyPx,
         //                   *ExPy,*EyPx,*EappliedField,*K_gpu,*V_gpu;
@@ -181,10 +180,14 @@ class Op{
         // Functions to store data
         void store(std::string id, double *data);
         void store(std::string id, cufftDoubleComplex *data);
+        void store(std::string id, std::vector<cufftDoubleComplex> data);
+        void store(std::string id, std::vector<double> data);
 
         // Functions to retrieve data
         double *dsval(std::string id);
         cufftDoubleComplex *cufftDoubleComplexval(std::string id);
+        std::vector<double> vdval(std::string id);
+        std::vector<cufftDoubleComplex> vcufftDoubleComplexval(std::string id);
 };
 typedef class Op Op;
 
@@ -195,7 +198,10 @@ typedef class Op Op;
 class Wave{
     private:
         std::unordered_map<std::string, double*> Wave_dstar;
+        std::unordered_map<std::string, std::vector<double>> Wave_vdouble;
         std::unordered_map<std::string, cufftDoubleComplex*> Wave_cdc;
+        std::unordered_map<std::string, std::vector<cufftDoubleComplex>>
+            Wave_vcdc;
         //double *Energy, *energy_gpu, *r, *Phi, *Phi_gpu;
         //cufftDoubleComplex *wfc, *wfc0, *wfc_backup, *wfc_gpu, *par_sum;
     public:
@@ -203,64 +209,16 @@ class Wave{
         // functions to store data
         void store(std::string id, double *data);
         void store(std::string id, cufftDoubleComplex *data);
+        void store(std::string id, std::vector<cufftDoubleComplex> data);
+        void store(std::string id, std::vector<double> data);
+
 
         // Functions to retrieve data
         double *dsval(std::string id);
         cufftDoubleComplex *cufftDoubleComplexval(std::string id);
+        std::vector<double> vdval(std::string id);
+        std::vector<cufftDoubleComplex> vcufftDoubleComplexval(std::string id);
 };
 typedef class Wave Wave;
 
-/*----------------------------------------------------------------------------//
-* DEPRECATION WARNING
-*-----------------------------------------------------------------------------*/
-// 
-// // Gathers all data from command-line parsing
-// struct Param{ 
-//     char title[32];
-//     double data;
-// };
-// typedef struct Param Param;
-// 
-// struct Array{
-//     Param *array;
-//     size_t length;
-//     size_t used;
-// };
-// typedef struct Array Array;
-// 
-// /**
-// * @brief	Intialises Array to specified length
-// * @ingroup	data
-// * @param	*arr Pointer to parameter storage Array
-// * @param	initLength Length to initialise Array
-// */
-// void initArr(Array *arr, size_t initLen);
-// /**
-// * @brief	Adds data to the parameter storage Array
-// * @ingroup	data
-// * @param	*arr Pointer to parameter storage Array
-// * @param	*t Parameter name to be saved
-// * @param	d Double value of parameter
-// */
-// void appendData(Array *arr, std::string t, double d);
-// /**
-// * @brief	Free all allocated memory from Array
-// * @ingroup	data
-// * @param	*arr Pointer to parameter storage Array
-// */
-// void freeArray(Array *arr);
-// /**
-// * @brief	Allocate new Param. Unused.
-// * @ingroup	data
-// * @param	*arr Pointer to parameter storage Array
-// * @param	*t Parameter name to be saved
-// * @param	d Double value of parameter
-// */
-// Param newParam(std::string t,double d);
-// 
-/*----------------------------------------------------------------------------//
-* END DEPRECATION WARNING
-*-----------------------------------------------------------------------------*/
-
 #endif
-

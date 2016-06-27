@@ -48,74 +48,72 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string>
 #include <iostream>
 
-/* Error variable & return variables */
-cudaError_t err;
-cufftResult result;
+int initialise(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
 
-/* Define operating modes */
-int ang_mom = 0;
-int gpe = 0;
+    // Re-establishing variables from parsed Grid class
+    // Initializes uninitialized variables to 0 values
+    int N = par.ival("atoms");
+    int xDim = par.ival("xDim");
+    int yDim = par.ival("yDim");
+    int threads = par.ival("threads");
+    unsigned int gSize = xDim*yDim;
+    double omega = par.dval("omega");
+    double gdt = par.dval("gdt");
+    double dt = par.dval("dt");
+    double omegaX = par.dval("omegaX");
+    double omegaY = par.dval("omegaY");
+    double omegaZ = par.dval("omegaZ");
+    double mass = par.dval("mass");
+    double dx = par.dval("dx");
+    double dy = par.dval("dy");
+    double a_s = par.dval("a_s");
+    double xMax = par.dval("xMax");
+    double yMax = par.dval("ymax");
+    double l = par.dval("l");
+    double *x;
+    double *y;
+    double *xp;
+    double *yp;
+    double *Energy;
+    double *r;
+    double *V;
+    double *V_opt;
+    double *Phi;
+    double *Phi_gpu;
+    double *K;
+    double *xPy;
+    double *yPx;
+    double *Energy_gpu;
+    cufftDoubleComplex *wfc;
+    //cufftDoubleComplex *V_gpu;
+    cufftDoubleComplex *EV_opt;
+    cufftDoubleComplex *wfc_backup;
+    cufftDoubleComplex *GK;
+    cufftDoubleComplex *GV;
+    cufftDoubleComplex *EV;
+    cufftDoubleComplex *EK;
+    cufftDoubleComplex *ExPy;
+    cufftDoubleComplex *EyPx;
+    cufftDoubleComplex *EappliedField; 
+    //cufftDoubleComplex *wfc_gpu;
+    //cufftDoubleComplex *K_gpu;
+    //cufftDoubleComplex *xPy_gpu;
+    //cufftDoubleComplex *yPx_gpu;
+    //cufftDoubleComplex *par_sum;
 
-/* Allocating global variables */
-double mass, a_s, omegaX, omegaY, omegaZ;
-double xi; //Healing length minimum value defined at central density.
+    cufftResult result = cupar.cufftResultval("result");
+    cufftHandle plan_1d = cupar.cufftHandleval("plan_1d");
+    cufftHandle plan_2d = cupar.cufftHandleval("plan_2d");
 
-/* Evolution timestep */
-double dt, gdt;
-
-/* Grid dimensions vector. xyz are dim length, w is total grid size (x*y*z) */
-int xDim, yDim, read_wfc, print, write_it;
-long gsteps, esteps, atoms;
-double *x,*y,*xp,*yp,*px,*py,dx,dy,xMax,yMax;
-
-/* CuFFT plans for forward and inverse. May only need to use 1 for both */
-cufftHandle plan_2d, plan_1d;
-
-/* Arrays for storing wavefunction, momentum and position op, etc */
-cufftDoubleComplex *wfc, *wfc0, *wfc_backup, *GK, *GV_half, *GV, *EK, *EV, *EV_opt, *GxPy, *GyPx, *ExPy, *EyPx, *EappliedField;
-double *Energy, *Energy_gpu, *r, *Phi, *V, *V_opt, *K, *xPy, *yPx, *xPy_gpu, *yPx_gpu;
-
-/* CUDA data buffers for FFT */
-cufftDoubleComplex *wfc_gpu, *K_gpu, *V_gpu, *par_sum;
-double *Phi_gpu;
-
-/* CUDA streams */
-cudaStream_t streamA, streamB, streamC, streamD;
-
-/* Scaling the interaction */
-double interaction;
-double laser_power;
-
-/* Define global dim3 and threads for grid and thread dim calculation */
-dim3 grid;
-int threads;
-
-/* */
-double l;
-
-int initialise(Grid &par){
+    dim3 grid = cupar.dim3val("grid");
 
     char buffer[100];
     double gammaY; //Aspect ratio of trapping geometry.
     double Rxy; //Condensate scaling factor.
     double a0x, a0y; //Harmonic oscillator length in x and y directions
 
-    double omegaX = par.dval("omegaX");
-    double omegaY = par.dval("omegaY");
     unsigned int xD=1,yD=1,zD=1;
     threads = 128;
-
-    // Re-establishing variables from parsed Grid class
-    double omega = par.dval("omega");
-    double angle_sweep = par.dval("angle_sweep");
-    int kick_it = par.ival("kick_it");
-    int graph = par.ival("graph");
-    int N = par.ival("atoms");
-    int printSteps = par.ival("print");
-    int nonlin = par.ival("gpe");
-    int lz = par.ival("ang_mom");
-    int xDim = par.ival("xDim");
-    int yDim = par.ival("yDim");
 
     // number of blocks in simulation
     unsigned int b = xDim*yDim/threads;
@@ -152,13 +150,12 @@ int initialise(Grid &par){
     
     int i,j; //Used in for-loops for indexing
     
-    unsigned int gSize = xDim*yDim;
     double xOffset, yOffset;
     xOffset=0.0;//5.0e-6;
     yOffset=0.0;//5.0e-6;
     
     mass = 1.4431607e-25; //Rb 87 mass, kg
-    par.store("Mass",mass);
+    par.store("mass",mass);
     a_s = 4.67e-9;
     par.store("a_s",a_s);
 
@@ -195,7 +192,6 @@ int initialise(Grid &par){
     par.store("dpx",dpx);
     par.store("dpy",dpy);
 
-    //printf("a0x=%e  a0y=%e \n dx=%e   dx=%e\n R_xy=%e\n",a0x,a0y,dx,dy,Rxy);
     //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%//
     
     //double *x,*y,*xp,*yp;
@@ -247,6 +243,7 @@ int initialise(Grid &par){
                                                          gSize);
     
     /* Initialise wfc, EKp, and EVr buffers on GPU */
+    /*
     cudaMalloc((void**) &Energy_gpu, sizeof(double) * gSize);
     cudaMalloc((void**) &wfc_gpu, sizeof(cufftDoubleComplex) * gSize);
     cudaMalloc((void**) &Phi_gpu, sizeof(double) * gSize);
@@ -255,6 +252,7 @@ int initialise(Grid &par){
     cudaMalloc((void**) &xPy_gpu, sizeof(cufftDoubleComplex) * gSize);
     cudaMalloc((void**) &yPx_gpu, sizeof(cufftDoubleComplex) * gSize);
     cudaMalloc((void**) &par_sum, sizeof(cufftDoubleComplex) * (gSize/threads));
+    */
     //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%//
 
     #ifdef __linux
@@ -323,7 +321,7 @@ int initialise(Grid &par){
     //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%//
 
     //free(V); 
-    free(K); free(r); //free(Phi);
+    //free(K); free(r); //free(Phi);
 
     //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%//
 
@@ -355,7 +353,62 @@ int initialise(Grid &par){
     }
     
     //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%//
-    
+
+    // Storing variables that have been initialized
+    // Re-establishing variables from parsed Grid class
+    // Initializes uninitialized variables to 0 values
+    par.store("omega", omega);
+    par.store("gdt", gdt);
+    par.store("dt", dt);
+    par.store("omegaX", omegaX);
+    par.store("omegaY", omegaY);
+    par.store("omegaZ", omegaZ);
+    par.store("dx", dx);
+    par.store("dy", dy);
+    par.store("xMax", xMax);
+    par.store("ymax", yMax);
+    par.store("l", l);
+    par.store("x", x);
+    par.store("y", y);
+    par.store("xp", xp);
+    par.store("yp", yp);
+    wave.store("Energy", Energy);
+    wave.store("r", r);
+    opr.store("V", V);
+    opr.store("V_opt", V_opt);
+    wave.store("Phi", Phi);
+    //wave.store("Phi_gpu", Phi_gpu);
+    opr.store("K", K);
+    opr.store("xPy", xPy);
+    opr.store("yPx", yPx);
+    //opr.store("Energy_gpu", Energy_gpu);
+    par.store("atoms", N);
+    par.store("xDim", xDim);
+    par.store("yDim", yDim);
+    par.store("threads", threads);
+    wave.store("wfc", wfc);
+    //opr.store("V_gpu", V_gpu);
+    opr.store("EV_opt", EV_opt);
+    wave.store("wfc_backup", wfc_backup);
+    opr.store("GK", GK);
+    opr.store("GV", GK);
+    opr.store("EV", EV);
+    opr.store("EK", EK);
+    opr.store("ExPy", ExPy);
+    opr.store("EyPx", EyPx);
+    opr.store("EappliedField", EappliedField);
+    //wave.store("wfc_gpu", wfc_gpu);
+    //opr.store("K_gpu", K_gpu);
+    //opr.store("xPy_gpu", xPy_gpu);
+    //opr.store("yPx_gpu", yPx_gpu);
+    //wave.store("par_sum", par_sum);
+
+    cupar.store("result", result);
+    cupar.store("plan_1d", plan_1d);
+    cupar.store("plan_2d", plan_2d);
+
+    cupar.store("grid", grid);
+
     return 0;
 }
 
@@ -363,26 +416,57 @@ int initialise(Grid &par){
 int main(int argc, char **argv){
 
     char buffer[100];
+
+    Wave wave;
+    Op opr;
     
     time_t start,fin;
     time(&start);
     printf("Start: %s\n", ctime(&start));
-    //initArr(&params,32);
-    //appendData(&params,ctime(&start),0.0);
     Grid par = parseArgs(argc,argv);
     Cuda cupar;
     int device = par.ival("device");
     cudaSetDevice(device);
+
     //************************************************************//
     /*
     * Initialise the Params data structure to track params and variables
     */
     //************************************************************//
-    //paramS = (Params *) malloc(sizeof(Params));
-    //strcpy(paramS->data,"INIT");
-    //paramS->next=NULL;
 
-    initialise(par);
+    initialise(opr, cupar, par, wave);
+
+    // Re-establishing variables from parsed Grid class
+    double dx = par.dval("dx");
+    double dy = par.dval("dy");
+    double *x = par.dsval("x");
+    double *y = par.dsval("y");
+    double *V_opt = opr.dsval("V_opt");
+    double *xPy = opr.dsval("xPy");
+    double *yPx = opr.dsval("yPx");
+    int xDim = par.ival("xDim");
+    int yDim = par.ival("yDim");
+    int read_wfc = par.ival("read_wfc");
+    int gsteps = par.ival("gsteps");
+    int esteps = par.ival("esteps");
+    cufftDoubleComplex *wfc = wave.cufftDoubleComplexval("wfc");
+    cufftDoubleComplex *V_gpu = opr.cufftDoubleComplexval("V_gpu");
+    cufftDoubleComplex *GK = opr.cufftDoubleComplexval("GK");
+    cufftDoubleComplex *GV = opr.cufftDoubleComplexval("GV");
+    cufftDoubleComplex *EV = opr.cufftDoubleComplexval("EV");
+    cufftDoubleComplex *EK = opr.cufftDoubleComplexval("EK");
+    cufftDoubleComplex *ExPy = opr.cufftDoubleComplexval("ExPy");
+    cufftDoubleComplex *EyPx = opr.cufftDoubleComplexval("EyPx");
+    cufftDoubleComplex *wfc_gpu = wave.cufftDoubleComplexval("wfc_gpu");
+    cufftDoubleComplex *K_gpu = opr.cufftDoubleComplexval("K_gpu");
+    cufftDoubleComplex *xPy_gpu = opr.cufftDoubleComplexval("xPy_gpu");
+    cufftDoubleComplex *yPx_gpu = opr.cufftDoubleComplexval("yPx_gpu");
+    cufftDoubleComplex *par_sum = wave.cufftDoubleComplexval("par_sum");
+    cudaError_t err = cupar.cudaError_tval("err");
+
+    std::cout << "variables re-established" << '\n';
+    std::cout << read_wfc << '\n';
+
     //************************************************************//
     /*
     * Groundstate finder section
@@ -394,22 +478,9 @@ int main(int argc, char **argv){
         wfc=FileIO::readIn("wfc_load","wfci_load",xDim, yDim);
         printf("Wavefunction loaded.\n");
     }
-    Wave wave;
-    Op opr;
+
+    std::cout << "gsteps: " << gsteps << '\n';
     
-/*
-    double x_0,y_0;
-    x_0 = 0;//(0.5*xDim)*dx;
-    y_0 = 0;//(0.5*yDim)*dy;
-    for(int i=0; i < xDim; i++ ){
-        for(int j=0; j < yDim; j++ ){
-            ph.x = cos( fmod( 0*atan2( y[j] - y_0, x[i] - x_0 ), 2*PI) );
-            ph.y = -sin( fmod( 0*atan2( y[j] - y_0, x[i] - x_0 ), 2*PI) );
-            wfc[(i*yDim + j)] = Minions::complexMult( wfc[(i*yDim + j)], ph );
-        }
-    }
-    printf("l=%e\n",l);
-*/
     if(gsteps > 0){
         err=cudaMemcpy(K_gpu, GK, sizeof(cufftDoubleComplex)*xDim*yDim, 
                        cudaMemcpyHostToDevice);
@@ -436,11 +507,18 @@ int main(int argc, char **argv){
         //       par.ival("gsteps"), cupar, 0, 0, par, buffer);
         evolve(wave, opr, par_sum,
                par.ival("gsteps"), cupar, 0, 0, par, buffer);
+        wfc = wave.cufftDoubleComplexval("wfc");
+        wfc_gpu = wave.cufftDoubleComplexval("wfc");
         cudaMemcpy(wfc, wfc_gpu, sizeof(cufftDoubleComplex)*xDim*yDim, 
                    cudaMemcpyDeviceToHost);
     }
 
+    std::cout << "got to here" << '\n';
+
     free(GV); free(GK); free(xPy); free(yPx);
+
+    std::cout << "evolution started..." << '\n';
+    std::cout << "esteps: " << esteps << '\n';
 
     //************************************************************//
     /*
@@ -477,8 +555,6 @@ int main(int argc, char **argv){
         if(err!=cudaSuccess)
             exit(1);
             
-        // delta_define(x, y, (523.6667 - 512 + x0_shift)*dx, 
-        //              (512.6667 - 512 + y0_shift)*dy, V_opt);
         FileIO::writeOutDouble(buffer,"V_opt",V_opt,xDim*yDim,0);
         //evolve(wfc_gpu, K_gpu, V_gpu, yPx_gpu, xPy_gpu, par_sum, 
         //       par.ival("esteps"), cupar, 1, 0, par, buffer);
@@ -492,9 +568,7 @@ int main(int argc, char **argv){
     cudaFree(xPy_gpu); cudaFree(par_sum);
 
     time(&fin);
-    //appendData(&params,ctime(&fin),0.0);
     printf("Finish: %s\n", ctime(&fin));
     printf("Total time: %ld seconds\n ",(long)fin-start);
-    //appendData(&params,"t_duration",fin-start);
     return 0;
 }

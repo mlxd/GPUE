@@ -197,6 +197,7 @@ void optLatSetup(struct Vtx::Vortex centre, double* V,
 ** Calculates energy and angular momentum of current state. 
 ** Implementation not fully finished.
 **/
+/*
 double energy_angmom(double *Energy, double* Energy_gpu, double2 *V_op, 
                      double2 *K_op, double2 *gpuWfc, 
                      int gState, Grid &par){
@@ -212,74 +213,11 @@ double energy_angmom(double *Energy, double* Energy_gpu, double2 *V_op,
     for (int i=0; i < xDim*yDim; ++i){
         Energy[i] = 0.0; 
     }
-    
-    
-/*    cudaMalloc((void**) &energy_gpu, sizeof(double2) * xDim*yDim);
-
-    energyCalc<<<grid,threads>>>( gpuWfc, V_op, 0.5*dt, energy_gpu, gState,1,
-                                  i 0.5*sqrt(omegaZ/mass));
-    result = cufftExecZ2Z( plan_2d, gpuWfc, gpuWfc, CUFFT_FORWARD );
-    scalarDiv<<<grid,threads>>>( gpuWfc, renorm_factor_2d, gpuWfc ); //Normalise
-
-    energyCalc<<<grid,threads>>>( gpuWfc, K_op, dt, energy_gpu, gState,0, 
-                                  0.5*sqrt(omegaZ/mass));
-    result = cufftExecZ2Z( plan_2d, gpuWfc, gpuWfc, CUFFT_INVERSE );
-    scalarDiv<<<grid,threads>>>( gpuWfc, renorm_factor_2d, gpuWfc ); //Normalise
-    
-    err=cudaMemcpy(energy, energy_gpu, sizeof(cufftDoubleComplex)*xDim*yDim, 
-                   cudaMemcpyDeviceToHost);
-    
-    for(int i=0; i<xDim*yDim; i++){
-        result += energy[i].x;
-        //printf("En=%E\n",result*dx*dy);
-    }
-*/
     return result*dx*dy;
     
 }
 
-
-//##############################################################################
-//##############################################################################
-
-/*
- * Used to perform parallel summation using templates from c++
- */
-/*
-template<typename T> void parSum(T *gpuToSumArr, T *gpuParSum, int threads,
-                                 Grid &par, Cuda &cupar){
-    int xDim = par.ival("xDim");
-    int yDim = par.ival("yDim");
-    double dx = par.dval("dx");
-    double dy = par.dval("dy");
-    int grid_tmp = xDim*yDim;
-    int block = grid_tmp/threads;
-    int thread_tmp = threads;
-    int pass = 0;
-    dim3 grid = cupar.dim3val("grid");
-    while((double)grid_tmp/threads > 1.0){
-        if(grid_tmp == xDim*yDim){
-            multipass<<<block,threads,threads*sizeof(T)>>>(
-                &gpuToSumArr[0],&gpuParSum[0],pass);
-             }
-        else{
-            multipass<<<block,thread_tmp,thread_tmp*sizeof(T)>>>(
-                &gpuParSum[0],&gpuParSum[0],pass);
-        }
-        grid_tmp /= threads;
-        block = (int) ceil((double)grid_tmp/threads);
-        pass++;
-    }
-    thread_tmp = grid_tmp;
-    multipass<<<1,thread_tmp,thread_tmp*sizeof(double2)>>>(&gpuParSum[0],
-                                                           &gpuParSum[0], pass);
-    scalarDiv_wfcNorm<<<grid,threads>>>(gpuToSumArr, dx*dy, gpuParSum, 
-                                        gpuToSumArr);
-}
-*/
-//##############################################################################
-//##############################################################################
-
+// Creates narrow Gaussian "delta" peaks for vortex kicking
 void delta_define(double *x, double *y, double x0, double y0, double *delta,
                   Grid &par, Op &opr){
     int xDim = par.ival("xDim");
@@ -300,3 +238,4 @@ void delta_define(double *x, double *y, double x0, double y0, double *delta,
         }
     }
 }
+*/
