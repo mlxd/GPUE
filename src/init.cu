@@ -85,7 +85,7 @@ int initialise(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     double *yPx;
     double *Energy_gpu;
     cufftDoubleComplex *wfc;
-    //cufftDoubleComplex *V_gpu;
+    cufftDoubleComplex *V_gpu;
     cufftDoubleComplex *EV_opt;
     cufftDoubleComplex *wfc_backup;
     cufftDoubleComplex *GK;
@@ -95,11 +95,11 @@ int initialise(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     cufftDoubleComplex *ExPy;
     cufftDoubleComplex *EyPx;
     cufftDoubleComplex *EappliedField; 
-    //cufftDoubleComplex *wfc_gpu;
-    //cufftDoubleComplex *K_gpu;
-    //cufftDoubleComplex *xPy_gpu;
-    //cufftDoubleComplex *yPx_gpu;
-    //cufftDoubleComplex *par_sum;
+    cufftDoubleComplex *wfc_gpu;
+    cufftDoubleComplex *K_gpu;
+    cufftDoubleComplex *xPy_gpu;
+    cufftDoubleComplex *yPx_gpu;
+    cufftDoubleComplex *par_sum;
 
     cufftResult result = cupar.cufftResultval("result");
     cufftHandle plan_1d = cupar.cufftHandleval("plan_1d");
@@ -107,7 +107,7 @@ int initialise(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
 
     dim3 grid = cupar.dim3val("grid");
 
-    char buffer[100];
+    std::string buffer;
     double gammaY; //Aspect ratio of trapping geometry.
     double Rxy; //Condensate scaling factor.
     double a0x, a0y; //Harmonic oscillator length in x and y directions
@@ -165,6 +165,8 @@ int initialise(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     a0y = sqrt(HBAR/(2*mass*omegaY));
     par.store("a0x",a0x);
     par.store("a0y",a0y);
+
+    std::cout << N << '\t' << a_s << '\t' << mass << '\t' << omegaZ << '\n';
     
     Rxy = pow(15,0.2)*pow(N*a_s*sqrt(mass*omegaZ/HBAR),0.2);
     par.store("Rxy",Rxy);
@@ -172,6 +174,7 @@ int initialise(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
                                                ( 1 - omega*omega) ) ));
     xMax = 6*Rxy*a0x; //10*bec_length; //6*Rxy*a0x;
     yMax = 6*Rxy*a0y; //10*bec_length;
+    std::cout << yMax << '\t' << xMax << '\n';
     par.store("xMax",xMax);
     par.store("yMax",yMax);
 
@@ -189,6 +192,8 @@ int initialise(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     double dpx, dpy;
     dpx = PI/(xMax);
     dpy = PI/(yMax);
+    std::cout << yMax << '\t' << xMax << '\n';
+    std::cout << dpx << '\t' << dpy << '\n';
     par.store("dpx",dpx);
     par.store("dpy",dpy);
 
@@ -215,8 +220,13 @@ int initialise(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
         
         yp[i] = (i+1)*dpy;
         yp[i + (yDim/2)] = -pyMax + (i+1)*dpy;
+
+        //std::cout << x[i] << '\t' << y[i] << '\t' << xp[i] << '\t' << yp[i] << '\n';
     }
     
+
+    std::cout << dpx << '\t' << dpy << '\n';
+
     //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%//
     
     /* Initialise wavefunction, momentum, position, angular momentum, 
@@ -243,7 +253,6 @@ int initialise(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
                                                          gSize);
     
     /* Initialise wfc, EKp, and EVr buffers on GPU */
-    /*
     cudaMalloc((void**) &Energy_gpu, sizeof(double) * gSize);
     cudaMalloc((void**) &wfc_gpu, sizeof(cufftDoubleComplex) * gSize);
     cudaMalloc((void**) &Phi_gpu, sizeof(double) * gSize);
@@ -252,7 +261,6 @@ int initialise(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     cudaMalloc((void**) &xPy_gpu, sizeof(cufftDoubleComplex) * gSize);
     cudaMalloc((void**) &yPx_gpu, sizeof(cufftDoubleComplex) * gSize);
     cudaMalloc((void**) &par_sum, sizeof(cufftDoubleComplex) * (gSize/threads));
-    */
     //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%//
 
     #ifdef __linux
@@ -321,7 +329,7 @@ int initialise(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%//
 
     //free(V); 
-    //free(K); free(r); //free(Phi);
+    free(K); free(r); free(Phi);
 
     //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%//
 
@@ -354,6 +362,9 @@ int initialise(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     
     //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%//
 
+    std::cout << GV[0].x << '\t' << GK[0].x << '\t' 
+              << xPy[0] << '\t' << yPx[0] << '\n';
+
     // Storing variables that have been initialized
     // Re-establishing variables from parsed Grid class
     // Initializes uninitialized variables to 0 values
@@ -377,17 +388,17 @@ int initialise(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     opr.store("V", V);
     opr.store("V_opt", V_opt);
     wave.store("Phi", Phi);
-    //wave.store("Phi_gpu", Phi_gpu);
+    wave.store("Phi_gpu", Phi_gpu);
     opr.store("K", K);
     opr.store("xPy", xPy);
     opr.store("yPx", yPx);
-    //opr.store("Energy_gpu", Energy_gpu);
+    opr.store("Energy_gpu", Energy_gpu);
     par.store("atoms", N);
     par.store("xDim", xDim);
     par.store("yDim", yDim);
     par.store("threads", threads);
     wave.store("wfc", wfc);
-    //opr.store("V_gpu", V_gpu);
+    opr.store("V_gpu", V_gpu);
     opr.store("EV_opt", EV_opt);
     wave.store("wfc_backup", wfc_backup);
     opr.store("GK", GK);
@@ -397,11 +408,11 @@ int initialise(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     opr.store("ExPy", ExPy);
     opr.store("EyPx", EyPx);
     opr.store("EappliedField", EappliedField);
-    //wave.store("wfc_gpu", wfc_gpu);
-    //opr.store("K_gpu", K_gpu);
-    //opr.store("xPy_gpu", xPy_gpu);
-    //opr.store("yPx_gpu", yPx_gpu);
-    //wave.store("par_sum", par_sum);
+    wave.store("wfc_gpu", wfc_gpu);
+    opr.store("K_gpu", K_gpu);
+    opr.store("xPy_gpu", xPy_gpu);
+    opr.store("yPx_gpu", yPx_gpu);
+    wave.store("par_sum", par_sum);
 
     cupar.store("result", result);
     cupar.store("plan_1d", plan_1d);
@@ -415,7 +426,7 @@ int initialise(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
 // NOTE: RE-ESTABLISH PARAMS AFTER PARSING
 int main(int argc, char **argv){
 
-    char buffer[100];
+    std::string buffer;
 
     Wave wave;
     Op opr;
@@ -503,19 +514,22 @@ int main(int argc, char **argv){
         if(err!=cudaSuccess)
             exit(1);
         
-        //evolve(wfc_gpu, K_gpu, V_gpu, yPx_gpu, xPy_gpu, par_sum, 
-        //       par.ival("gsteps"), cupar, 0, 0, par, buffer);
         evolve(wave, opr, par_sum,
-               par.ival("gsteps"), cupar, 0, 0, par, buffer);
+               gsteps, cupar, 0, 0, par, buffer);
         wfc = wave.cufftDoubleComplexval("wfc");
         wfc_gpu = wave.cufftDoubleComplexval("wfc");
         cudaMemcpy(wfc, wfc_gpu, sizeof(cufftDoubleComplex)*xDim*yDim, 
                    cudaMemcpyDeviceToHost);
     }
 
-    std::cout << "got to here" << '\n';
+    std::cout << GV[0].x << '\t' << GK[0].x << '\t' 
+              << xPy[0] << '\t' << yPx[0] << '\n';
 
-    free(GV); free(GK); free(xPy); free(yPx);
+    //free(GV); free(GK); free(xPy); free(yPx);
+
+    // Re-initializing wfc after evolution
+    wfc = wave.cufftDoubleComplexval("wfc");
+    wfc_gpu = wave.cufftDoubleComplexval("wfc_gpu");
 
     std::cout << "evolution started..." << '\n';
     std::cout << "esteps: " << esteps << '\n';
@@ -528,40 +542,54 @@ int main(int argc, char **argv){
     if(esteps > 0){
         err=cudaMemcpy(xPy_gpu, ExPy, sizeof(cufftDoubleComplex)*xDim*yDim, 
                        cudaMemcpyHostToDevice);
-        if(err!=cudaSuccess)
+        if(err!=cudaSuccess){
+            std::cout << 1 << '\n';
             exit(1);
+        }
         err=cudaMemcpy(yPx_gpu, EyPx, sizeof(cufftDoubleComplex)*xDim*yDim, 
                        cudaMemcpyHostToDevice);
-        if(err!=cudaSuccess)
+        if(err!=cudaSuccess){
+            std::cout << 2 << '\n';
             exit(1);
+        }
         err=cudaMemcpy(xPy_gpu, ExPy, sizeof(cufftDoubleComplex)*xDim*yDim, 
                        cudaMemcpyHostToDevice);
-        if(err!=cudaSuccess)
+        if(err!=cudaSuccess){
+            std::cout << 3 << '\n';
             exit(1);
+        }
         err=cudaMemcpy(yPx_gpu, EyPx, sizeof(cufftDoubleComplex)*xDim*yDim, 
                        cudaMemcpyHostToDevice);
-        if(err!=cudaSuccess)
+        if(err!=cudaSuccess){
+            std::cout << 4 << '\n';
             exit(1);
+        }
         err=cudaMemcpy(K_gpu, EK, sizeof(cufftDoubleComplex)*xDim*yDim, 
                        cudaMemcpyHostToDevice);
-        if(err!=cudaSuccess)
+        if(err!=cudaSuccess){
+            std::cout << 5 << '\n';
             exit(1);
+        }
         err=cudaMemcpy(V_gpu, EV, sizeof(cufftDoubleComplex)*xDim*yDim, 
                        cudaMemcpyHostToDevice);
-        if(err!=cudaSuccess)
+        if(err!=cudaSuccess){
+            std::cout << 6 << '\n';
             exit(1);
+        }
         err=cudaMemcpy(wfc_gpu, wfc, sizeof(cufftDoubleComplex)*xDim*yDim, 
                        cudaMemcpyHostToDevice);
-        if(err!=cudaSuccess)
+        if(err!=cudaSuccess){
+            std::cout << 7 << '\n';
             exit(1);
+        }
             
         FileIO::writeOutDouble(buffer,"V_opt",V_opt,xDim*yDim,0);
-        //evolve(wfc_gpu, K_gpu, V_gpu, yPx_gpu, xPy_gpu, par_sum, 
-        //       par.ival("esteps"), cupar, 1, 0, par, buffer);
         evolve(wave, opr, par_sum,
-               par.ival("esteps"), cupar, 1, 0, par, buffer);
+               esteps, cupar, 1, 0, par, buffer);
     
     }
+
+    std::cout << "done evolving" << '\n';
     free(EV); free(EK); free(ExPy); free(EyPx);
     free(x);free(y);
     cudaFree(wfc_gpu); cudaFree(K_gpu); cudaFree(V_gpu); cudaFree(yPx_gpu); 

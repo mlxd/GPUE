@@ -100,6 +100,7 @@ namespace FileIO{
         for (i = 0; i < length; i++)
             fprintf (f, "%.16e\n",data[i].y);
         fclose (f);
+
     }
 
     /*

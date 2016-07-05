@@ -42,7 +42,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 void evolve( Wave &wave, Op &opr,
             cufftDoubleComplex *gpuParSum, int numSteps, Cuda cupar,
-            unsigned int gstate, unsigned int ramp, Grid &par, char *buffer){
+            unsigned int gstate, unsigned int ramp, Grid &par, 
+            std::string buffer){
 
     // Re-establishing variables from parsed Grid class
     double omega = par.dval("omega");
@@ -68,7 +69,7 @@ void evolve( Wave &wave, Op &opr,
     int write_it = par.ival("write_it");
     int graph = par.ival("graph");
     int N = par.ival("atoms");
-    int printSteps = par.ival("print");
+    int printSteps = par.ival("printSteps");
     int nonlin = par.ival("gpe");
     int lz = par.ival("ang_mom");
     int xDim = par.ival("xDim");
@@ -113,8 +114,11 @@ void evolve( Wave &wave, Op &opr,
     /** Determines the initial average density at the condensate central 
     * position and calculates a value for the healing length from this. Used 
     * thereafter as the lower limit for distances between vortices. **/
+
     int gridSum = 1<<6;
+
     double *densitySubset = (double*) malloc(sizeof(double)*gridSum);
+
     #pragma omp parallel for private(k)
     for (int j=0; j<gridSum; ++j){
         for (int k=0; k<gridSum; ++k){
@@ -122,6 +126,7 @@ void evolve( Wave &wave, Op &opr,
                 (gridSum/2) + j )*yDim  + ( (xDim/2)  - (gridSum/2) + k )]);
         }
     }
+
     // defined central condensate density
     xi = 1/sqrt(8*PI*a_s*Minions::sumAvg(densitySubset,gridSum)/(dx*dy));
     printf("Avg healing length at centre=%E\n",xi);
@@ -159,7 +164,8 @@ void evolve( Wave &wave, Op &opr,
     
     int num_kick = 0;
     double t_kick = (2*PI/omega_0)/(6*Dt);
-    
+
+    std::cout << "numSteps is: " << numSteps << '\n';
     for(int i=0; i < numSteps; ++i){
         if ( ramp == 1 ){
             //Adjusts omega for the appropriate trap frequency.
@@ -180,12 +186,15 @@ void evolve( Wave &wave, Op &opr,
                    ramp, gstate, ramp | (gstate << 1));
             switch (ramp | (gstate << 1)) {
                 case 0: //Groundstate solver, constant Omega value.
+                    std::cout << "we are in case 0" << '\n';
                     fileName = "wfc_0_const";
                     break;
                 case 1: //Groundstate solver, ramped Omega value.
+                    std::cout << "we are in state 1" << '\n';
                     fileName = "wfc_0_ramp";
                     break;
                 case 2: //Real-time evolution, constant Omega value.
+                    std::cout << "we are in case 2" << '\n';
                     fileName = "wfc_ev";
                     vortexLocation = (int *) calloc(xDim * yDim, sizeof(int));
                     num_vortices[0] = Tracker::findVortex(vortexLocation, wfc,
@@ -312,11 +321,12 @@ void evolve( Wave &wave, Op &opr,
                 default:
                     break;
             }
+
             if (write_it) {
                 FileIO::writeOut(buffer, fileName, wfc, xDim * yDim, i);
             }
-            // printf("Energy[t@%d]=%E\n",i,energy_angmom(gpuPositionOp, 
-            //        gpuMomentumOp, dx, dy, gpuWfc,gstate));
+            //printf("Energy[t@%d]=%E\n",i,energy_angmom(gpuPositionOp, 
+            //       gpuMomentumOp, dx, dy, gpuWfc,gstate));
 /*
             cudaMemcpy(V_gpu, V, sizeof(double)*xDim*yDim, 
                          cudaMemcpyHostToDevice);
@@ -326,18 +336,18 @@ void evolve( Wave &wave, Op &opr,
                        cudaMemcpyHostToDevice);
             cudaMemcpy(K_gpu, K, sizeof(double)*xDim*yDim, 
                        cudaMemcpyHostToDevice);
-*/        
+*/
         }
-    
-    /** ** ############################################################## ** **/
-    /** **                       More F'n' Dragons!                       ** **/
-    /** ** ############################################################## ** **/
+
+        /** ** ########################################################## ** **/
+        /** **                     More F'n' Dragons!                     ** **/
+        /** ** ########################################################## ** **/
         if(i%((int)t_kick+1) == 0 && num_kick<=6 && gstate==1 && kick_it == 1 ){
             cudaMemcpy(V_gpu, EV_opt, sizeof(cufftDoubleComplex)*xDim*yDim, 
                        cudaMemcpyHostToDevice);
             ++num_kick;
         }
-    /** ** ############################################################## ** **/
+        /** ** ########################################################## ** **/
 
         /*
          * U_r(dt/2)*wfc
@@ -504,6 +514,7 @@ void evolve( Wave &wave, Op &opr,
         }
     }
 
+    std::cout << "finished evolution" << '\n';
     // Storing wavefunctions for later
     wave.store("wfc", wfc);
     wave.store("wfc_gpu", gpuWfc);
