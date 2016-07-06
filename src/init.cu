@@ -426,15 +426,17 @@ int initialise(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
 // NOTE: RE-ESTABLISH PARAMS AFTER PARSING
 int main(int argc, char **argv){
 
+    Grid par = parseArgs(argc,argv);
+
     std::string buffer;
 
     Wave wave;
     Op opr;
-    
+
     time_t start,fin;
     time(&start);
     printf("Start: %s\n", ctime(&start));
-    Grid par = parseArgs(argc,argv);
+
     Cuda cupar;
     int device = par.ival("device");
     cudaSetDevice(device);
