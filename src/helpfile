@@ -61,6 +61,7 @@ Options:
 -T 1e-4         Set gdt, timestep for imaginary-time
 -t 1e-4         Set dt, timestep for real-time
 -U 0            Set x0_shift
+-u              Performs all unit tests
 -V 0            Set y0_shift
 -W 1            Set write_it, flag to write to file
 -w 0            Set omega

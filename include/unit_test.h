@@ -1,7 +1,7 @@
 ///@cond LICENSE
-/*** parser.h - GPUE: Split Operator based GPU solver for Nonlinear
-Schrodinger Equation, Copyright (C) 2011-2016, James Ryan Schloss
-<jrs.schloss@gmail.com>, Tadhg Morgan, Neil Crowley.
+/*** split_op.h - GPUE: Split Operator based GPU solver for Nonlinear
+Schrodinger Equation, Copyright (C) 2011-2015, Lee J. O'Riordan
+<loriordan@gmail.com>, Tadhg Morgan, Neil Crowley.
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -34,29 +34,35 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ///@endcond
 //##############################################################################
 /**
- *  @file    split_op.h
+ *  @file    evolution.h
  *  @author  James Ryan Schloss (leios)
- *  @date    5/25/2016
+ *  @date    5/31/2016
  *  @version 0.1
  *
- *  @brief command line parser file.
+ *  @brief function for evolution.
  *
+ *  @section DESCRIPTION
+ *  These functions and variables are necessary for carrying out the GPUE
+ *	simulations. This file will be re-written in an improved form in some
+ *	future release.
  */
 //##############################################################################
 
-#ifndef PARSER_H
-#define PARSER_H
+#ifndef UNIT_H
+#define UNIT_H
 
-#include <cstdio>
-#include <cstdlib>
-#include <string>
-#include <getopt.h>
-#include "../include/ds.h"
-#include "../include/unit_test.h"
+#include "ds.h"
+/* Function declarations */
+/*
+ * arg1 = Function result code from CUDA CUFFT calls.
+ * arg2 = String data for name of function called. Prints value to stdout.
+ */
 
-/**
-* @brief	Parses command-line input, creates initial grid
-*/
-Grid parseArgs(int argc, char** argv);
+// UPDATE LIST LATER
+ /**
+ * @brief	performs all necessary unit tests to ensure proper function
+ * @ingroup	data
+ */
+void test_all();
 
 #endif

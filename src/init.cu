@@ -38,6 +38,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../include/tracker.h"
 #include "../include/minions.h"
 #include "../include/parser.h"
+#include "../include/unit_test.h"
 
 #include "../include/lattice.h"
 #include "../include/node.h"

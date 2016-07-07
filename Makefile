@@ -20,7 +20,7 @@ INCFLAGS	= -I$(CUDA_HEADER)
 LDFLAGS		= -L$(CUDA_LIB) 
 EXECS		= gpue # BINARY NAME HERE
 
-gpue: fileIO.o kernels.o split_op.o tracker.o minions.o ds.o edge.o node.o lattice.o manip.o vort.o parser.o evolution.o init.o
+gpue: fileIO.o kernels.o split_op.o tracker.o minions.o ds.o edge.o node.o lattice.o manip.o vort.o parser.o evolution.o init.o unit_test.o
 	$(CC) *.o $(INCFLAGS) $(CFLAGS) $(LDFLAGS) $(CHOSTFLAGS) -lm -lcufft -lcudart -o gpue
 	#rm -rf ./*.o
 
@@ -44,6 +44,9 @@ minions.o: ./src/minions.cc ./include/minions.h
 
 parser.o: ./src/parser.cc ./include/parser.h
 	 $(CC) -c ./src/parser.cc -o $@ $(INCFLAGS) $(CFLAGS) $(LDFLAGS) $(CHOSTFLAGS)
+
+unit_test.o: ./src/unit_test.cu ./include/unit_test.h
+	$(CC) -c ./src/unit_test.cu -o $@ $(INCFLAGS) $(CFLAGS) $(LDFLAGS) $(CHOSTFLAGS)
 
 evolution.o: ./src/evolution.cu ./include/evolution.h ./include/split_op.h ./include/constants.h ./include/kernels.h ./include/fileIO.h 
 	$(CC) -c ./src/evolution.cu -o $@ $(INCFLAGS) $(CFLAGS) $(LDFLAGS) -Xcompiler "-fopenmp" -arch=$(GPU_ARCH)

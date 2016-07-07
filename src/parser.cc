@@ -31,10 +31,9 @@ NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #include "../include/parser.h"
+#include "../include/unit_test.h"
 
 // note: read variables into appendData directly.
-
-
 
 Grid parseArgs(int argc, char** argv){
 
@@ -71,7 +70,7 @@ Grid parseArgs(int argc, char** argv){
     par.store("graph",0);
 
     while ((opt = getopt (argc, argv, 
-           "d:x:y:w:G:g:e:T:t:n:p:r:o:L:l:s:i:P:X:Y:O:k:W:U:V:S:a:hz:H:")) !=-1)
+          "d:x:y:w:G:g:e:T:t:n:p:r:o:L:l:s:i:P:X:Y:O:k:W:U:V:S:a:hz:H:u")) !=-1)
     {
         switch (opt)
         {
@@ -265,6 +264,12 @@ Grid parseArgs(int argc, char** argv){
                 printf("Argument for x0_shift is %lf\n",x0_shift);
                 par.store("x0_shift",x0_shift);
                 break;
+            }
+            case 'u':
+            {
+                std::cout << "performing all unit tests" << '\n';
+                test_all();
+                exit(0);
             }
             case 'V':
             {
