@@ -37,12 +37,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string>
 #include <assert.h>
 #include <cufft.h>
+#include <vector>
 
 // Test for the Grid structure with paramters in it 
 void parameter_test();
 
 // Test for the parsing function
 void parser_test();
+
+// Kernel testing will be added later
 
 /*----------------------------------------------------------------------------//
 * MAIN
@@ -51,6 +54,8 @@ void parser_test();
 void test_all(){
     std::cout << "Starting unit tests..." << '\n';
     parameter_test();
+    parser_test();
+    std::cout << "All tests completed. GPUE passed." << '\n';
 }
 
 // Test for the Grid structure with paramters in it
@@ -144,5 +149,115 @@ void parameter_test(){
     assert(cdc_var == wave_test.cufftDoubleComplexval("cdc_var"));
 
     std::cout << "All data structures checked" << '\n';
+
+}
+
+// Test for the parsing function
+void parser_test(){
+
+    // Testing the command-line parser with defaults and with modifications
+    std::cout << "Testing command-line parser with no arguments..." << '\n';
+
+    // First testing default values in and out of the parser function
+    char **fake_noargv;
+    fake_noargv = (char **)malloc(sizeof(char) * 1);
+    Grid noarg_grid;
+    noarg_grid = parseArgs(0,fake_noargv);
+
+    // Checking contents of noarg_grid:
+    assert(noarg_grid.ival("xDim") == 256);
+    assert(noarg_grid.ival("yDim") == 256);
+    assert(noarg_grid.ival("zDim") == 256);
+    assert(noarg_grid.dval("omega") == 0);
+    assert(noarg_grid.dval("gammaY") == 1.0);
+    assert(noarg_grid.dval("gsteps") == 1e4);
+    assert(noarg_grid.dval("esteps") == 1000);
+    assert(noarg_grid.dval("gdt") == 1e-4);
+    assert(noarg_grid.dval("dt") == 1e-4);
+    assert(noarg_grid.ival("device") == 0);
+    assert(noarg_grid.ival("atoms") == 1);
+    assert(noarg_grid.ival("read_wfc") == 0);
+    assert(noarg_grid.ival("printSteps") == 100);
+    assert(noarg_grid.dval("winding") == 0);
+    assert(noarg_grid.ival("corotating") == 0);
+    assert(noarg_grid.ival("gpe") == 0);
+    assert(noarg_grid.dval("omegaZ") == 0);
+    assert(noarg_grid.dval("int_scaling") == 0);
+    assert(noarg_grid.dval("laser_power") == 0);
+    assert(noarg_grid.dval("angle_sweep") == 0);
+    assert(noarg_grid.ival("kick_it") == 0);
+    assert(noarg_grid.ival("write_it") == 1);
+    assert(noarg_grid.dval("x0_shift") == 0);
+    assert(noarg_grid.dval("y0_shift") == 0);
+    assert(noarg_grid.dval("sepMinEpsilon") == 0);
+    assert(noarg_grid.ival("graph") == 0);
+
+    // Now testing all values specified by command-line arguments
+    std::cout << "Testing command-line parser with all arguments..." << '\n';
+
+    std::string cmdline;
+    cmdline = "./gpue -a 0 -d 0 -e 1000 -G 1 -g 1e4 -i 0 -k 0 -L 0 -l 0 -n 1 -O 0 -o 0 -P 0 -p 100 -r 0 -S 0 -s 0 -T 1e-4 -t 1e-4 -U 0 -V 0 -W 1 -w 0 -X 6.283 -x 256 -Y 6.283 -y 256";
+
+    // Fake argc is number of arguments above
+    int fake_argc = 55;
+
+    // Vector for the arguments for easier parsing
+    std::vector<std::string> arguments(fake_argc);
+
+    // Parsing the cmdline argument into vector
+    int count = 0;
+    for (size_t i = 0; i < cmdline.size(); ++i){
+        if (cmdline.at(i) != ' '){
+            arguments[count] += cmdline.at(i);
+        }
+        else{
+            count++;
+        }
+    }
+
+    char **fake_fullargv;
+    fake_fullargv = (char **)malloc(fake_argc * sizeof(char *));
+    for (int i = 0; i < fake_argc; ++i){
+        fake_fullargv[i] = (char *)malloc(arguments[i].size() * sizeof(char));
+        for (size_t j = 0; j < arguments[i].size(); ++j){
+            fake_fullargv[i][j] = arguments[i].at(j);
+        }
+    }
+
+    // Now to read into gpue and see what happens
+    Grid fullarg_grid;
+    fullarg_grid = parseArgs(fake_argc, fake_fullargv);
+
+    // Checking contents of fullarg_grid:
+    assert(fullarg_grid.ival("xDim") == 256);
+    assert(fullarg_grid.ival("yDim") == 256);
+    assert(fullarg_grid.ival("zDim") == 256);
+    assert(fullarg_grid.dval("omega") == 0);
+    assert(fullarg_grid.dval("gammaY") == 1.0);
+    assert(fullarg_grid.dval("gsteps") == 1e4);
+    assert(fullarg_grid.dval("esteps") == 1000);
+    assert(fullarg_grid.dval("gdt") == 1e-4);
+    assert(fullarg_grid.dval("dt") == 1e-4);
+    assert(fullarg_grid.ival("device") == 0);
+    assert(fullarg_grid.ival("atoms") == 1);
+    assert(fullarg_grid.ival("read_wfc") == 0);
+    assert(fullarg_grid.ival("printSteps") == 100);
+    assert(fullarg_grid.dval("winding") == 0);
+    assert(fullarg_grid.ival("corotating") == 0);
+    assert(fullarg_grid.ival("gpe") == 0);
+    assert(fullarg_grid.dval("omegaZ") == 0);
+    assert(fullarg_grid.dval("int_scaling") == 0);
+    assert(fullarg_grid.dval("laser_power") == 0);
+    assert(fullarg_grid.dval("angle_sweep") == 0);
+    assert(fullarg_grid.ival("kick_it") == 0);
+    assert(fullarg_grid.ival("write_it") == 1);
+    assert(fullarg_grid.dval("x0_shift") == 0);
+    assert(fullarg_grid.dval("y0_shift") == 0);
+    assert(fullarg_grid.dval("sepMinEpsilon") == 0);
+    assert(fullarg_grid.ival("graph") == 0);
+    assert(fullarg_grid.dval("omegaY") == 6.283);
+    assert(fullarg_grid.dval("omegaX") == 6.283);
+
+    std::cout << "All arguments parsed" << '\n';
 
 }

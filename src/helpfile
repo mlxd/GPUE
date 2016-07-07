@@ -36,7 +36,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # output a "help" function for GPUE that outputs all possible command-line
 # options for GPUE
                                       GPUE
-        Graphics-Processing Units solving the Gross--Piteavskii Equation
+          Graphics-Processing Units Gross--Piteavskii Equation solver
 Options:
 
 -a 0            Set flag to graph [deprecated]
@@ -57,7 +57,7 @@ Options:
 -p 100          Set printSteps, frequency of printing
 -r 0            Set read_wfc to read wavefunction from file
 -S 0            Set sepMinEpsilon
--s o            Sep gpe, flag for using Gross-Pitaevskii Equation
+-s 0            Set gpe, flag for using Gross-Pitaevskii Equation
 -T 1e-4         Set gdt, timestep for imaginary-time
 -t 1e-4         Set dt, timestep for real-time
 -U 0            Set x0_shift

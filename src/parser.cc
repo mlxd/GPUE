@@ -42,32 +42,32 @@ Grid parseArgs(int argc, char** argv){
     int opt;
 
     // Setting default values
-    par.store("xDim",256);
-    par.store("yDim",256);
-    par.store("zDim",256);
-    par.store("omega",0);
-    par.store("gammaY",1);
-    par.store("gsteps",1e4);
-    par.store("esteps",1000);
-    par.store("gdt",1e-4);
-    par.store("dt",1e-4);
-    par.store("device",0);
-    par.store("atoms",1);
-    par.store("read_wfc",0);
-    par.store("printSteps",100);
-    par.store("winding",0);
-    par.store("corotating",0);
-    par.store("gpe",0);
-    par.store("omegaZ",0);
-    par.store("int_scaling",0);
-    par.store("laser_power",0);
-    par.store("angle_sweep",0);
-    par.store("kick_it",0);
-    par.store("write_it",1);
-    par.store("x0_shift",0);
-    par.store("y0_shift",0);
-    par.store("sepMinEpsilon",0);
-    par.store("graph",0);
+    par.store("xDim", 256);
+    par.store("yDim", 256);
+    par.store("zDim", 256);
+    par.store("omega", 0.0);
+    par.store("gammaY", 1.0);
+    par.store("gsteps", 1e4);
+    par.store("esteps", 1000.0);
+    par.store("gdt", 1e-4);
+    par.store("dt", 1e-4);
+    par.store("device", 0);
+    par.store("atoms", 1);
+    par.store("read_wfc", 0);
+    par.store("printSteps" ,100);
+    par.store("winding", 0.0);
+    par.store("corotating", 0);
+    par.store("gpe" ,0);
+    par.store("omegaZ" ,0.0);
+    par.store("int_scaling" ,0.0);
+    par.store("laser_power" ,0.0);
+    par.store("angle_sweep" ,0.0);
+    par.store("kick_it" ,0);
+    par.store("write_it" ,1);
+    par.store("x0_shift" ,0.0);
+    par.store("y0_shift" ,0.0);
+    par.store("sepMinEpsilon" ,0.0);
+    par.store("graph" ,0);
 
     while ((opt = getopt (argc, argv, 
           "d:x:y:w:G:g:e:T:t:n:p:r:o:L:l:s:i:P:X:Y:O:k:W:U:V:S:a:hz:H:u")) !=-1)
