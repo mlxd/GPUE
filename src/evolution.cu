@@ -66,12 +66,12 @@ void evolve( Wave &wave, Op &opr,
     double *EV = opr.dsval("EV");
     double *Phi_gpu = wave.dsval("Phi_gpu");
     int kick_it = par.ival("kick_it");
-    int write_it = par.ival("write_it");
-    int graph = par.ival("graph");
+    bool write_it = par.bval("write_it");
+    bool graph = par.bval("graph");
     int N = par.ival("atoms");
     int printSteps = par.ival("printSteps");
-    int nonlin = par.ival("gpe");
-    int lz = par.ival("ang_mom");
+    bool nonlin = par.bval("gpe");
+    bool lz = par.bval("ang_mom");
     int xDim = par.ival("xDim");
     int yDim = par.ival("yDim");
     int gridSize = xDim * yDim;
@@ -258,7 +258,7 @@ void evolve( Wave &wave, Op &opr,
                                              num_vortices[0]);
                     }
 
-                    if (graph == 1) {
+                    if (graph) {
 
                         for (int ii = 0; ii < num_vortices[0]; ++ii) {
                             std::shared_ptr<LatticeGraph::Node> 
@@ -322,9 +322,11 @@ void evolve( Wave &wave, Op &opr,
                     break;
             }
 
+            std::cout << "writing" << '\n';
             if (write_it) {
                 FileIO::writeOut(buffer, fileName, wfc, xDim * yDim, i);
             }
+            std::cout << "written" << '\n';
             //printf("Energy[t@%d]=%E\n",i,energy_angmom(gpuPositionOp, 
             //       gpuMomentumOp, dx, dy, gpuWfc,gstate));
 /*

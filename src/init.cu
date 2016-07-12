@@ -38,6 +38,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../include/tracker.h"
 #include "../include/minions.h"
 #include "../include/parser.h"
+#include "../include/ds.h"
 #include "../include/unit_test.h"
 
 #include "../include/lattice.h"
@@ -460,7 +461,7 @@ int main(int argc, char **argv){
     double *yPx = opr.dsval("yPx");
     int xDim = par.ival("xDim");
     int yDim = par.ival("yDim");
-    int read_wfc = par.ival("read_wfc");
+    bool read_wfc = par.bval("read_wfc");
     int gsteps = par.ival("gsteps");
     int esteps = par.ival("esteps");
     cufftDoubleComplex *wfc = wave.cufftDoubleComplexval("wfc");
@@ -487,7 +488,7 @@ int main(int argc, char **argv){
     */
     //************************************************************//
     FileIO::writeOutParam(buffer, par, "Params.dat");
-    if(read_wfc == 1){
+    if(read_wfc){
         printf("Loading wavefunction...");
         wfc=FileIO::readIn("wfc_load","wfci_load",xDim, yDim);
         printf("Wavefunction loaded.\n");

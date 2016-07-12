@@ -82,7 +82,7 @@ class Grid{
         std::unordered_map<std::string, int> param_int;
         std::unordered_map<std::string, double> param_double;
         std::unordered_map<std::string, double*> param_dstar;
-        std::unordered_map<std::string, std::vector<double>> param_vdouble;
+        std::unordered_map<std::string, bool> param_bool;
 
         // List of all strings for parsing into the appropriate param map
         // 1 -> int, 2 -> double, 3 -> double*
@@ -103,8 +103,8 @@ class Grid{
         // Function to store double* into param_dstar
         void store(std::string id, double *dsparam);
 
-        // Function to store vector<double> into param_vdouble
-        void store(std::string id, std::vector<double> vdparam);
+        // Function to store bool into param_bool
+        void store(std::string id, bool bparam);
 
         // Function to retrieve integer value from param_int
         int ival(std::string id);
@@ -115,8 +115,8 @@ class Grid{
         // Function to retrieve double star values from param_dstar
         double *dsval(std::string id);
 
-        // Function to retrieve vector<double> from param_vdouble
-        std::vector<double> vdval(std::string id);
+        // Function to retrieve bool from param_bool
+        bool bval(std::string id);
 
         // Function for file writing
         void write(std::string filename);
@@ -168,10 +168,7 @@ class Cuda{
 class Op{
     private:
         std::unordered_map<std::string, double*> Op_dstar;
-        std::unordered_map<std::string, std::vector<double>> Op_vdouble;
         std::unordered_map<std::string, cufftDoubleComplex*> Op_cdc;
-        std::unordered_map<std::string, std::vector<cufftDoubleComplex>>
-            Op_vcdc;
         // double *V, *V_opt, *K, *xPy, *yPx, *xPy_gpu, *yPx_gpu;
         //cufftDoubleComplex *GK,*GV_half,*GV,*EK,*EV,*EV_opt,*GxPy,*GyPx,
         //                   *ExPy,*EyPx,*EappliedField,*K_gpu,*V_gpu;
@@ -180,14 +177,10 @@ class Op{
         // Functions to store data
         void store(std::string id, double *data);
         void store(std::string id, cufftDoubleComplex *data);
-        void store(std::string id, std::vector<cufftDoubleComplex> data);
-        void store(std::string id, std::vector<double> data);
 
         // Functions to retrieve data
         double *dsval(std::string id);
         cufftDoubleComplex *cufftDoubleComplexval(std::string id);
-        std::vector<double> vdval(std::string id);
-        std::vector<cufftDoubleComplex> vcufftDoubleComplexval(std::string id);
 };
 typedef class Op Op;
 
@@ -198,10 +191,7 @@ typedef class Op Op;
 class Wave{
     private:
         std::unordered_map<std::string, double*> Wave_dstar;
-        std::unordered_map<std::string, std::vector<double>> Wave_vdouble;
         std::unordered_map<std::string, cufftDoubleComplex*> Wave_cdc;
-        std::unordered_map<std::string, std::vector<cufftDoubleComplex>>
-            Wave_vcdc;
         //double *Energy, *energy_gpu, *r, *Phi, *Phi_gpu;
         //cufftDoubleComplex *wfc, *wfc0, *wfc_backup, *wfc_gpu, *par_sum;
     public:
@@ -209,15 +199,11 @@ class Wave{
         // functions to store data
         void store(std::string id, double *data);
         void store(std::string id, cufftDoubleComplex *data);
-        void store(std::string id, std::vector<cufftDoubleComplex> data);
-        void store(std::string id, std::vector<double> data);
 
 
         // Functions to retrieve data
         double *dsval(std::string id);
         cufftDoubleComplex *cufftDoubleComplexval(std::string id);
-        std::vector<double> vdval(std::string id);
-        std::vector<cufftDoubleComplex> vcufftDoubleComplexval(std::string id);
 };
 typedef class Wave Wave;
 

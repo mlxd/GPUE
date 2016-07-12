@@ -48,11 +48,10 @@ void Grid::store(std::string id, double *dsparam){
     param_dstar[id] = dsparam;
 }
 
-// Function to store double* into param_dstar
-void Grid::store(std::string id, std::vector<double> vdparam){
-    param_vdouble[id] = vdparam;
+// Function to store bool into param_bool
+void Grid::store(std::string id, bool bparam){
+    param_bool[id] = bparam;
 }
-
 // Function to retrieve integer from Grid->param_int
 int Grid::ival(std::string id){
     return param_int[id];
@@ -68,9 +67,9 @@ double *Grid::dsval(std::string id){
     return param_dstar[id];
 }
 
-// Function to retrieve vector<double> from param_vdouble
-std::vector<double> Grid::vdval(std::string id){
-    return param_vdouble[id];
+// Function to retrieve bool values from param_bool
+bool Grid::bval(std::string id){
+    return param_bool[id];
 }
 
 // Function for file writing (to replace writeOutParam)
@@ -152,6 +151,7 @@ cufftHandle Cuda::cufftHandleval(std::string id){
     }
     else{
         std::cout << "Error: plan not found!" << '\n';
+        exit(1);
     }
 }
 
@@ -171,6 +171,7 @@ cudaStream_t Cuda::cudaStream_tval(std::string id){
     }
     else{
         std::cout << "Error: stream not found!" << '\n';
+        exit(1);
     }
 }
 
@@ -187,14 +188,6 @@ void Op::store(std::string id, cufftDoubleComplex *data){
     Op_cdc[id] = data;
 }
 
-void Op::store(std::string id, std::vector<cufftDoubleComplex> data){
-    Op_vcdc[id] = data;
-}
-
-void Op::store(std::string id, std::vector<double> data){
-    Op_vdouble[id] = data;
-}
-
 // Functions to retrieve data from the Op class
 double *Op::dsval(std::string id){
     return Op_dstar[id];
@@ -202,14 +195,6 @@ double *Op::dsval(std::string id){
 
 cufftDoubleComplex *Op::cufftDoubleComplexval(std::string id){
     return Op_cdc[id];
-}
-
-std::vector<double> Op::vdval(std::string id){
-    return Op_vdouble[id];
-}
-
-std::vector<cufftDoubleComplex> Op::vcufftDoubleComplexval(std::string id){
-    return Op_vcdc[id];
 }
 
 // Functions to store data in the Wave class
@@ -221,14 +206,6 @@ void Wave::store(std::string id, cufftDoubleComplex *data){
     Wave_cdc[id] = data;
 }
 
-void Wave::store(std::string id, std::vector<cufftDoubleComplex> data){
-    Wave_vcdc[id] = data;
-}
-
-void Wave::store(std::string id, std::vector<double> data){
-    Wave_vdouble[id] = data;
-}
-
 // Functions to retrieve data from the Wave class
 double *Wave::dsval(std::string id){
     return Wave_dstar[id];
@@ -236,12 +213,4 @@ double *Wave::dsval(std::string id){
 
 cufftDoubleComplex *Wave::cufftDoubleComplexval(std::string id){
     return Wave_cdc[id];
-}
-
-std::vector<double> Wave::vdval(std::string id){
-    return Wave_vdouble[id];
-}
-
-std::vector<cufftDoubleComplex> Wave::vcufftDoubleComplexval(std::string id){
-    return Wave_vcdc[id];
 }

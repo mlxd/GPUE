@@ -53,24 +53,25 @@ Grid parseArgs(int argc, char** argv){
     par.store("dt", 1e-4);
     par.store("device", 0);
     par.store("atoms", 1);
-    par.store("read_wfc", 0);
+    par.store("read_wfc", false);
     par.store("printSteps" ,100);
     par.store("winding", 0.0);
-    par.store("corotating", 0);
-    par.store("gpe" ,0);
-    par.store("omegaZ" ,0.0);
-    par.store("int_scaling" ,0.0);
-    par.store("laser_power" ,0.0);
-    par.store("angle_sweep" ,0.0);
-    par.store("kick_it" ,0);
-    par.store("write_it" ,1);
-    par.store("x0_shift" ,0.0);
-    par.store("y0_shift" ,0.0);
-    par.store("sepMinEpsilon" ,0.0);
-    par.store("graph" ,0);
+    par.store("corotating", false);
+    par.store("gpe", false);
+    par.store("omegaZ", 0.0);
+    par.store("int_scaling",0.0);
+    par.store("laser_power",0.0);
+    par.store("angle_sweep",0.0);
+    par.store("kick_it", 0);
+    par.store("write_it", false);
+    par.store("x0_shift",0.0);
+    par.store("y0_shift",0.0);
+    par.store("sepMinEpsilon",0.0);
+    par.store("graph", false);
+    par.store("unit_test",false);
 
     while ((opt = getopt (argc, argv, 
-          "d:x:y:w:G:g:e:T:t:n:p:r:o:L:l:s:i:P:X:Y:O:k:W:U:V:S:a:hz:H:u")) !=-1)
+          "d:x:y:w:G:g:e:T:t:n:p:ro:L:lsi:P:X:Y:O:k:WU:V:S:ahz:H:u")) !=-1)
     {
         switch (opt)
         {
@@ -154,9 +155,8 @@ Grid parseArgs(int argc, char** argv){
             }
             case 'r':
             {
-                int read_wfc  = atoi(optarg);
-                printf("Argument for ReadIn is given as %d\n",read_wfc);
-                par.store("read_wfc",read_wfc);
+                printf("Reading wavefunction from file\n");
+                par.store("read_wfc",true);
                 break;
             }
             case 'p':
@@ -175,16 +175,14 @@ Grid parseArgs(int argc, char** argv){
             }
             case 'l':
             {
-                int ang_mom = atoi(optarg);
-                printf("Angular Momentum mode engaged: %d\n",ang_mom);
-                par.store("corotating",ang_mom);
+                printf("Angular momentum mode engaged\n");
+                par.store("corotating",true);
                 break;
             }
             case 's':
             {
-                int gpe = atoi(optarg);
-                printf("Non-linear mode engaged: %d\n",gpe);
-                par.store("gpe",gpe);
+                printf("Non-linear mode engaged\n");
+                par.store("gpe",true);
                 break;
             }
             case 'o':
@@ -253,9 +251,8 @@ Grid parseArgs(int argc, char** argv){
             }
             case 'W':
             {
-                int write_it = atoi(optarg);
-                printf("Argument for write_it is %i\n",write_it);
-                par.store("write_it",write_it);
+                printf("Writing out\n");
+                par.store("write_it",true);
                 break;
             }
             case 'U':
@@ -268,6 +265,7 @@ Grid parseArgs(int argc, char** argv){
             case 'u':
             {
                 std::cout << "performing all unit tests" << '\n';
+                par.store("unit_test", true);
                 test_all();
                 exit(0);
             }
@@ -287,9 +285,8 @@ Grid parseArgs(int argc, char** argv){
             }
             case 'a':
             {
-                int graph = atoi(optarg);
-                printf("Argument for graph is %d\n",graph);
-                par.store("graph",graph);
+                printf("Graphing mode engaged\n");
+                par.store("graph",true);
                 break;
             }
             case '?':

@@ -65,4 +65,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 void test_all();
 
+ /**
+ * @brief        Performs a simple integral with trapezoidal sum
+ * @ingroup      data
+ * @param        array to be integrated
+ * @param        dimension of the array to be integrated
+ * @param        dx of the array (assuming we are integrating along x)
+ */
+double trapz(double *array, int dimension, double dx);
+
 #endif

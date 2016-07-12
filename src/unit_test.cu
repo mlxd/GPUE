@@ -45,6 +45,9 @@ void parameter_test();
 // Test for the parsing function
 void parser_test();
 
+// Testing the evolve function in evolution.cu
+void test_evolve();
+
 // Kernel testing will be added later
 
 /*----------------------------------------------------------------------------//
@@ -77,16 +80,19 @@ void parameter_test(){
 
     double dvar = 1.05;
     int ivar = 5;
+    bool bvar = true;
 
     // Now testing the Grid class
     Grid grid_test;
     grid_test.store("dstar_var",dstar_var);
     grid_test.store("dvar", dvar);
     grid_test.store("ivar", ivar);
+    grid_test.store("bvar", bvar);
 
     assert(dstar_var == grid_test.dsval("dstar_var"));
     assert(dvar == grid_test.dval("dvar"));
     assert(ivar == grid_test.ival("ivar"));
+    assert(bvar == grid_test.bval("bvar"));
 
     std::cout << "Grid class checked, now checking the Cuda class..." << '\n';
 
@@ -176,27 +182,28 @@ void parser_test(){
     assert(noarg_grid.dval("dt") == 1e-4);
     assert(noarg_grid.ival("device") == 0);
     assert(noarg_grid.ival("atoms") == 1);
-    assert(noarg_grid.ival("read_wfc") == 0);
+    assert(noarg_grid.bval("read_wfc") == false);
     assert(noarg_grid.ival("printSteps") == 100);
     assert(noarg_grid.dval("winding") == 0);
-    assert(noarg_grid.ival("corotating") == 0);
-    assert(noarg_grid.ival("gpe") == 0);
+    assert(noarg_grid.bval("corotating") == false);
+    assert(noarg_grid.bval("gpe") == false);
     assert(noarg_grid.dval("omegaZ") == 0);
     assert(noarg_grid.dval("int_scaling") == 0);
     assert(noarg_grid.dval("laser_power") == 0);
     assert(noarg_grid.dval("angle_sweep") == 0);
     assert(noarg_grid.ival("kick_it") == 0);
-    assert(noarg_grid.ival("write_it") == 1);
+    assert(noarg_grid.bval("write_it") == false);
     assert(noarg_grid.dval("x0_shift") == 0);
     assert(noarg_grid.dval("y0_shift") == 0);
     assert(noarg_grid.dval("sepMinEpsilon") == 0);
-    assert(noarg_grid.ival("graph") == 0);
+    assert(noarg_grid.bval("graph") == false);
+    assert(noarg_grid.bval("unit_test") == false);
 
     // Now testing all values specified by command-line arguments
     std::cout << "Testing command-line parser with all arguments..." << '\n';
 
     std::string cmdline;
-    cmdline = "./gpue -a 0 -d 0 -e 1000 -G 1 -g 1e4 -i 0 -k 0 -L 0 -l 0 -n 1 -O 0 -o 0 -P 0 -p 100 -r 0 -S 0 -s 0 -T 1e-4 -t 1e-4 -U 0 -V 0 -W 1 -w 0 -X 6.283 -x 256 -Y 6.283 -y 256";
+    cmdline = "./gpue -d 0 -e 1000 -G 1 -a -g 1e4 -i 0 -k 0 -L 0 -l -n 1 -O 0 -o 0 -P 0 -p 100 -r -S 0 -s -T 1e-4 -t 1e-4 -U 0 -V 0 -W -w 0 -X 6.283 -x 256 -Y 6.283 -y 256";
 
     // Fake argc is number of arguments above
     int fake_argc = 55;
@@ -240,24 +247,43 @@ void parser_test(){
     assert(fullarg_grid.dval("dt") == 1e-4);
     assert(fullarg_grid.ival("device") == 0);
     assert(fullarg_grid.ival("atoms") == 1);
-    assert(fullarg_grid.ival("read_wfc") == 0);
+    assert(fullarg_grid.bval("read_wfc") == true);
     assert(fullarg_grid.ival("printSteps") == 100);
     assert(fullarg_grid.dval("winding") == 0);
-    assert(fullarg_grid.ival("corotating") == 0);
-    assert(fullarg_grid.ival("gpe") == 0);
+    assert(fullarg_grid.bval("corotating") == true);
+    assert(fullarg_grid.bval("gpe") == true);
     assert(fullarg_grid.dval("omegaZ") == 0);
     assert(fullarg_grid.dval("int_scaling") == 0);
     assert(fullarg_grid.dval("laser_power") == 0);
     assert(fullarg_grid.dval("angle_sweep") == 0);
     assert(fullarg_grid.ival("kick_it") == 0);
-    assert(fullarg_grid.ival("write_it") == 1);
+    assert(fullarg_grid.bval("write_it") == true);
     assert(fullarg_grid.dval("x0_shift") == 0);
     assert(fullarg_grid.dval("y0_shift") == 0);
     assert(fullarg_grid.dval("sepMinEpsilon") == 0);
-    assert(fullarg_grid.ival("graph") == 0);
+    assert(fullarg_grid.bval("graph") == true);
     assert(fullarg_grid.dval("omegaY") == 6.283);
     assert(fullarg_grid.dval("omegaX") == 6.283);
+    assert(fullarg_grid.bval("unit_test") == false);
 
     std::cout << "All arguments parsed" << '\n';
 
+}
+
+// Testing the evolve function in evolution.cu
+void test_evolve(){
+    // First, we need to create all the necessary data structures for the
+    // The evolve function
+
+}
+
+// Performs simple trapezoidal integral -- following python notation
+// Note: Because of the shape of the wfc array, we may need to create a temp 
+//       array to do the actual integration here. Look into it!
+double trapz(double *array, int dimension, double dx){
+    double integral = 0;
+    for (int i = 1; i < dimension; ++i){
+        integral += (array[i-1] + array[i]) * 0.5 * dx;
+    }
+    return integral;
 }
