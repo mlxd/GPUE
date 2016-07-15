@@ -1,4 +1,4 @@
-[![Coverage Status](https://coveralls.io/repos/github/mlxd/GPUE/badge.svg?branch=master)](https://coveralls.io/github/mlxd/GPUE?branch=master)
+[![DOI](https://zenodo.org/badge/23153/mlxd/GPUE.svg)](https://zenodo.org/badge/latestdoi/23153/mlxd/GPUE)
 [![Code Climate](https://codeclimate.com/github/mlxd/GPUE/badges/gpa.svg)](https://codeclimate.com/github/mlxd/GPUE)
 ![GPUE version](https://img.shields.io/badge/v-0.abs(exp(1i*pi))-blue.svg)
 ###############################################################################
@@ -110,9 +110,8 @@ Schrodinger and non-linear Schrodinger systems.
 ###############################################################################
 A citation would be nice :) Feel free to cite as:
 
-Moiré superlattice structures in kicked Bose-Einstein condensates,
-L. J. O'Riordan, A. C. White, and Th. Busch,
-Phys. Rev. A 93, 023609 (2016)
+Lee James O'Riordan et al., GPUE: Phasegineering release, Zenodo. (2016)
+\url{https://github.com/mlxd/GPUE} DOI:10.5281/zenodo.57968
 
 Otherwise, an email with a message, comments, or anything is appreciated. I'm 
 curious as to who is using this, so regardless of what you do with it, feel 
