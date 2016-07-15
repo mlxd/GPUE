@@ -48,7 +48,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 unsigned int LatticeGraph::Edge::suid = 0;
 unsigned int LatticeGraph::Node::suid = 0;
-
+double DX = 0.0;
 char buffer[100];
 int verbose; //Print more info. Not curently implemented.
 int device; //GPU ID choice.
@@ -64,7 +64,7 @@ double x0_shift, y0_shift; //Optical lattice shift parameters.
 double Rxy; //Condensate scaling factor.
 double a0x, a0y; //Harmonic oscillator length in x and y directions
 double sepMinEpsilon=0.0; //Minimum separation for epsilon.
-
+int kill_idx = -1;;
 /*
  * Checks CUDA routines have exitted correctly.
  */
@@ -395,7 +395,7 @@ int evolve( cufftDoubleComplex *gpuWfc,
 				case 2: //Real-time evolution, constant Omega value.
 					fileName = "wfc_ev";
 			        vortexLocation = (int *) calloc(xDim * yDim, sizeof(int));
-			        num_vortices[0] = Tracker::findVortex(vortexLocation, wfc, 1e-4, xDim, x, i);
+			        num_vortices[0] = Tracker::findVortex(vortexLocation, wfc, 2e-4, xDim, x, i);
 
 			        if (i == 0) { //If initial step, locate vortices, least-squares to find exact centre, calculate lattice angle, generate optical lattice.
 				        vortCoords = (struct Vtx::Vortex *) malloc(
@@ -447,14 +447,15 @@ int evolve( cufftDoubleComplex *gpuWfc,
 				        }
 				        if(i==0) {
 					        //Lambda for vortex annihilation/creation.
-					        auto killIt=[&](int idx) {
-					            WFC::phaseWinding(Phi, 1, x, y, dx, dy, lattice.getVortexUid(idx)->getData().coordsD.x,
-					                          lattice.getVortexUid(idx)->getData().coordsD.y, xDim);
+					        auto killIt=[&](int idx, int winding, double delta_x) {
+					            WFC::phaseWinding(Phi, winding, x, y, dx, dy, lattice.getVortexUid(idx)->getData().coordsD.x + cos(angle_sweep + vort_angle)*delta_x,
+					                          lattice.getVortexUid(idx)->getData().coordsD.y + sin(angle_sweep + vort_angle)*delta_x, xDim);
 					            cudaMemcpy(Phi_gpu, Phi, sizeof(double) * xDim * yDim, cudaMemcpyHostToDevice);
 					            cMultPhi <<<grid, threads>>> (gpuWfc, Phi_gpu, gpuWfc);
-				            };
-					        //killIt(44); //Kills vortex with UID 44
-
+				        	};
+						if (kill_idx > 0){
+							killIt(kill_idx,1,DX); //Kills vortex with UID idx 
+						}
 
 				        }
 				        lattice.createEdges(1.5 * 2e-5 / dx);
@@ -768,7 +769,7 @@ template<typename T> void parSum(T *gpuToSumArr, T *gpuParSum, int xDim, int yDi
 //###################################################################################################################
 int parseArgs(int argc, char** argv){
 	int opt;
-	while ((opt = getopt (argc, argv, "d:x:y:w:G:g:e:T:t:n:p:r:o:L:l:s:i:P:X:Y:O:k:W:U:V:S:a:")) != -1) {
+	while ((opt = getopt (argc, argv, "D:d:x:y:w:G:g:e:T:t:n:p:r:o:L:l:s:i:P:X:Y:O:k:W:U:V:S:a:K:")) != -1) {
 		switch (opt)
 		{
 			case 'x':
@@ -905,6 +906,16 @@ int parseArgs(int argc, char** argv){
 				graph = atoi(optarg);
 				printf("Argument for graph is %d\n",graph);
 				appendData(&params,"graph",graph);
+				break;
+			case 'K':
+				kill_idx = atoi(optarg);
+				printf("Argument for kill_idx is %d\n",kill_idx);
+				appendData(&params,"kill_idx",kill_idx);
+				break;
+			case 'D':
+				DX = atoi(optarg);
+				printf("Argument for DX is %d\n",DX);
+				appendData(&params,"DX",DX);
 				break;
 			case '?':
 				if (optopt == 'c') {

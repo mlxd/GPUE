@@ -188,7 +188,7 @@ class VtxList: #Linked-list for tracking vortices
 		return (ret_idx,r)
 
 ###############################################################################
-	def remove(self,pos): #Remove vortices outside articificial boundary
+	def remove(self,pos): #Remove vortices outside artificial boundary
 ###############################################################################
 		if self.length > 1 and pos > 1:
 			current = self.element(pos-1).next

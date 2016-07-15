@@ -298,7 +298,7 @@ namespace Tracker {
 				location = i;
 			}
 		}
-		double ang=(fmod(atan2( (vortCoords[location].coords.y - central.coords.y), (vortCoords[location].coords.x - central.coords.x) ),PI/3));
+		double ang=0;//(fmod(atan2( (vortCoords[location].coords.y - central.coords.y), (vortCoords[location].coords.x - central.coords.x) ),PI/3));
 		printf("Angle=%e\n",ang);
 		return PI/3 - ang;
 		
