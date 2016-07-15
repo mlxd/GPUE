@@ -1,30 +1,22 @@
+[![Coverage Status](https://coveralls.io/repos/github/mlxd/GPUE/badge.svg?branch=master)](https://coveralls.io/github/mlxd/GPUE?branch=master)
+[![Code Climate](https://codeclimate.com/github/mlxd/GPUE/badges/gpa.svg)](https://codeclimate.com/github/mlxd/GPUE)
+![GPUE version](https://img.shields.io/badge/v-0.abs(exp(1i*pi))-blue.svg)
 ###############################################################################
 ###############################################################################
  
-                                    (
-                           (        )\ )               )
-                           )\ )    (()/(   (    (     ((
-                          (()/(     /(_))  )\   )\   /))
-                          /(_))_   (_))   ((_) ((_) ()/(_)
-                          ██████╗ ██████╗ ██╗   ██╗███████╗
-                         ██╔════╝ ██╔══██╗██║   ██║██╔════╝
-                         ██║  ███╗██████╔╝██║   ██║█████╗
-                         ██║   ██║██╔═══╝ ██║   ██║██╔══╝
-                         ╚██████╔╝██║     ╚██████╔╝███████╗
-                          ╚═════╝ ╚═╝      ╚═════╝ ╚══════╝
+[logo]: https://github.com/mlxd/GPUE/blob/master/logo.png "GPUE"
+![GPUE - GPU Gross-Pitaevskii Equation solver][logo]
 
-                    GPUE - GPU Gross-Pitaevskii Equation solver
-                             Version 0.abs(exp(i*pi))
+***
 
-                        https://bitbucket.org/loriordan/gpue
-                        https://github.com/mlxd/gpue
+[bb]: https://bitbucket.org/loriordan/gpue "Bitbucket"
+[gh]: https://github.com/mlxd/gpue "GitHub"
 
 ###############################################################################
 ## 0. Introduction
 ###############################################################################
 
-Welcome to GPUE, the fastest zero temperature BEC routines in the land (the 
-last time I checked).
+Welcome to GPUE, the [fastest zero temperature BEC routines in the land](http://peterwittek.com/gpe-comparison.html) (the last time I checked).
 
 Runs on CUDA 7.0 (C++11 functionality needed) on both Linux and Mac OS X 
 (Nvidia GPU only). I have not tested on Windows. Other requirements are Python 
@@ -112,3 +104,19 @@ too to allow for their use.
 ###############################################################################
 I would like this tool to be a suite for 1D, 2D and 3D simulations of both 
 Schrodinger and non-linear Schrodinger systems. 
+
+###############################################################################
+## 4. I have used your program and/or learned from the source. What now?
+###############################################################################
+A citation would be nice :) Feel free to cite as:
+
+Moiré superlattice structures in kicked Bose-Einstein condensates,
+L. J. O'Riordan, A. C. White, and Th. Busch,
+Phys. Rev. A 93, 023609 (2016)
+
+Otherwise, an email with a message, comments, or anything is appreciated. I'm 
+curious as to who is using this, so regardless of what you do with it, feel 
+free to get in touch. 
+
+If you would like to help, I am always looking for some additional improvements.
+There is a lot remaining to be done, but many hands make light work, after all.
