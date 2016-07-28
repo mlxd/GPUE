@@ -39,7 +39,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
           Graphics-Processing Units Gross--Piteavskii Equation solver
 Options:
 
--a 0            Set flag to graph [deprecated]
+-a              Set flag to graph [deprecated]
 -d 0            Set device for GPU computing
 -e 1000         Set esteps, number of real-time evolution steps
 -G 1            Set GammaY
@@ -49,21 +49,21 @@ Options:
 -i 0            Set interaction strength between particles
 -k 0            Set kick_it, kicking for Moire lattice simulations
 -L 0            Set l, vortex winding
--l 0            Set ang_mom flag to use angular momentum
+-l              Set ang_mom flag to use angular momentum
 -n 1            Set N, number of particles in simulation
 -O 0            Set angle_sweep
 -o 0            Set omega_z, rotation around z axis
 -P 0            Set laser_power
 -p 100          Set printSteps, frequency of printing
--r 0            Set read_wfc to read wavefunction from file
+-r              Set read_wfc to read wavefunction from file
 -S 0            Set sepMinEpsilon
--s 0            Set gpe, flag for using Gross-Pitaevskii Equation
+-s              Set gpe, flag for using Gross-Pitaevskii Equation
 -T 1e-4         Set gdt, timestep for imaginary-time
 -t 1e-4         Set dt, timestep for real-time
 -U 0            Set x0_shift
 -u              Performs all unit tests
 -V 0            Set y0_shift
--W 1            Set write_it, flag to write to file
+-W              Set write_it, flag to write to file
 -w 0            Set omega
 -X 6.283        Set omega_x
 -x 256          Set xDim, dimension in X

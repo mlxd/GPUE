@@ -58,6 +58,8 @@ void evolve( Wave &wave, Op &opr,
     double dy = par.dval("dy");
     double interaction = par.dval("interaction");
     double laser_power = par.dval("laser_power");
+    double *x = par.dsval("x");
+    double *y = par.dsval("y");
     double *V = opr.dsval("V");
     double *V_opt = opr.dsval("V_opt");
     double *Phi = wave.dsval("Phi");
@@ -165,7 +167,7 @@ void evolve( Wave &wave, Op &opr,
     int num_kick = 0;
     double t_kick = (2*PI/omega_0)/(6*Dt);
 
-    std::cout << "numSteps is: " << numSteps << '\n';
+    //std::cout << "numSteps is: " << numSteps << '\n';
     for(int i=0; i < numSteps; ++i){
         if ( ramp == 1 ){
             //Adjusts omega for the appropriate trap frequency.
@@ -186,24 +188,28 @@ void evolve( Wave &wave, Op &opr,
                    ramp, gstate, ramp | (gstate << 1));
             switch (ramp | (gstate << 1)) {
                 case 0: //Groundstate solver, constant Omega value.
-                    std::cout << "we are in case 0" << '\n';
+                    //std::cout << "we are in case 0" << '\n';
                     fileName = "wfc_0_const";
                     break;
                 case 1: //Groundstate solver, ramped Omega value.
-                    std::cout << "we are in state 1" << '\n';
+                    //std::cout << "we are in state 1" << '\n';
                     fileName = "wfc_0_ramp";
                     break;
                 case 2: //Real-time evolution, constant Omega value.
-                    std::cout << "we are in case 2" << '\n';
+                    //std::cout << "we are in case 2" << '\n';
                     fileName = "wfc_ev";
                     vortexLocation = (int *) calloc(xDim * yDim, sizeof(int));
+                    //std::cout << "defining first element in num_vortices..." 
+                    //          << '\n';
                     num_vortices[0] = Tracker::findVortex(vortexLocation, wfc,
-                                                         1e-4, xDim, par.x, i);
+                                                         1e-4, xDim, x, i);
 
                     // If initial step, locate vortices, least-squares to find
                     // exact centre, calculate lattice angle, generate optical 
                     // lattice.
+                    //std::cout << "before first conditional" << '\n';
                     if (i == 0) {
+                        //std::cout << "in first conditional" << '\n';
                         vortCoords = (struct Vtx::Vortex *) malloc(
                                 sizeof(struct Vtx::Vortex) * 
                                 (2 * num_vortices[0]));
@@ -223,7 +229,7 @@ void evolve( Wave &wave, Op &opr,
                                     num_vortices[0], 
                                     vort_angle + PI * angle_sweep / 180.0,
                                     laser_power * HBAR * sqrt(omegaX * omegaY),
-                                    V_opt, par.x, par.y, par, opr);
+                                    V_opt, x, y, par, opr);
                         sepAvg = Tracker::vortSepAvg(vortCoords, central_vortex,
                                                      num_vortices[0]);
                         if (kick_it == 2) {
@@ -243,6 +249,7 @@ void evolve( Wave &wave, Op &opr,
                         par.store("Central_vort_winding", 
                                   (double) central_vortex.wind);
                         par.store("Num_vort", (double) num_vortices[0]);
+                        //std::cout << "writing to file in conditional" << '\n';
                         FileIO::writeOutParam(buffer, par, "Params.dat");
                     }
                     else if (num_vortices[0] > num_vortices[1]) {
@@ -274,7 +281,7 @@ void evolve( Wave &wave, Op &opr,
                         if(i==0) {
                             //Lambda for vortex annihilation/creation.
                             auto killIt=[&](int idx) {
-                                WFC::phaseWinding(Phi, 1, par.x, par.y, dx, dy,
+                                WFC::phaseWinding(Phi, 1, x, y, dx, dy,
                                                   lattice.getVortexUid(idx)->
                                                       getData().coordsD.x,
                                                   lattice.getVortexUid(idx)->
@@ -312,6 +319,7 @@ void evolve( Wave &wave, Op &opr,
                     memcpy(vortCoordsP, vortCoords, 
                            sizeof(int2) * num_vortices[0]);
                     //exit(1);
+                    //std::cout << "finished case 2" << '\n';
                     break;
 
 
@@ -322,11 +330,11 @@ void evolve( Wave &wave, Op &opr,
                     break;
             }
 
-            std::cout << "writing" << '\n';
+            //std::cout << "writing" << '\n';
             if (write_it) {
                 FileIO::writeOut(buffer, fileName, wfc, xDim * yDim, i);
             }
-            std::cout << "written" << '\n';
+            //std::cout << "written" << '\n';
             //printf("Energy[t@%d]=%E\n",i,energy_angmom(gpuPositionOp, 
             //       gpuMomentumOp, dx, dy, gpuWfc,gstate));
 /*
@@ -516,7 +524,7 @@ void evolve( Wave &wave, Op &opr,
         }
     }
 
-    std::cout << "finished evolution" << '\n';
+    //std::cout << "finished evolution" << '\n';
     // Storing wavefunctions for later
     wave.store("wfc", wfc);
     wave.store("wfc_gpu", gpuWfc);

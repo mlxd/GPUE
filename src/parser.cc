@@ -37,6 +37,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 Grid parseArgs(int argc, char** argv){
 
+    for (int i = 0; i < argc; i++){
+        std::cout << argv[i] << '\n';
+    }
+
     // Creates initial grid class for the parameters
     Grid par;
     int opt;
@@ -69,6 +73,10 @@ Grid parseArgs(int argc, char** argv){
     par.store("sepMinEpsilon",0.0);
     par.store("graph", false);
     par.store("unit_test",false);
+    par.store("omegaX", 6.283);
+    par.store("omegaY", 6.283);
+
+    optind = 1;
 
     while ((opt = getopt (argc, argv, 
           "d:x:y:w:G:g:e:T:t:n:p:ro:L:lsi:P:X:Y:O:k:WU:V:S:ahz:H:u")) !=-1)
@@ -79,35 +87,35 @@ Grid parseArgs(int argc, char** argv){
             {
                 int xDim = atoi(optarg);
                 printf("Argument for x is given as %d\n",xDim);
-                par.store("xDim",xDim);
+                par.store("xDim",(int)xDim);
                 break;
             }
             case 'y':
             {
                 int yDim = atoi(optarg);
                 printf("Argument for y is given as %d\n",yDim);
-                par.store("yDim",yDim);
+                par.store("yDim",(int)yDim);
                 break;
             }
             case 'z':
             {
                 int zDim = atoi(optarg);
                 printf("Argument for z is given as %d\n",zDim);
-                par.store("zDim",zDim);
+                par.store("zDim",(int)zDim);
                 break;
             }
             case 'w':
             {
                 double omega = atof(optarg);
                 printf("Argument for OmegaRotate is given as %E\n",omega);
-                par.store("omega",omega);
+                par.store("omega",(double)omega);
                 break;
             }
             case 'G':
             {
                 double gammaY = atof(optarg);
                 printf("Argument for gamma is given as %E\n",gammaY);
-                par.store("gammaY",gammaY);
+                par.store("gammaY",(double)gammaY);
                 break;
             }
             case 'g':
@@ -129,21 +137,21 @@ Grid parseArgs(int argc, char** argv){
                 double gdt = atof(optarg);
                 printf("Argument for groundstate Timestep is given as %E\n",
                        gdt);
-                par.store("gdt",gdt);
+                par.store("gdt",(double)gdt);
                 break;
             }
             case 't':
             {
                 double dt = atof(optarg);
                 printf("Argument for Timestep is given as %E\n",dt);
-                par.store("dt",dt);
+                par.store("dt",(double)dt);
                 break;
             }
             case 'd':
             {
                 int device = atoi(optarg);
                 printf("Argument for device is given as %d\n",device);
-                par.store("device",device);
+                par.store("device",(int)device);
                 break;
             }
             case 'n':
@@ -163,14 +171,14 @@ Grid parseArgs(int argc, char** argv){
             {
                 int print = atoi(optarg);
                 printf("Argument for Printout is given as %d\n",print);
-                par.store("printSteps",print);
+                par.store("printSteps",(int)print);
                 break;
             }
             case 'L':
             {
                 double l = atof(optarg);
                 printf("Vortex winding is given as : %E\n",l);
-                par.store("winding",l);
+                par.store("winding",(double)l);
                 break;
             }
             case 'l':
@@ -189,7 +197,7 @@ Grid parseArgs(int argc, char** argv){
             {
                 double omegaZ = atof(optarg);
                 printf("Argument for OmegaZ is given as %E\n",omegaZ);
-                par.store("omegaZ",omegaZ);
+                par.store("omegaZ",(double)omegaZ);
                 break;
             }
             case 'h':
@@ -225,7 +233,7 @@ Grid parseArgs(int argc, char** argv){
             {
                 double omegaX = atof(optarg);
                 printf("Argument for omegaX is %E\n",omegaX);
-                par.store("omegaX",omegaX);
+                par.store("omegaX",(double)omegaX);
                 break;
             }
             case 'Y':

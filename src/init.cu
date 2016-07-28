@@ -31,24 +31,7 @@ NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include "../include/split_op.h"
-#include "../include/kernels.h"
-#include "../include/constants.h"
-#include "../include/fileIO.h"
-#include "../include/tracker.h"
-#include "../include/minions.h"
-#include "../include/parser.h"
-#include "../include/ds.h"
-#include "../include/unit_test.h"
-
-#include "../include/lattice.h"
-#include "../include/node.h"
-#include "../include/edge.h"
-#include "../include/manip.h"
-#include "../include/vort.h"
-#include "../include/evolution.h"
-#include <string>
-#include <iostream>
+#include "../include/init.h"
 
 int initialise(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
 
@@ -102,6 +85,9 @@ int initialise(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     cufftDoubleComplex *xPy_gpu;
     cufftDoubleComplex *yPx_gpu;
     cufftDoubleComplex *par_sum;
+
+    std::cout << omegaX << '\t' << omegaY << '\n';
+    std::cout << "xDim is: " << xDim << '\t' <<  "yDim is: " << yDim << '\n';
 
     cufftResult result = cupar.cufftResultval("result");
     cufftHandle plan_1d = cupar.cufftHandleval("plan_1d");
@@ -168,15 +154,18 @@ int initialise(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     par.store("a0x",a0x);
     par.store("a0y",a0y);
 
+    std::cout << "a0x and y are: " << a0x << '\t' << a0y << '\n';
+
     std::cout << N << '\t' << a_s << '\t' << mass << '\t' << omegaZ << '\n';
     
     Rxy = pow(15,0.2)*pow(N*a_s*sqrt(mass*omegaZ/HBAR),0.2);
     par.store("Rxy",Rxy);
     double bec_length = sqrt( HBAR/(mass*sqrt( omegaX*omegaX * 
                                                ( 1 - omega*omega) ) ));
+
+    std::cout << "Rxy is: " << Rxy << '\n';
     xMax = 6*Rxy*a0x; //10*bec_length; //6*Rxy*a0x;
     yMax = 6*Rxy*a0y; //10*bec_length;
-    std::cout << yMax << '\t' << xMax << '\n';
     par.store("xMax",xMax);
     par.store("yMax",yMax);
 
@@ -194,7 +183,7 @@ int initialise(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     double dpx, dpy;
     dpx = PI/(xMax);
     dpy = PI/(yMax);
-    std::cout << yMax << '\t' << xMax << '\n';
+    std::cout << "yMax is: " << yMax << '\t' << "xMax is: " << xMax << '\n';
     std::cout << dpx << '\t' << dpy << '\n';
     par.store("dpx",dpx);
     par.store("dpy",dpy);
@@ -278,12 +267,19 @@ int initialise(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
         for( j=0; j < yDim; j++ ){
             Phi[(i*yDim + j)] = fmod(l*atan2(y[j], x[i]),2*PI);
             
-            wfc[(i*yDim + j)].x = exp(-( pow((x[i])/(Rxy*a0x),2) + 
-                                         pow((y[j])/(Rxy*a0y),2) ) ) *
-                                  cos(Phi[(i*xDim + j)]);
-            wfc[(i*yDim + j)].y = -exp(-( pow((x[i])/(Rxy*a0x),2) + 
-                                          pow((y[j])/(Rxy*a0y),2) ) ) *
-                                  sin(Phi[(i*xDim + j)]);
+            if (par.bval("unit_test")){
+                wfc[(i*yDim + j)].x =  (1/sqrt(2))*pow(1/PI,0.5) 
+                    * exp( -0.5*( x[i]*x[i] + y[j]*y[j] ) )*(1+2*x[i]/sqrt(2));
+                wfc[(i*yDim + j)].y = 0;
+            }
+            else{
+                wfc[(i*yDim + j)].x = exp(-( pow((x[i])/(Rxy*a0x),2) + 
+                                             pow((y[j])/(Rxy*a0y),2) ) ) *
+                                      cos(Phi[(i*xDim + j)]);
+                wfc[(i*yDim + j)].y = -exp(-( pow((x[i])/(Rxy*a0x),2) + 
+                                              pow((y[j])/(Rxy*a0y),2) ) ) *
+                                          sin(Phi[(i*xDim + j)]);
+            }
                 
             V[(i*yDim + j)] = 0.5*mass*( pow(omegaX*(x[i]+xOffset),2) + 
                                          pow(gammaY*omegaY*(y[j]+yOffset),2) );
@@ -425,23 +421,20 @@ int initialise(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     return 0;
 }
 
-// NOTE: RE-ESTABLISH PARAMS AFTER PARSING
 int main(int argc, char **argv){
 
     Grid par = parseArgs(argc,argv);
-
-    std::string buffer;
-
     Wave wave;
     Op opr;
+    Cuda cupar;
 
+    int device = par.ival("device");
+    cudaSetDevice(device);
+
+    std::string buffer;
     time_t start,fin;
     time(&start);
     printf("Start: %s\n", ctime(&start));
-
-    Cuda cupar;
-    int device = par.ival("device");
-    cudaSetDevice(device);
 
     //************************************************************//
     /*
@@ -521,7 +514,7 @@ int main(int argc, char **argv){
         evolve(wave, opr, par_sum,
                gsteps, cupar, 0, 0, par, buffer);
         wfc = wave.cufftDoubleComplexval("wfc");
-        wfc_gpu = wave.cufftDoubleComplexval("wfc");
+        wfc_gpu = wave.cufftDoubleComplexval("wfc_gpu");
         cudaMemcpy(wfc, wfc_gpu, sizeof(cufftDoubleComplex)*xDim*yDim, 
                    cudaMemcpyDeviceToHost);
     }
@@ -591,6 +584,8 @@ int main(int argc, char **argv){
         evolve(wave, opr, par_sum,
                esteps, cupar, 1, 0, par, buffer);
     
+        wfc = wave.cufftDoubleComplexval("wfc");
+        wfc_gpu = wave.cufftDoubleComplexval("wfc_gpu");
     }
 
     std::cout << "done evolving" << '\n';

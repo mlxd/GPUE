@@ -34,7 +34,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../include/ds.h"
 #include "../include/unit_test.h"
 #include "../include/parser.h"
-#include <string>
+#include "../include/evolution.h"
+#include "../include/init.h"
+#include <string.h>
 #include <assert.h>
 #include <cufft.h>
 #include <vector>
@@ -46,7 +48,7 @@ void parameter_test();
 void parser_test();
 
 // Testing the evolve function in evolution.cu
-void test_evolve();
+void evolve_test();
 
 // Kernel testing will be added later
 
@@ -58,6 +60,8 @@ void test_all(){
     std::cout << "Starting unit tests..." << '\n';
     parameter_test();
     parser_test();
+    evolve_test();
+
     std::cout << "All tests completed. GPUE passed." << '\n';
 }
 
@@ -165,8 +169,7 @@ void parser_test(){
     std::cout << "Testing command-line parser with no arguments..." << '\n';
 
     // First testing default values in and out of the parser function
-    char **fake_noargv;
-    fake_noargv = (char **)malloc(sizeof(char) * 1);
+    char *fake_noargv[] = {NULL};
     Grid noarg_grid;
     noarg_grid = parseArgs(0,fake_noargv);
 
@@ -201,35 +204,10 @@ void parser_test(){
 
     // Now testing all values specified by command-line arguments
     std::cout << "Testing command-line parser with all arguments..." << '\n';
+    std::vector<std::string> argarray(10);
 
-    std::string cmdline;
-    cmdline = "./gpue -d 0 -e 1000 -G 1 -a -g 1e4 -i 0 -k 0 -L 0 -l -n 1 -O 0 -o 0 -P 0 -p 100 -r -S 0 -s -T 1e-4 -t 1e-4 -U 0 -V 0 -W -w 0 -X 6.283 -x 256 -Y 6.283 -y 256";
-
-    // Fake argc is number of arguments above
-    int fake_argc = 55;
-
-    // Vector for the arguments for easier parsing
-    std::vector<std::string> arguments(fake_argc);
-
-    // Parsing the cmdline argument into vector
-    int count = 0;
-    for (size_t i = 0; i < cmdline.size(); ++i){
-        if (cmdline.at(i) != ' '){
-            arguments[count] += cmdline.at(i);
-        }
-        else{
-            count++;
-        }
-    }
-
-    char **fake_fullargv;
-    fake_fullargv = (char **)malloc(fake_argc * sizeof(char *));
-    for (int i = 0; i < fake_argc; ++i){
-        fake_fullargv[i] = (char *)malloc(arguments[i].size() * sizeof(char));
-        for (size_t j = 0; j < arguments[i].size(); ++j){
-            fake_fullargv[i][j] = arguments[i].at(j);
-        }
-    }
+    char *fake_fullargv[] = {strdup("./gpue"), strdup("-d"), strdup("0"), strdup("-e"), strdup("1000"), strdup("-G"), strdup("1"), strdup("-g"), strdup("1e4"), strdup("-i"), strdup("0"), strdup("-k"), strdup("0"), strdup("-L"), strdup("0"), strdup("-n"), strdup("1"), strdup("-O"), strdup("0"), strdup("-o"), strdup("0"), strdup("-P"), strdup("0"), strdup("-p"), strdup("100"), strdup("-S"), strdup("0"), strdup("-T"), strdup("1e-4"), strdup("-t"), strdup("1e-4"), strdup("-U"), strdup("0"), strdup("-V"), strdup("0"), strdup("-W"), strdup("-w"), strdup("0"), strdup("-X"), strdup("1.0"), strdup("-x"), strdup("256"), strdup("-Y"), strdup("1.0"), strdup("-y"), strdup("256"), strdup("-r"), strdup("-l"), strdup("-a"), strdup("-s"), NULL};
+    int fake_argc = sizeof(fake_fullargv) / sizeof(char *) - 1;
 
     // Now to read into gpue and see what happens
     Grid fullarg_grid;
@@ -262,18 +240,197 @@ void parser_test(){
     assert(fullarg_grid.dval("y0_shift") == 0);
     assert(fullarg_grid.dval("sepMinEpsilon") == 0);
     assert(fullarg_grid.bval("graph") == true);
-    assert(fullarg_grid.dval("omegaY") == 6.283);
-    assert(fullarg_grid.dval("omegaX") == 6.283);
+    assert(fullarg_grid.dval("omegaY") == 1.0);
+    assert(fullarg_grid.dval("omegaX") == 1.0);
     assert(fullarg_grid.bval("unit_test") == false);
-
-    std::cout << "All arguments parsed" << '\n';
 
 }
 
 // Testing the evolve function in evolution.cu
-void test_evolve(){
+void evolve_test(){
     // First, we need to create all the necessary data structures for the
-    // The evolve function
+    // The evolve function, FOLLOWING INIT.CU
+
+    std::cout << "Testing the evolve function" << '\n';
+
+    char * fake_argv[] = {strdup("./gpue"), strdup("-d"), strdup("0"), strdup("-e"), strdup("2.01e4"), strdup("-G"), strdup("1.0"), strdup("-g"), strdup("0"), strdup("-i"), strdup("1.0"), strdup("-k"), strdup("0"), strdup("-L"), strdup("0"), strdup("-n"), strdup("1e6"), strdup("-O"), strdup("0.0"), strdup("-o"), strdup("0.0"), strdup("-P"), strdup("0.0"), strdup("-p"), strdup("1000"), strdup("-S"), strdup("0.0"), strdup("-T"), strdup("1e-4"), strdup("-t"), strdup("1e-4"), strdup("-U"), strdup("0"), strdup("-V"), strdup("0"), strdup("-w"), strdup("0.0"), strdup("-X"), strdup("1.0"), strdup("-x"), strdup("256"), strdup("-Y"), strdup("1.0"), strdup("-y"), strdup("256"), strdup("-W"), NULL};
+    int fake_argc = sizeof(fake_argv) / sizeof(char *) - 1;
+
+    // Now to read into gpue and see what happens
+    Grid par;
+    par = parseArgs(fake_argc, fake_argv);
+
+    Wave wave;
+    Op opr;
+    Cuda cupar;
+
+    std::cout << "omegaX is: " << par.dval("omegaX") << '\n';
+    std::cout << "x / yDim are: " << par.ival("xDim") << '\t' 
+              << par.ival("yDim") << '\n';
+    int device = par.ival("device");
+    cudaSetDevice(device);
+
+    std::string buffer;
+
+    //************************************************************//
+    /*
+    * Initialise the Params data structure to track params and variables
+    */
+    //************************************************************//
+
+    initialise(opr, cupar, par, wave);
+
+    // Re-establishing variables from parsed Grid class
+    double dx = par.dval("dx");
+    double dy = par.dval("dy");
+    double *x = par.dsval("x");
+    double *y = par.dsval("y");
+    double *V_opt = opr.dsval("V_opt");
+    double *xPy = opr.dsval("xPy");
+    double *yPx = opr.dsval("yPx");
+    int xDim = par.ival("xDim");
+    int yDim = par.ival("yDim");
+    bool read_wfc = par.bval("read_wfc");
+    int gsteps = par.ival("gsteps");
+    int esteps = par.ival("esteps");
+    cufftDoubleComplex *wfc = wave.cufftDoubleComplexval("wfc");
+    cufftDoubleComplex *V_gpu = opr.cufftDoubleComplexval("V_gpu");
+    cufftDoubleComplex *GK = opr.cufftDoubleComplexval("GK");
+    cufftDoubleComplex *GV = opr.cufftDoubleComplexval("GV");
+    cufftDoubleComplex *EV = opr.cufftDoubleComplexval("EV");
+    cufftDoubleComplex *EK = opr.cufftDoubleComplexval("EK");
+    cufftDoubleComplex *ExPy = opr.cufftDoubleComplexval("ExPy");
+    cufftDoubleComplex *EyPx = opr.cufftDoubleComplexval("EyPx");
+    cufftDoubleComplex *wfc_gpu = wave.cufftDoubleComplexval("wfc_gpu");
+    cufftDoubleComplex *K_gpu = opr.cufftDoubleComplexval("K_gpu");
+    cufftDoubleComplex *xPy_gpu = opr.cufftDoubleComplexval("xPy_gpu");
+    cufftDoubleComplex *yPx_gpu = opr.cufftDoubleComplexval("yPx_gpu");
+    cufftDoubleComplex *par_sum = wave.cufftDoubleComplexval("par_sum");
+    cudaError_t err = cupar.cudaError_tval("err");
+
+    std::cout << "variables re-established" << '\n';
+    std::cout << read_wfc << '\n';
+
+    std::cout << "omegaY is: " << par.ival("omegaY") << '\t'
+              << "omegaX is: " << par.dval("omegaX") << '\n';
+   
+    if(gsteps > 0){
+        err=cudaMemcpy(K_gpu, GK, sizeof(cufftDoubleComplex)*xDim*yDim,
+                       cudaMemcpyHostToDevice);
+        if(err!=cudaSuccess)
+            exit(1);
+        err=cudaMemcpy(V_gpu, GV, sizeof(cufftDoubleComplex)*xDim*yDim,
+                       cudaMemcpyHostToDevice);
+        if(err!=cudaSuccess)
+            exit(1);
+        err=cudaMemcpy(xPy_gpu, xPy, sizeof(double)*xDim*yDim,
+                       cudaMemcpyHostToDevice);
+        if(err!=cudaSuccess)
+            exit(1);
+        err=cudaMemcpy(yPx_gpu, yPx, sizeof(double)*xDim*yDim,
+                       cudaMemcpyHostToDevice);
+        if(err!=cudaSuccess)
+            exit(1);
+        err=cudaMemcpy(wfc_gpu, wfc, sizeof(cufftDoubleComplex)*xDim*yDim,
+                       cudaMemcpyHostToDevice);
+        if(err!=cudaSuccess)
+            exit(1);
+    
+        evolve(wave, opr, par_sum,
+               gsteps, cupar, 0, 0, par, buffer);
+        wfc = wave.cufftDoubleComplexval("wfc");
+        wfc_gpu = wave.cufftDoubleComplexval("wfc_gpu");
+        cudaMemcpy(wfc, wfc_gpu, sizeof(cufftDoubleComplex)*xDim*yDim,
+                   cudaMemcpyDeviceToHost);
+    }
+
+    std::cout << GV[0].x << '\t' << GK[0].x << '\t'
+              << xPy[0] << '\t' << yPx[0] << '\n';
+
+    //free(GV); free(GK); free(xPy); free(yPx);
+
+    // Re-initializing wfc after evolution
+    wfc = wave.cufftDoubleComplexval("wfc");
+    wfc_gpu = wave.cufftDoubleComplexval("wfc_gpu");
+
+    std::cout << "evolution started..." << '\n';
+    std::cout << "esteps: " << esteps << '\n';
+
+    //************************************************************//
+    /*
+    * Evolution
+    */
+    //************************************************************//
+    if(esteps > 0){
+        err=cudaMemcpy(xPy_gpu, ExPy, sizeof(cufftDoubleComplex)*xDim*yDim,
+                       cudaMemcpyHostToDevice);
+        if(err!=cudaSuccess){
+            std::cout << 1 << '\n';
+            exit(1);
+        }
+        err=cudaMemcpy(yPx_gpu, EyPx, sizeof(cufftDoubleComplex)*xDim*yDim,
+                       cudaMemcpyHostToDevice);
+        if(err!=cudaSuccess){
+            std::cout << 2 << '\n';
+            exit(1);
+        }
+        err=cudaMemcpy(xPy_gpu, ExPy, sizeof(cufftDoubleComplex)*xDim*yDim,
+                       cudaMemcpyHostToDevice);
+        if(err!=cudaSuccess){
+            std::cout << 3 << '\n';
+            exit(1);
+        }
+        err=cudaMemcpy(yPx_gpu, EyPx, sizeof(cufftDoubleComplex)*xDim*yDim,
+                       cudaMemcpyHostToDevice);
+        if(err!=cudaSuccess){
+            std::cout << 4 << '\n';
+            exit(1);
+        }
+        err=cudaMemcpy(K_gpu, EK, sizeof(cufftDoubleComplex)*xDim*yDim,
+                       cudaMemcpyHostToDevice);
+        if(err!=cudaSuccess){
+            std::cout << 5 << '\n';
+            exit(1);
+        }
+        err=cudaMemcpy(V_gpu, EV, sizeof(cufftDoubleComplex)*xDim*yDim,
+                       cudaMemcpyHostToDevice);
+        if(err!=cudaSuccess){
+            std::cout << 6 << '\n';
+            exit(1);
+        }
+        err=cudaMemcpy(wfc_gpu, wfc, sizeof(cufftDoubleComplex)*xDim*yDim,
+                       cudaMemcpyHostToDevice);
+        if(err!=cudaSuccess){
+            std::cout << 7 << '\n';
+            exit(1);
+        }
+
+        FileIO::writeOutDouble(buffer,"V_opt",V_opt,xDim*yDim,0);
+        evolve(wave, opr, par_sum,
+               esteps, cupar, 1, 0, par, buffer);
+
+        wfc = wave.cufftDoubleComplexval("wfc");
+        wfc_gpu = wave.cufftDoubleComplexval("wfc_gpu");
+    }
+
+    std::cout << "done evolving" << '\n';
+    free(EV); free(EK); free(ExPy); free(EyPx);
+    free(x);free(y);
+    cudaFree(wfc_gpu); cudaFree(K_gpu); cudaFree(V_gpu); cudaFree(yPx_gpu);
+    cudaFree(xPy_gpu); cudaFree(par_sum);
+
+    // At this point, we have a wavefunction that is testable, which we will be
+    // doing in much the same way as in the linear/perf branch of GPUE.
+    // For this, we must recreate the en.py file in a testable format in cpp
+    // Note that we could be using the GPUs for this, but because it is a unit
+    // test and we do not care that much about perfomance, we will be using the 
+    // CPU instead. We may later add in the appropriate GPU kernels.
+
+    // We first need to grab the wavefunctions from the evolve function
+    // After evolution
+
+    wfc = wave.cufftDoubleComplexval("wfc");
+    wfc_gpu = wave.cufftDoubleComplexval("wfc_gpu");
 
 }
 
