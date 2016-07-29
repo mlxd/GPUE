@@ -253,7 +253,7 @@ void evolve_test(){
 
     std::cout << "Testing the evolve function" << '\n';
 
-    char * fake_argv[] = {strdup("./gpue"), strdup("-d"), strdup("0"), strdup("-e"), strdup("2.01e4"), strdup("-G"), strdup("1.0"), strdup("-g"), strdup("0"), strdup("-i"), strdup("1.0"), strdup("-k"), strdup("0"), strdup("-L"), strdup("0"), strdup("-n"), strdup("1e6"), strdup("-O"), strdup("0.0"), strdup("-o"), strdup("0.0"), strdup("-P"), strdup("0.0"), strdup("-p"), strdup("1000"), strdup("-S"), strdup("0.0"), strdup("-T"), strdup("1e-4"), strdup("-t"), strdup("1e-4"), strdup("-U"), strdup("0"), strdup("-V"), strdup("0"), strdup("-w"), strdup("0.0"), strdup("-X"), strdup("1.0"), strdup("-x"), strdup("256"), strdup("-Y"), strdup("1.0"), strdup("-y"), strdup("256"), strdup("-W"), NULL};
+    char * fake_argv[] = {strdup("./gpue"), strdup("-d"), strdup("0"), strdup("-e"), strdup("2.01e4"), strdup("-G"), strdup("1.0"), strdup("-g"), strdup("0"), strdup("-i"), strdup("1.0"), strdup("-k"), strdup("0"), strdup("-L"), strdup("0"), strdup("-n"), strdup("1e6"), strdup("-O"), strdup("0.0"), strdup("-o"), strdup("0.0"), strdup("-P"), strdup("0.0"), strdup("-p"), strdup("1000"), strdup("-S"), strdup("0.0"), strdup("-T"), strdup("1e-4"), strdup("-t"), strdup("1e-4"), strdup("-U"), strdup("0"), strdup("-V"), strdup("0"), strdup("-w"), strdup("0.0"), strdup("-X"), strdup("1.0"), strdup("-x"), strdup("256"), strdup("-Y"), strdup("1.0"), strdup("-y"), strdup("256"), strdup("-W"), strdup("-D"), strdup("data"), NULL};
     int fake_argc = sizeof(fake_argv) / sizeof(char *) - 1;
 
     // Now to read into gpue and see what happens
@@ -405,7 +405,6 @@ void evolve_test(){
             exit(1);
         }
 
-        FileIO::writeOutDouble(buffer,"V_opt",V_opt,xDim*yDim,0);
         evolve(wave, opr, par_sum,
                esteps, cupar, 1, 0, par, buffer);
 

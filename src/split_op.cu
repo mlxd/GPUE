@@ -119,6 +119,7 @@ void optLatSetup(struct Vtx::Vortex centre, double* V,
                  struct Vtx::Vortex *vArray, int num_vortices, double theta_opt,
                  double intensity, double* v_opt, double *x, double *y,
                  Grid &par, Op &opr){
+    std::string data_dir = par.sval("data_dir");
     int xDim = par.ival("xDim");
     int yDim = par.ival("yDim");
     double dx = par.dval("dx");
@@ -151,7 +152,7 @@ void optLatSetup(struct Vtx::Vortex centre, double* V,
         r_opt[ii].y = 0.0 + (xDim/sepMin)*PI*(ii-centre.coords.y)/(yDim-1);
     }
 */
-    FileIO::writeOut(buffer,"r_opt",r_opt,xDim,0);
+    FileIO::writeOut(buffer,data_dir + "r_opt",r_opt,xDim,0);
     par.store("k[0].x",(double)k[0].x);
     par.store("k[0].y",(double)k[0].y);
     par.store("k[1].x",(double)k[1].x);

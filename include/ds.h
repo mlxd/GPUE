@@ -83,6 +83,7 @@ class Grid{
         std::unordered_map<std::string, double> param_double;
         std::unordered_map<std::string, double*> param_dstar;
         std::unordered_map<std::string, bool> param_bool;
+        std::string data_dir;
 
         // List of all strings for parsing into the appropriate param map
         // 1 -> int, 2 -> double, 3 -> double*
@@ -106,6 +107,9 @@ class Grid{
         // Function to store bool into param_bool
         void store(std::string id, bool bparam);
 
+        // Function to store string into data_dir
+        void store(std::string id, std::string sparam);
+
         // Function to retrieve integer value from param_int
         int ival(std::string id);
 
@@ -117,6 +121,9 @@ class Grid{
 
         // Function to retrieve bool from param_bool
         bool bval(std::string id);
+
+        // Fucntion to retrieve string from data_dir
+        std::string sval(std::string id);
 
         // Function for file writing
         void write(std::string filename);

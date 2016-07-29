@@ -52,6 +52,12 @@ void Grid::store(std::string id, double *dsparam){
 void Grid::store(std::string id, bool bparam){
     param_bool[id] = bparam;
 }
+
+// Function to store string into data_dir
+void Grid::store(std::string id, std::string sparam){
+    data_dir = sparam;
+}
+
 // Function to retrieve integer from Grid->param_int
 int Grid::ival(std::string id){
     return param_int[id];
@@ -70,6 +76,11 @@ double *Grid::dsval(std::string id){
 // Function to retrieve bool values from param_bool
 bool Grid::bval(std::string id){
     return param_bool[id];
+}
+
+// Function to retrieve string from data_dir
+std::string Grid::sval(std::string id){
+    return data_dir;
 }
 
 // Function for file writing (to replace writeOutParam)

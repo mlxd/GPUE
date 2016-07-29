@@ -46,6 +46,7 @@ void evolve( Wave &wave, Op &opr,
             std::string buffer){
 
     // Re-establishing variables from parsed Grid class
+    std::string data_dir = par.sval("data_dir");
     double omega = par.dval("omega");
     double angle_sweep = par.dval("angle_sweep");
     double gdt = par.dval("gdt");
@@ -238,9 +239,9 @@ void evolve( Wave &wave, Op &opr,
                                        sizeof(cufftDoubleComplex) * xDim * yDim,
                                        cudaMemcpyHostToDevice);
                         }
-                        FileIO::writeOutDouble(buffer, "V_opt_1", V_opt, 
-                                               xDim * yDim, 0);
-                        FileIO::writeOut(buffer, "EV_opt_1", EV_opt, 
+                        FileIO::writeOutDouble(buffer, data_dir + "V_opt_1",
+                                               V_opt, xDim * yDim, 0);
+                        FileIO::writeOut(buffer, data_dir + "EV_opt_1", EV_opt, 
                                          xDim * yDim, 0);
                         par.store("Central_vort_x", 
                                   (double) central_vortex.coords.x);
@@ -250,7 +251,8 @@ void evolve( Wave &wave, Op &opr,
                                   (double) central_vortex.wind);
                         par.store("Num_vort", (double) num_vortices[0]);
                         //std::cout << "writing to file in conditional" << '\n';
-                        FileIO::writeOutParam(buffer, par, "Params.dat");
+                        FileIO::writeOutParam(buffer, par, 
+                                              data_dir + "Params.dat");
                     }
                     else if (num_vortices[0] > num_vortices[1]) {
                         printf("Number of vortices increased from %d to %d\n", 
@@ -301,7 +303,8 @@ void evolve( Wave &wave, Op &opr,
                                                   lattice.getVortices().size(),
                                                    sizeof(double));
                         lattice.genAdjMat(adjMat);
-                        FileIO::writeOutAdjMat(buffer, "graph", adjMat, uids, 
+                        FileIO::writeOutAdjMat(buffer, data_dir + "graph", 
+                                               adjMat, uids, 
                                                lattice.getVortices().size(), i);
                         free(adjMat);
                         free(uids);
@@ -310,8 +313,8 @@ void evolve( Wave &wave, Op &opr,
                         //exit(0);
                     }
 
-                    FileIO::writeOutVortex(buffer, "vort_arr", vortCoords, 
-                                           num_vortices[0], i);
+                    FileIO::writeOutVortex(buffer, data_dir + "vort_arr",
+                                           vortCoords, num_vortices[0], i);
                     printf("Located %d vortices\n", num_vortices[0]);
                     printf("Sigma=%e\n", vortOLSigma);
                     free(vortexLocation);
@@ -332,7 +335,8 @@ void evolve( Wave &wave, Op &opr,
 
             //std::cout << "writing" << '\n';
             if (write_it) {
-                FileIO::writeOut(buffer, fileName, wfc, xDim * yDim, i);
+                FileIO::writeOut(buffer, data_dir + fileName, 
+                                 wfc, xDim * yDim, i);
             }
             //std::cout << "written" << '\n';
             //printf("Energy[t@%d]=%E\n",i,energy_angmom(gpuPositionOp, 

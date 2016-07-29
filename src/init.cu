@@ -37,6 +37,7 @@ int initialise(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
 
     // Re-establishing variables from parsed Grid class
     // Initializes uninitialized variables to 0 values
+    std::string data_dir = par.sval("data_dir");
     int N = par.ival("atoms");
     int xDim = par.ival("xDim");
     int yDim = par.ival("yDim");
@@ -310,20 +311,20 @@ int initialise(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%//
     //hdfWriteDouble(xDim, V, 0, "V_0"); //HDF COMING SOON!
     //hdfWriteComplex(xDim, wfc, 0, "wfc_0");
-    FileIO::writeOutDouble(buffer,"V",V,xDim*yDim,0);
-    //FileIO::writeOutDouble(buffer,"V_opt",V_opt,xDim*yDim,0);
-    FileIO::writeOutDouble(buffer,"K",K,xDim*yDim,0);
-    FileIO::writeOutDouble(buffer,"xPy",xPy,xDim*yDim,0);
-    FileIO::writeOutDouble(buffer,"yPx",yPx,xDim*yDim,0);
-    FileIO::writeOut(buffer,"WFC",wfc,xDim*yDim,0);
-    FileIO::writeOut(buffer,"ExPy",ExPy,xDim*yDim,0);
-    FileIO::writeOut(buffer,"EyPx",EyPx,xDim*yDim,0);
-    FileIO::writeOutDouble(buffer,"Phi",Phi,xDim*yDim,0);
-    FileIO::writeOutDouble(buffer,"r",r,xDim*yDim,0);
-    FileIO::writeOutDouble(buffer,"x",x,xDim,0);
-    FileIO::writeOutDouble(buffer,"y",y,yDim,0);
-    FileIO::writeOutDouble(buffer,"px",xp,xDim,0);
-    FileIO::writeOutDouble(buffer,"py",yp,yDim,0);
+    FileIO::writeOutDouble(buffer, data_dir + "V",V,xDim*yDim,0);
+    //FileIO::writeOutDouble(buffer, data_dir + "V_opt",V_opt,xDim*yDim,0);
+    FileIO::writeOutDouble(buffer, data_dir + "K",K,xDim*yDim,0);
+    FileIO::writeOutDouble(buffer, data_dir + "xPy",xPy,xDim*yDim,0);
+    FileIO::writeOutDouble(buffer, data_dir + "yPx",yPx,xDim*yDim,0);
+    FileIO::writeOut(buffer, data_dir + "WFC",wfc,xDim*yDim,0);
+    FileIO::writeOut(buffer, data_dir + "ExPy",ExPy,xDim*yDim,0);
+    FileIO::writeOut(buffer, data_dir + "EyPx",EyPx,xDim*yDim,0);
+    FileIO::writeOutDouble(buffer, data_dir + "Phi",Phi,xDim*yDim,0);
+    FileIO::writeOutDouble(buffer, data_dir + "r",r,xDim*yDim,0);
+    FileIO::writeOutDouble(buffer, data_dir + "x",x,xDim,0);
+    FileIO::writeOutDouble(buffer, data_dir + "y",y,yDim,0);
+    FileIO::writeOutDouble(buffer, data_dir + "px",xp,xDim,0);
+    FileIO::writeOutDouble(buffer, data_dir + "py",yp,yDim,0);
     //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%//
 
     //free(V); 
@@ -445,6 +446,7 @@ int main(int argc, char **argv){
     initialise(opr, cupar, par, wave);
 
     // Re-establishing variables from parsed Grid class
+    std::string data_dir = par.sval("data_dir");
     double dx = par.dval("dx");
     double dy = par.dval("dy");
     double *x = par.dsval("x");
@@ -480,7 +482,7 @@ int main(int argc, char **argv){
     * Groundstate finder section
     */
     //************************************************************//
-    FileIO::writeOutParam(buffer, par, "Params.dat");
+    FileIO::writeOutParam(buffer, par, data_dir + "Params.dat");
     if(read_wfc){
         printf("Loading wavefunction...");
         wfc=FileIO::readIn("wfc_load","wfci_load",xDim, yDim);
@@ -580,7 +582,7 @@ int main(int argc, char **argv){
             exit(1);
         }
             
-        FileIO::writeOutDouble(buffer,"V_opt",V_opt,xDim*yDim,0);
+        FileIO::writeOutDouble(buffer, data_dir + "V_opt",V_opt,xDim*yDim,0);
         evolve(wave, opr, par_sum,
                esteps, cupar, 1, 0, par, buffer);
     

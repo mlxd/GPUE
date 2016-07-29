@@ -1,4 +1,4 @@
-CUDA_HOME = /apps/free/cuda/7.5.18/
+CUDA_HOME = /opt/cuda/
 GPU_ARCH	= sm_30
 OS:=	$(shell uname)
 ifeq ($(OS),Darwin)

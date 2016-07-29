@@ -40,6 +40,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 Options:
 
 -a              Set flag to graph [deprecated]
+-D data         Set data directory / where to store data (here in data/)
 -d 0            Set device for GPU computing
 -e 1000         Set esteps, number of real-time evolution steps
 -G 1            Set GammaY

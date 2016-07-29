@@ -37,10 +37,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 Grid parseArgs(int argc, char** argv){
 
-    for (int i = 0; i < argc; i++){
-        std::cout << argv[i] << '\n';
-    }
-
     // Creates initial grid class for the parameters
     Grid par;
     int opt;
@@ -75,11 +71,12 @@ Grid parseArgs(int argc, char** argv){
     par.store("unit_test",false);
     par.store("omegaX", 6.283);
     par.store("omegaY", 6.283);
+    par.store("data_dir", "");
 
     optind = 1;
 
     while ((opt = getopt (argc, argv, 
-          "d:x:y:w:G:g:e:T:t:n:p:ro:L:lsi:P:X:Y:O:k:WU:V:S:ahz:H:u")) !=-1)
+          "d:D:x:y:w:G:g:e:T:t:n:p:ro:L:lsi:P:X:Y:O:k:WU:V:S:ahz:H:u")) !=-1)
     {
         switch (opt)
         {
@@ -261,6 +258,13 @@ Grid parseArgs(int argc, char** argv){
             {
                 printf("Writing out\n");
                 par.store("write_it",true);
+                break;
+            }
+            case 'D':
+            {
+                std::string data_dir = optarg;
+                std::cout << "Data directory is: " << data_dir << '\n';
+                par.store("data_dir", data_dir + "/");
                 break;
             }
             case 'U':
