@@ -431,6 +431,11 @@ void evolve_test(){
     wfc = wave.cufftDoubleComplexval("wfc");
     wfc_gpu = wave.cufftDoubleComplexval("wfc_gpu");
 
+    // In the example python code, it was necessary to reshape everything, 
+    // But let's see what happens if I don't do that here...
+
+    cufftResult energyresult;
+    
 }
 
 // Performs simple trapezoidal integral -- following python notation

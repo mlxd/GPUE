@@ -157,11 +157,21 @@ __global__ void pinVortex(cufftDoubleComplex* in1, cufftDoubleComplex* in2, cuff
 /**
 * @brief	Complex field scaling and renormalisation. Used mainly post-FFT.
 * @ingroup	gpu
-* @param	in Complex field to be scaled (multiplied, not divided)
+* @param	in Complex field to be scaled (divided, not multiplied)
 * @param	factor Scaling factor to be used
 * @param	out Pass by reference output for result
 */
 __global__ void scalarDiv(double2* in, double factor, double2* out);
+
+/**
+* @brief        Complex field scaling and renormalisation. Used mainly post-FFT.
+* @ingroup      gpu
+* @param        in Complex field to be scaled (multiplied, not divided)
+* @param        factor Scaling factor to be used
+* @param        out Pass by reference output for result
+*/
+__global__ void scalarMult(double2* in, double factor, double2* out);
+
 /**
 * @brief	Complex field scaling and renormalisation. Not implemented. Use scalarDiv
 * @ingroup	gpu
