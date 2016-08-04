@@ -431,10 +431,21 @@ void evolve_test(){
     wfc = wave.cufftDoubleComplexval("wfc");
     wfc_gpu = wave.cufftDoubleComplexval("wfc_gpu");
 
+    // Now we need som CUDA specific variables for the kernels later on...
+    int threads = par.ival("threads");
+    dim3 grid = cupar.dim3val("grid");
+
     // In the example python code, it was necessary to reshape everything, 
     // But let's see what happens if I don't do that here...
 
     cufftResult energyresult;
+    cufftHandle plan_2d = cupar.cufftHandleval("plan_2d");
+
+    double2 *wfc_p = wfc_gpu;
+    energyresult = cufftExecZ2Z(plan_2d, wfc_gpu, wfc_p, CUFFT_FORWARD);
+
+    double2 *wfc_c = wfc_gpu;
+    vecConjugate<<<grid,threads>>>(wfc_gpu, wfc_c);
     
 }
 

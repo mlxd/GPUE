@@ -109,6 +109,17 @@ __global__ void cMultPhi(double2* in1, double* in2, double2* out){
     out[gid] = result;
 }
 
+/**
+ * Performs multiplication of double* with double2*
+ */
+__global__ void vecMult(double2 *in, double *factor, double2 *out){
+    double2 result;
+    unsigned int gid = getGid3d3d();
+    result.x = (in[gid].x * factor[gid]);
+    result.y = (in[gid].y * factor[gid]);
+    out[gid] = result;
+}
+
 
 /**
  * Performs the non-linear evolution term of Gross--Pitaevskii equation.
@@ -172,6 +183,16 @@ __global__ void scalarDiv_wfcNorm(double2* in, double dr, double2* pSum, double2
     double norm = sqrt((pSum[0].x + pSum[0].y)*dr);
     result.x = (in[gid].x/norm);
     result.y = (in[gid].y/norm);
+    out[gid] = result;
+}
+
+/**
+ * Finds conjugate for double2*
+ */
+__global__ void vecConjugate(double2 *in, double2 *out){
+    double2 result;
+    unsigned int gid = getGid3d3d(); 
+    result.y = -in[gid].y;
     out[gid] = result;
 }
 

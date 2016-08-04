@@ -165,9 +165,6 @@ class Cuda{
 };
 //typedef class Cuda Cuda;
 
-// NOTE: We may need to store the operators as a 3 1d vectors 
-//       instead of 1 3d one.
-
 /**
  * @brief       class to hold all necessary information about the operators
  * @ingroup     data
