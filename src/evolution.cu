@@ -40,7 +40,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../include/manip.h"
 #include <string>
 
-void evolve( Wave &wave, Op &opr,
+void evolve(Wave &wave, Op &opr,
             cufftDoubleComplex *gpuParSum, int numSteps, Cuda cupar,
             unsigned int gstate, unsigned int ramp, Grid &par, 
             std::string buffer){
@@ -557,8 +557,11 @@ void evolve( Wave &wave, Op &opr,
 
     //std::cout << "finished evolution" << '\n';
     // Storing wavefunctions for later
+    for (int i = 0; i < xDim * yDim; ++i){
+        std::cout << wfc[i].x << '\t' << wfc[i].y << '\n';
+    }
+    //std::cout << gpuWfc[0].x << '\t' << gpuWfc[0].y << '\n';
     wave.store("wfc", wfc);
     wave.store("wfc_gpu", gpuWfc);
 
 }
-

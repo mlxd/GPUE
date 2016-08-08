@@ -32,6 +32,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include "../include/ds.h"
+#include <cassert>
+
+/*----------------------------------------------------------------------------//
+* GRID
+*-----------------------------------------------------------------------------*/
 
 // Function to store integer into Grid->param_int
 void Grid::store(std::string id, int iparam){
@@ -65,39 +70,65 @@ int Grid::ival(std::string id){
 
 // Function to retrieve double from Grid->param_double
 double Grid::dval(std::string id){
-    return param_double[id];
+    auto it = param_double.find(id);
+    if (it == param_double.end()){
+        std::cout << "ERROR: could not find string " << id 
+                  << " in Grid::param_double." << '\n';
+        assert(it != param_double.end());
+    }
+    return it->second;
 }
 
 // Function to retrieve double star values from param_dstar
 double *Grid::dsval(std::string id){
-    return param_dstar[id];
+    auto it = param_dstar.find(id);
+    if (it == param_dstar.end()){
+        std::cout << "ERROR: could not find string " << id
+                  << " in Grid::param_dstar." << '\n';
+        assert(it != param_dstar.end());
+    }
+    return it->second;
 }
 
 // Function to retrieve bool values from param_bool
 bool Grid::bval(std::string id){
-    return param_bool[id];
+    auto it = param_bool.find(id);
+    if (it == param_bool.end()){
+        std::cout << "ERROR: could not find string " << id 
+                  << " in Grid::param_bool." << '\n';
+        assert(it != param_bool.end());
+    }
+    return it->second;
 }
 
 // Function to retrieve string from data_dir
+// Note: There is only one string value in the Grid struct... 
+//       We must add an unordered map for strings if further strings are desired
 std::string Grid::sval(std::string id){
     return data_dir;
 }
 
-// Function for file writing (to replace writeOutParam)
+// Function for file writing (to replace fileIO::writeOutParam)
 void Grid::write(std::string filename){
     std::ofstream output;
     output.open(filename);
     // We simply iterate through the int and double param maps
     for (auto item : param_double){
         output << item.first << "=" << item.second << '\n';
+        std::cout << item.first << "=" << item.second << '\n';
     }
 
     for (auto item : param_int){
         output << item.first << "=" << item.second << '\n';
+        std::cout << item.first << "=" << item.second << '\n';
     }
 
     output.close();
 }
+
+/*----------------------------------------------------------------------------//
+* CUDA
+*-----------------------------------------------------------------------------*/
 
 // Functions to store data in Cuda class
 void Cuda::store(std::string id, cudaError_t errin){
@@ -190,6 +221,10 @@ dim3 Cuda::dim3val(std::string id){
     return grid;
 }
 
+/*----------------------------------------------------------------------------//
+* OP
+*-----------------------------------------------------------------------------*/
+
 // Functions to store data in the Op class
 void Op::store(std::string id, double *data){
     Op_dstar[id] = data;
@@ -201,12 +236,28 @@ void Op::store(std::string id, cufftDoubleComplex *data){
 
 // Functions to retrieve data from the Op class
 double *Op::dsval(std::string id){
-    return Op_dstar[id];
+    auto it = Op_dstar.find(id);
+    if (it == Op_dstar.end()){
+        std::cout << "ERROR: could not find string " << id 
+                  << " in Op::Op_dstar." << '\n';
+        assert(it != Op_dstar.end());
+    }
+    return it->second;
 }
 
 cufftDoubleComplex *Op::cufftDoubleComplexval(std::string id){
-    return Op_cdc[id];
+    auto it = Op_cdc.find(id);
+    if (it == Op_cdc.end()){
+        std::cout << "ERROR: could not find string " << id 
+                  << " in Op::Op_cdc." << '\n';
+        assert(it != Op_cdc.end());
+    }
+    return it->second;
 }
+
+/*----------------------------------------------------------------------------//
+* WAVE
+*-----------------------------------------------------------------------------*/
 
 // Functions to store data in the Wave class
 void Wave::store(std::string id, double *data){
@@ -219,9 +270,36 @@ void Wave::store(std::string id, cufftDoubleComplex *data){
 
 // Functions to retrieve data from the Wave class
 double *Wave::dsval(std::string id){
-    return Wave_dstar[id];
+    auto it = Wave_dstar.find(id);
+    if (it == Wave_dstar.end()){
+        std::cout << "ERROR: could not find string " << id 
+                  << " in Wave::Wave_dstar." << '\n';
+        assert(it != Wave_dstar.end());
+    }
+    return it->second;
 }
 
 cufftDoubleComplex *Wave::cufftDoubleComplexval(std::string id){
-    return Wave_cdc[id];
+    auto it = Wave_cdc.find(id);
+    if (it == Wave_cdc.end()){
+        std::cout << "ERROR: could not find string " << id 
+                  << " in Wave::Wave_cdc." << '\n';
+        assert(it != Wave_cdc.end());
+    }
+    return it->second;
 }
+
+/*----------------------------------------------------------------------------//
+* MISC
+*-----------------------------------------------------------------------------*/
+
+/*
+// Template function to print all values in map
+template <typename T> void print_map(std::unordered_map<std::string, T> map){
+    std::cout << "Contents of map are: " << '\n';
+    std::cout << "key: " << '\t' << "element: " << '\n';
+    for (auto element : map){
+    std::cout << element.fitst << '\t' << element.second << '\n';
+    }
+}
+*/

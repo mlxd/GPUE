@@ -49,13 +49,7 @@ int initialise(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     double omegaX = par.dval("omegaX");
     double omegaY = par.dval("omegaY");
     double omegaZ = par.dval("omegaZ");
-    double mass = par.dval("mass");
-    double dx = par.dval("dx");
-    double dy = par.dval("dy");
-    double a_s = par.dval("a_s");
-    double xMax = par.dval("xMax");
-    double yMax = par.dval("ymax");
-    double l = par.dval("l");
+    double l = par.dval("winding");
     double *x;
     double *y;
     double *xp;
@@ -69,6 +63,8 @@ int initialise(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     double *K;
     double *xPy;
     double *yPx;
+    double *xPy_gpu;
+    double *yPx_gpu;
     double *Energy_gpu;
     cufftDoubleComplex *wfc;
     cufftDoubleComplex *V_gpu;
@@ -83,8 +79,6 @@ int initialise(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     cufftDoubleComplex *EappliedField; 
     cufftDoubleComplex *wfc_gpu;
     cufftDoubleComplex *K_gpu;
-    cufftDoubleComplex *xPy_gpu;
-    cufftDoubleComplex *yPx_gpu;
     cufftDoubleComplex *par_sum;
 
     std::cout << omegaX << '\t' << omegaY << '\n';
@@ -143,9 +137,9 @@ int initialise(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     xOffset=0.0;//5.0e-6;
     yOffset=0.0;//5.0e-6;
     
-    mass = 1.4431607e-25; //Rb 87 mass, kg
+    double mass = 1.4431607e-25; //Rb 87 mass, kg
     par.store("mass",mass);
-    a_s = 4.67e-9;
+    double a_s = 4.67e-9;
     par.store("a_s",a_s);
 
     double sum = 0.0;
@@ -165,8 +159,8 @@ int initialise(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
                                                ( 1 - omega*omega) ) ));
 
     std::cout << "Rxy is: " << Rxy << '\n';
-    xMax = 6*Rxy*a0x; //10*bec_length; //6*Rxy*a0x;
-    yMax = 6*Rxy*a0y; //10*bec_length;
+    double xMax = 6*Rxy*a0x; //10*bec_length; //6*Rxy*a0x;
+    double yMax = 6*Rxy*a0y; //10*bec_length;
     par.store("xMax",xMax);
     par.store("yMax",yMax);
 
@@ -176,8 +170,8 @@ int initialise(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     par.store("pyMax",pyMax);
     par.store("pxMax",pxMax);
     
-    dx = xMax/(xDim>>1);
-    dy = yMax/(yDim>>1);
+    double dx = xMax/(xDim>>1);
+    double dy = yMax/(yDim>>1);
     par.store("dx",dx);
     par.store("dy",dy);
     
@@ -250,8 +244,8 @@ int initialise(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     cudaMalloc((void**) &Phi_gpu, sizeof(double) * gSize);
     cudaMalloc((void**) &K_gpu, sizeof(cufftDoubleComplex) * gSize);
     cudaMalloc((void**) &V_gpu, sizeof(cufftDoubleComplex) * gSize);
-    cudaMalloc((void**) &xPy_gpu, sizeof(cufftDoubleComplex) * gSize);
-    cudaMalloc((void**) &yPx_gpu, sizeof(cufftDoubleComplex) * gSize);
+    cudaMalloc((void**) &xPy_gpu, sizeof(double) * gSize);
+    cudaMalloc((void**) &yPx_gpu, sizeof(double) * gSize);
     cudaMalloc((void**) &par_sum, sizeof(cufftDoubleComplex) * (gSize/threads));
     //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%//
 
@@ -364,6 +358,8 @@ int initialise(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     std::cout << GV[0].x << '\t' << GK[0].x << '\t' 
               << xPy[0] << '\t' << yPx[0] << '\n';
 
+    std::cout << "storing variables..." << '\n';
+
     // Storing variables that have been initialized
     // Re-establishing variables from parsed Grid class
     // Initializes uninitialized variables to 0 values
@@ -377,7 +373,7 @@ int initialise(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     par.store("dy", dy);
     par.store("xMax", xMax);
     par.store("ymax", yMax);
-    par.store("l", l);
+    par.store("winding", l);
     par.store("x", x);
     par.store("y", y);
     par.store("xp", xp);
@@ -419,6 +415,8 @@ int initialise(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
 
     cupar.store("grid", grid);
 
+    std::cout << "variables stored" << '\n';
+
     return 0;
 }
 
@@ -445,6 +443,8 @@ int main(int argc, char **argv){
 
     initialise(opr, cupar, par, wave);
 
+    std::cout << "initialized" << '\n';
+
     // Re-establishing variables from parsed Grid class
     std::string data_dir = par.sval("data_dir");
     double dx = par.dval("dx");
@@ -454,6 +454,8 @@ int main(int argc, char **argv){
     double *V_opt = opr.dsval("V_opt");
     double *xPy = opr.dsval("xPy");
     double *yPx = opr.dsval("yPx");
+    double *xPy_gpu = opr.dsval("xPy_gpu");
+    double *yPx_gpu = opr.dsval("yPx_gpu");
     int xDim = par.ival("xDim");
     int yDim = par.ival("yDim");
     bool read_wfc = par.bval("read_wfc");
@@ -469,8 +471,6 @@ int main(int argc, char **argv){
     cufftDoubleComplex *EyPx = opr.cufftDoubleComplexval("EyPx");
     cufftDoubleComplex *wfc_gpu = wave.cufftDoubleComplexval("wfc_gpu");
     cufftDoubleComplex *K_gpu = opr.cufftDoubleComplexval("K_gpu");
-    cufftDoubleComplex *xPy_gpu = opr.cufftDoubleComplexval("xPy_gpu");
-    cufftDoubleComplex *yPx_gpu = opr.cufftDoubleComplexval("yPx_gpu");
     cufftDoubleComplex *par_sum = wave.cufftDoubleComplexval("par_sum");
     cudaError_t err = cupar.cudaError_tval("err");
 

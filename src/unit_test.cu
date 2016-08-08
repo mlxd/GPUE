@@ -288,6 +288,8 @@ void evolve_test(){
     double *V_opt = opr.dsval("V_opt");
     double *xPy = opr.dsval("xPy");
     double *yPx = opr.dsval("yPx");
+    double *xPy_gpu = opr.dsval("xPy_gpu");
+    double *yPx_gpu = opr.dsval("yPx_gpu");
     int xDim = par.ival("xDim");
     int yDim = par.ival("yDim");
     bool read_wfc = par.bval("read_wfc");
@@ -303,8 +305,6 @@ void evolve_test(){
     cufftDoubleComplex *EyPx = opr.cufftDoubleComplexval("EyPx");
     cufftDoubleComplex *wfc_gpu = wave.cufftDoubleComplexval("wfc_gpu");
     cufftDoubleComplex *K_gpu = opr.cufftDoubleComplexval("K_gpu");
-    cufftDoubleComplex *xPy_gpu = opr.cufftDoubleComplexval("xPy_gpu");
-    cufftDoubleComplex *yPx_gpu = opr.cufftDoubleComplexval("yPx_gpu");
     cufftDoubleComplex *par_sum = wave.cufftDoubleComplexval("par_sum");
     cudaError_t err = cupar.cudaError_tval("err");
 
@@ -408,15 +408,9 @@ void evolve_test(){
         evolve(wave, opr, par_sum,
                esteps, cupar, 1, 0, par, buffer);
 
-        wfc = wave.cufftDoubleComplexval("wfc");
-        wfc_gpu = wave.cufftDoubleComplexval("wfc_gpu");
     }
 
-    std::cout << "done evolving" << '\n';
-    free(EV); free(EK); free(ExPy); free(EyPx);
-    free(x);free(y);
-    cudaFree(wfc_gpu); cudaFree(K_gpu); cudaFree(V_gpu); cudaFree(yPx_gpu);
-    cudaFree(xPy_gpu); cudaFree(par_sum);
+    std::cout << "done evolving, checking result" << '\n';
 
     // At this point, we have a wavefunction that is testable, which we will be
     // doing in much the same way as in the linear/perf branch of GPUE.
@@ -427,9 +421,16 @@ void evolve_test(){
 
     // We first need to grab the wavefunctions from the evolve function
     // After evolution
-
     wfc = wave.cufftDoubleComplexval("wfc");
     wfc_gpu = wave.cufftDoubleComplexval("wfc_gpu");
+
+    // Now to grab K and V
+    K_gpu =
+        opr.cufftDoubleComplexval("K_gpu");
+    V_gpu = opr.cufftDoubleComplexval("V_gpu");
+
+    double *K = opr.dsval("K");
+    double *V = opr.dsval("V");
 
     // Now we need som CUDA specific variables for the kernels later on...
     int threads = par.ival("threads");
@@ -438,14 +439,34 @@ void evolve_test(){
     // In the example python code, it was necessary to reshape everything, 
     // But let's see what happens if I don't do that here...
 
-    cufftResult energyresult;
     cufftHandle plan_2d = cupar.cufftHandleval("plan_2d");
 
     double2 *wfc_p = wfc_gpu;
-    energyresult = cufftExecZ2Z(plan_2d, wfc_gpu, wfc_p, CUFFT_FORWARD);
+    cufftExecZ2Z(plan_2d, wfc_gpu, wfc_p, CUFFT_FORWARD);
 
     double2 *wfc_c = wfc_gpu;
     vecConjugate<<<grid,threads>>>(wfc_gpu, wfc_c);
+
+    double2 *Energy_1, *Energy_2, *Energy_k, *Energy_v;
+    Energy_1 = wfc_gpu;
+    Energy_2 = wfc_gpu;
+    vecMult<<<grid,threads>>>(wfc_p,K,wfc_p);
+    cufftExecZ2Z(plan_2d, wfc_p, Energy_1, CUFFT_INVERSE); 
+
+    vecMult<<<grid,threads>>>(wfc_gpu, V, Energy_2);
+
+/*
+    for (int i = 0; i < xDim * yDim; ++i){
+        std::cout << Energy_1[i].y << '\t' << Energy_2[i].x << '\n';
+    }
+*/
+
+    //std::cout << wfc_gpu[0].x << '\t' << wfc_gpu[0].y << '\n';
+
+    free(EV); free(EK); free(ExPy); free(EyPx);
+    free(x);free(y);
+    cudaFree(wfc_gpu); cudaFree(K_gpu); cudaFree(V_gpu); cudaFree(yPx_gpu);
+    cudaFree(xPy_gpu); cudaFree(par_sum);
     
 }
 

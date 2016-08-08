@@ -216,7 +216,7 @@ Grid parseArgs(int argc, char** argv){
             {
                 double interaction = atof(optarg);
                 printf("Argument for interaction scaling is %E\n",interaction);
-                par.store("int_scaling",interaction);
+                par.store("interaction",interaction);
                 break;
             }
             case 'P':

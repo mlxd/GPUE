@@ -163,7 +163,7 @@ class Cuda{
         //int ival(std::string id);
 
 };
-//typedef class Cuda Cuda;
+typedef class Cuda Cuda;
 
 /**
  * @brief       class to hold all necessary information about the operators
@@ -203,7 +203,6 @@ class Wave{
         // functions to store data
         void store(std::string id, double *data);
         void store(std::string id, cufftDoubleComplex *data);
-
 
         // Functions to retrieve data
         double *dsval(std::string id);
