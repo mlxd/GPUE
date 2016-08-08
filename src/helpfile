@@ -43,33 +43,34 @@ Options:
 -D data         Set data directory / where to store data (here in data/)
 -d 0            Set device for GPU computing
 -e 1000         Set esteps, number of real-time evolution steps
--G 1            Set GammaY
+-G 1            Set GammaY, ratio of omega_y to omega_x
 -g 1e4          Set gsteps, number of imaginary-time evolution steps
 -h              Print help menu, exit GPUE
 -H phrase       Print help menu, searching for "phrase"
 -i 0            Set interaction strength between particles
 -k 0            Set kick_it, kicking for Moire lattice simulations
--L 0            Set l, vortex winding
+                0 = off, 1 = periodic kicking, 2 = single kick
+-L 0            Set l, vortex winding [2*pi*L]
 -l              Set ang_mom flag to use angular momentum
 -n 1            Set N, number of particles in simulation
--O 0            Set angle_sweep
--o 0            Set omega_z, rotation around z axis
--P 0            Set laser_power
+-O 0            Set angle_sweep, kicking potential rotation angle
+-o 0            Set omega_z, tightly-confined z-dimension
+-P 0            Set laser_power, strength of kicking [hbar * omega_perp]
 -p 100          Set printSteps, frequency of printing
 -r              Set read_wfc to read wavefunction from file
--S 0            Set sepMinEpsilon
+-S 0            Set sepMinEpsilon, kicking potential lattice spacing scaling
 -s              Set gpe, flag for using Gross-Pitaevskii Equation
 -T 1e-4         Set gdt, timestep for imaginary-time
 -t 1e-4         Set dt, timestep for real-time
--U 0            Set x0_shift
+-U 0            Set x0_shift, x shift of kicking potential
 -u              Performs all unit tests
--V 0            Set y0_shift
+-V 0            Set y0_shift, y shift of kicking potential
 -W              Set write_it, flag to write to file
--w 0            Set omega
+-w 0            Set omega_z, rotation rate reltive to omega_perp
 -X 6.283        Set omega_x
--x 256          Set xDim, dimension in X
+-x 256          Set xDim, dimension in X (power of 2, please!)
 -Y 6.283        Set omega_y
--y 256          Set yDim, dimension in Y
+-y 256          Set yDim, dimension in Y (power of 2, please!)
 
 Notes:
 

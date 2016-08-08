@@ -66,7 +66,6 @@ void evolve(Wave &wave, Op &opr,
     double *Phi = wave.dsval("Phi");
     double *gpu1dyPx = opr.dsval("yPx_gpu");
     double *gpu1dxPy = opr.dsval("xPy_gpu");
-    double *EV = opr.dsval("EV");
     double *Phi_gpu = wave.dsval("Phi_gpu");
     int kick_it = par.ival("kick_it");
     bool write_it = par.bval("write_it");
@@ -74,10 +73,11 @@ void evolve(Wave &wave, Op &opr,
     int N = par.ival("atoms");
     int printSteps = par.ival("printSteps");
     bool nonlin = par.bval("gpe");
-    bool lz = par.bval("ang_mom");
+    bool lz = par.bval("corotating");
     int xDim = par.ival("xDim");
     int yDim = par.ival("yDim");
     int gridSize = xDim * yDim;
+    cufftDoubleComplex *EV = opr.cufftDoubleComplexval("EV");
     cufftDoubleComplex *wfc = wave.cufftDoubleComplexval("wfc");
     cufftDoubleComplex *V_gpu = opr.cufftDoubleComplexval("V_gpu");
     cufftDoubleComplex *EV_opt = opr.cufftDoubleComplexval("EV_opt");
