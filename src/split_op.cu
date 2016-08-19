@@ -192,6 +192,11 @@ void optLatSetup(struct Vtx::Vortex centre, double* V,
                                    v_opt[j*xDim + i])*(dt/(2*HBAR)));
         }
     }
+
+    // Storing changed variables
+    opr.store("EV_opt", EV_opt);
+    opr.store("V", V);
+    opr.store("V_opt",v_opt);
 }
 
 /**

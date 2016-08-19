@@ -211,7 +211,9 @@ __global__ void angularOp(double omega, double dt, double2* wfc, double* xpyypx,
  */
 __global__ void multipass(double2* input, double2* output, int pass){
     unsigned int tid = threadIdx.x;
-    unsigned int bid = blockIdx.y*gridDim.x*blockDim.x + blockIdx.x;// printf("bid0=%d\n",bid);
+    unsigned int bid = blockIdx.y*gridDim.x*blockDim.x + blockIdx.x;
+    // printf("bid0=%d\n",bid);
+
     unsigned int gid = getGid3d3d();
     extern __shared__ double2 sdata[];
     sdata[tid] = input[gid];
@@ -256,6 +258,41 @@ __global__ void energyCalc(double2 *wfc, double2 *op, double dt, double2 *energy
     energy[gid].y += result.y;
 }
 
+/*
+ * Calculates the trapezoidalm integration of a provided double* vector
+ * Note: -This is a variation on figure 9.7 on page 209 of Programming Massively
+ *        Parallel Processors, Second Edition.
+ *       -We do not complete the entire prefix sum because we only need the 
+ *        final sum in the end. 
+ *       -Further modifications have been made for the trapezoidal rule...
+ */
+/*
+__global__ void trapz(double *array, const int dimension, double dx, 
+                      double out){
+
+    // src material uses global variable SECTION_SIZE. dunno...
+    double *element = array;
+
+    int i = blockIdx.x*blockDim.x + threadIdx.x;
+
+    // src material uses InputSize here. Not sure what it all means
+    if (i < dimension){
+        element[threadIdx.x] = array[i];
+    }
+
+    for (unsigned int stride = 1; stride < blockIdx.x; stride *= 2){
+        __syncthreads();
+        int index = (threadIdx.x+1) * 2 * stride - 1;
+        if (index < blockDim.x){
+            element[index + stride] += element[index]; 
+        }
+    }
+
+    __syncthreads();
+
+    out = element[dimension];
+}
+*/
 
 //##############################################################################
 //##############################################################################
