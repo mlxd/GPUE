@@ -49,6 +49,7 @@ int initialise(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     double omegaX = par.dval("omegaX");
     double omegaY = par.dval("omegaY");
     double omegaZ = par.dval("omegaZ");
+    double gammaY = par.dval("gammaY"); //Aspect ratio of trapping geometry.
     double l = par.dval("winding");
     double *x;
     double *y;
@@ -91,7 +92,6 @@ int initialise(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     dim3 grid = cupar.dim3val("grid");
 
     std::string buffer;
-    double gammaY; //Aspect ratio of trapping geometry.
     double Rxy; //Condensate scaling factor.
     double a0x, a0y; //Harmonic oscillator length in x and y directions
 
@@ -257,6 +257,7 @@ int initialise(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     // Assuming dev system specifics (Xeon with HT -> cores detected / 2)
     par.store("Cores_Max",cores/2);
     omp_set_num_threads(cores/2);
+    std::cout << "GAMMAY IS: " << gammaY << '\n';
     #pragma omp parallel for private(j)
     #endif
     for( i=0; i < xDim; i++ ){
@@ -308,8 +309,8 @@ int initialise(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%//
     //hdfWriteDouble(xDim, V, 0, "V_0"); //HDF COMING SOON!
     //hdfWriteComplex(xDim, wfc, 0, "wfc_0");
-    FileIO::writeOutDouble(buffer, data_dir + "V",V,xDim*yDim,0);
     //FileIO::writeOutDouble(buffer, data_dir + "V_opt",V_opt,xDim*yDim,0);
+    FileIO::writeOutDouble(buffer, data_dir + "V",V,xDim*yDim,0);
     FileIO::writeOutDouble(buffer, data_dir + "K",K,xDim*yDim,0);
     FileIO::writeOutDouble(buffer, data_dir + "xPy",xPy,xDim*yDim,0);
     FileIO::writeOutDouble(buffer, data_dir + "yPx",yPx,xDim*yDim,0);

@@ -80,12 +80,11 @@ void evolve(Wave &wave, Op &opr,
     int gridSize = xDim * yDim;
     cufftDoubleComplex *EV = opr.cufftDoubleComplexval("EV");
     cufftDoubleComplex *wfc = wave.cufftDoubleComplexval("wfc");
-    cufftDoubleComplex *V_gpu = opr.cufftDoubleComplexval("V_gpu");
     cufftDoubleComplex *EV_opt = opr.cufftDoubleComplexval("EV_opt");
     cufftDoubleComplex *gpuWfc = wave.cufftDoubleComplexval("wfc_gpu");
-    cufftDoubleComplex *gpuMomentumOp =
+    cufftDoubleComplex *K_gpu =
         opr.cufftDoubleComplexval("K_gpu");
-    cufftDoubleComplex *gpuPositionOp =
+    cufftDoubleComplex *V_gpu =
         opr.cufftDoubleComplexval("V_gpu");
 
     // getting data from Cuda class
@@ -345,8 +344,8 @@ void evolve(Wave &wave, Op &opr,
                                  wfc, xDim * yDim, i);
             }
             //std::cout << "written" << '\n';
-            //printf("Energy[t@%d]=%E\n",i,energy_angmom(gpuPositionOp, 
-            //       gpuMomentumOp, dx, dy, gpuWfc,gstate));
+            //printf("Energy[t@%d]=%E\n",i,energy_angmom(V_gpu, 
+            //       K_gpu, dx, dy, gpuWfc,gstate));
 /*
             cudaMemcpy(V_gpu, V, sizeof(double)*xDim*yDim, 
                          cudaMemcpyHostToDevice);
@@ -377,11 +376,11 @@ void evolve(Wave &wave, Op &opr,
          * U_r(dt/2)*wfc
          */ 
         if(nonlin == 1){
-            cMultDensity<<<grid,threads>>>(gpuPositionOp,gpuWfc,gpuWfc,0.5*Dt,
+            cMultDensity<<<grid,threads>>>(V_gpu,gpuWfc,gpuWfc,0.5*Dt,
                                            mass,omegaZ,gstate,N*interaction);
         }
         else {
-            cMult<<<grid,threads>>>(gpuPositionOp,gpuWfc,gpuWfc);
+            cMult<<<grid,threads>>>(V_gpu,gpuWfc,gpuWfc);
         }
                 
         /*
@@ -391,7 +390,7 @@ void evolve(Wave &wave, Op &opr,
 
         // Normalise
         scalarMult<<<grid,threads>>>(gpuWfc,renorm_factor_2d,gpuWfc);
-        cMult<<<grid,threads>>>(gpuMomentumOp,gpuWfc,gpuWfc);
+        cMult<<<grid,threads>>>(K_gpu,gpuWfc,gpuWfc);
         result = cufftExecZ2Z(plan_2d,gpuWfc,gpuWfc,CUFFT_INVERSE);
 
         // Normalise
@@ -401,11 +400,11 @@ void evolve(Wave &wave, Op &opr,
          * U_r(dt/2)*wfc
          */    
         if(nonlin == 1){
-            cMultDensity<<<grid,threads>>>(gpuPositionOp,gpuWfc,gpuWfc,Dt*0.5,
+            cMultDensity<<<grid,threads>>>(V_gpu,gpuWfc,gpuWfc,Dt*0.5,
                                            mass,omegaZ,gstate,N*interaction);
         }
         else {
-            cMult<<<grid,threads>>>(gpuPositionOp,gpuWfc,gpuWfc);
+            cMult<<<grid,threads>>>(V_gpu,gpuWfc,gpuWfc);
         }
 
         // If first timestep and kick_it >= 1, kick.
@@ -421,6 +420,7 @@ void evolve(Wave &wave, Op &opr,
         if(lz == 1){
             switch(i%2 | (gstate<<1)){
                 case 0: //Groundstate solver, even step
+                    //std::cout << "GS solve even." << '\n';
 
                     // wfc_xPy
                     result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_FORWARD); 
@@ -456,6 +456,7 @@ void evolve(Wave &wave, Op &opr,
                     break;
                 
                 case 1:    //Groundstate solver, odd step
+                    //std::cout << "GS solver odd." << '\n';
 
                     // 2D forward
                     result = cufftExecZ2Z(plan_2d,gpuWfc,gpuWfc,CUFFT_FORWARD); 
@@ -491,6 +492,7 @@ void evolve(Wave &wave, Op &opr,
                     break;
                 
                 case 2: //Real time evolution, even step
+                    //std::cout << "RT solver even." << '\n';
 
                     // wfc_xPy
                     result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_FORWARD); 
@@ -526,6 +528,7 @@ void evolve(Wave &wave, Op &opr,
                     break;
                 
                 case 3:    //Real time evolution, odd step
+                    //std::cout << "RT solver odd." << '\n';
 
                     // 2D forward
                     result = cufftExecZ2Z(plan_2d,gpuWfc,gpuWfc,CUFFT_FORWARD); 
@@ -602,9 +605,8 @@ void evolve(Wave &wave, Op &opr,
     wave.store("Phi_gpu", Phi_gpu);
     opr.store("EV", EV);
     opr.store("V_gpu", V_gpu);
+    opr.store("K_gpu", K_gpu);
     opr.store("EV_opt", EV_opt);
-    opr.store("K_gpu", gpuMomentumOp);
-    opr.store("V_gpu", V_gpu);
 
     // getting data from Cuda class
     cupar.store("result", result);

@@ -152,7 +152,7 @@ void optLatSetup(struct Vtx::Vortex centre, double* V,
         r_opt[ii].y = 0.0 + (xDim/sepMin)*PI*(ii-centre.coords.y)/(yDim-1);
     }
 */
-    FileIO::writeOut(buffer,data_dir + "r_opt",r_opt,xDim,0);
+    //FileIO::writeOut(buffer,data_dir + "r_opt",r_opt,xDim,0);
     par.store("k[0].x",(double)k[0].x);
     par.store("k[0].y",(double)k[0].y);
     par.store("k[1].x",(double)k[1].x);
