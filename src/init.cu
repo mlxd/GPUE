@@ -49,6 +49,7 @@ int initialise(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     double omegaX = par.dval("omegaX");
     double omegaY = par.dval("omegaY");
     double omegaZ = par.dval("omegaZ");
+    double gammaY = par.dval("gammaY"); //Aspect ratio of trapping geometry.
     double l = par.dval("winding");
     double *x;
     double *y;
@@ -91,7 +92,6 @@ int initialise(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     dim3 grid = cupar.dim3val("grid");
 
     std::string buffer;
-    double gammaY; //Aspect ratio of trapping geometry.
     double Rxy; //Condensate scaling factor.
     double a0x, a0y; //Harmonic oscillator length in x and y directions
 
@@ -179,6 +179,7 @@ int initialise(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     dpx = PI/(xMax);
     dpy = PI/(yMax);
     std::cout << "yMax is: " << yMax << '\t' << "xMax is: " << xMax << '\n';
+    std::cout << "dpx and dpy are:" << '\n';
     std::cout << dpx << '\t' << dpy << '\n';
     par.store("dpx",dpx);
     par.store("dpy",dpy);
@@ -211,8 +212,6 @@ int initialise(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     }
     
 
-    std::cout << dpx << '\t' << dpy << '\n';
-
     //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%//
     
     /* Initialise wavefunction, momentum, position, angular momentum, 
@@ -244,10 +243,12 @@ int initialise(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     cudaMalloc((void**) &Phi_gpu, sizeof(double) * gSize);
     cudaMalloc((void**) &K_gpu, sizeof(cufftDoubleComplex) * gSize);
     cudaMalloc((void**) &V_gpu, sizeof(cufftDoubleComplex) * gSize);
-    cudaMalloc((void**) &xPy_gpu, sizeof(double) * gSize);
-    cudaMalloc((void**) &yPx_gpu, sizeof(double) * gSize);
+    cudaMalloc((void**) &xPy_gpu, sizeof(cufftDoubleComplex) * gSize);
+    cudaMalloc((void**) &yPx_gpu, sizeof(cufftDoubleComplex) * gSize);
     cudaMalloc((void**) &par_sum, sizeof(cufftDoubleComplex) * (gSize/threads));
     //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%//
+
+    std::cout << "all variables malloc'd" << '\n';
 
     #ifdef __linux
     int cores = omp_get_num_procs();
@@ -256,6 +257,7 @@ int initialise(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     // Assuming dev system specifics (Xeon with HT -> cores detected / 2)
     par.store("Cores_Max",cores/2);
     omp_set_num_threads(cores/2);
+    std::cout << "GAMMAY IS: " << gammaY << '\n';
     #pragma omp parallel for private(j)
     #endif
     for( i=0; i < xDim; i++ ){
@@ -302,11 +304,13 @@ int initialise(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
                       wfc[(i*xDim + j)].y*wfc[(i*xDim + j)].y);
         }
     }
+
+    std::cout << "writing initial variables to file..." << '\n';
     //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%//
     //hdfWriteDouble(xDim, V, 0, "V_0"); //HDF COMING SOON!
     //hdfWriteComplex(xDim, wfc, 0, "wfc_0");
-    FileIO::writeOutDouble(buffer, data_dir + "V",V,xDim*yDim,0);
     //FileIO::writeOutDouble(buffer, data_dir + "V_opt",V_opt,xDim*yDim,0);
+    FileIO::writeOutDouble(buffer, data_dir + "V",V,xDim*yDim,0);
     FileIO::writeOutDouble(buffer, data_dir + "K",K,xDim*yDim,0);
     FileIO::writeOutDouble(buffer, data_dir + "xPy",xPy,xDim*yDim,0);
     FileIO::writeOutDouble(buffer, data_dir + "yPx",yPx,xDim*yDim,0);
@@ -320,6 +324,8 @@ int initialise(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     FileIO::writeOutDouble(buffer, data_dir + "px",xp,xDim,0);
     FileIO::writeOutDouble(buffer, data_dir + "py",yp,yDim,0);
     //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%//
+
+    std::cout << "wrote initial variables" << '\n';
 
     //free(V); 
     free(K); free(r); free(Phi);
@@ -335,9 +341,13 @@ int initialise(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
         }
     }
     
+    std::cout << "modified wfc" << '\n';
     //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%//
     
+    std::cout << "xDim is: " << xDim << '\t' << "yDim is: " << yDim << '\n';
+    std::cout << "plan_2d is: " << plan_2d << '\n';
     result = cufftPlan2d(&plan_2d, xDim, yDim, CUFFT_Z2Z);
+    std::cout << "found result" << '\n';
     if(result != CUFFT_SUCCESS){
         printf("Result:=%d\n",result);
         printf("Error: Could not execute cufftPlan2d(%s ,%d, %d).\n", "plan_2d",
@@ -372,7 +382,7 @@ int initialise(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     par.store("dx", dx);
     par.store("dy", dy);
     par.store("xMax", xMax);
-    par.store("ymax", yMax);
+    par.store("yMax", yMax);
     par.store("winding", l);
     par.store("x", x);
     par.store("y", y);
@@ -492,27 +502,36 @@ int main(int argc, char **argv){
     std::cout << "gsteps: " << gsteps << '\n';
     
     if(gsteps > 0){
-        err=cudaMemcpy(K_gpu, GK, sizeof(cufftDoubleComplex)*xDim*yDim, 
+        err=cudaMemcpy(K_gpu, GK, sizeof(cufftDoubleComplex)*xDim*yDim,
                        cudaMemcpyHostToDevice);
-        if(err!=cudaSuccess)
+        if(err!=cudaSuccess){
+            std::cout << "ERROR: Could not copy K_gpu to device" << '\n';
             exit(1);
-        err=cudaMemcpy(V_gpu, GV, sizeof(cufftDoubleComplex)*xDim*yDim, 
+        }
+        err=cudaMemcpy(V_gpu, GV, sizeof(cufftDoubleComplex)*xDim*yDim,
                        cudaMemcpyHostToDevice);
-        if(err!=cudaSuccess)
+        if(err!=cudaSuccess){
+            std::cout << "ERROR: Could not copy V_gpu to device" << '\n';
             exit(1);
-        err=cudaMemcpy(xPy_gpu, xPy, sizeof(double)*xDim*yDim, 
+        }
+        err=cudaMemcpy(xPy_gpu, xPy, sizeof(double)*xDim*yDim,
                        cudaMemcpyHostToDevice);
-        if(err!=cudaSuccess)
+        if(err!=cudaSuccess){
+            std::cout << "ERROR: Could not copy xPy_gpu to device" << '\n';
             exit(1);
-        err=cudaMemcpy(yPx_gpu, yPx, sizeof(double)*xDim*yDim, 
+        }
+        err=cudaMemcpy(yPx_gpu, yPx, sizeof(double)*xDim*yDim,
                        cudaMemcpyHostToDevice);
-        if(err!=cudaSuccess)
+        if(err!=cudaSuccess){
+            std::cout << "ERROR: Could not copy yPx_gpu to device" << '\n';
             exit(1);
-        err=cudaMemcpy(wfc_gpu, wfc, sizeof(cufftDoubleComplex)*xDim*yDim, 
+        }
+        err=cudaMemcpy(wfc_gpu, wfc, sizeof(cufftDoubleComplex)*xDim*yDim,
                        cudaMemcpyHostToDevice);
-        if(err!=cudaSuccess)
+        if(err!=cudaSuccess){
+            std::cout << "ERROR: Could not copy wfc_gpu to device" << '\n';
             exit(1);
-        
+        } 
         evolve(wave, opr, par_sum,
                gsteps, cupar, 0, 0, par, buffer);
         wfc = wave.cufftDoubleComplexval("wfc");
@@ -539,49 +558,37 @@ int main(int argc, char **argv){
     */
     //************************************************************//
     if(esteps > 0){
-        err=cudaMemcpy(xPy_gpu, ExPy, sizeof(cufftDoubleComplex)*xDim*yDim, 
+        err=cudaMemcpy(xPy_gpu, ExPy, sizeof(cufftDoubleComplex)*xDim*yDim,
                        cudaMemcpyHostToDevice);
         if(err!=cudaSuccess){
-            std::cout << 1 << '\n';
+            std::cout << "ERROR: Could not copy xPy_gpu to device" << '\n';
             exit(1);
         }
-        err=cudaMemcpy(yPx_gpu, EyPx, sizeof(cufftDoubleComplex)*xDim*yDim, 
+        err=cudaMemcpy(yPx_gpu, EyPx, sizeof(cufftDoubleComplex)*xDim*yDim,
                        cudaMemcpyHostToDevice);
         if(err!=cudaSuccess){
-            std::cout << 2 << '\n';
+            std::cout << "ERROR: Could not copy yPx_gpu to device" << '\n';
             exit(1);
         }
-        err=cudaMemcpy(xPy_gpu, ExPy, sizeof(cufftDoubleComplex)*xDim*yDim, 
+        err=cudaMemcpy(K_gpu, EK, sizeof(cufftDoubleComplex)*xDim*yDim,
                        cudaMemcpyHostToDevice);
         if(err!=cudaSuccess){
-            std::cout << 3 << '\n';
+            std::cout << "ERROR: Could not copy K_gpu to device" << '\n';
             exit(1);
         }
-        err=cudaMemcpy(yPx_gpu, EyPx, sizeof(cufftDoubleComplex)*xDim*yDim, 
+        err=cudaMemcpy(V_gpu, EV, sizeof(cufftDoubleComplex)*xDim*yDim,
                        cudaMemcpyHostToDevice);
         if(err!=cudaSuccess){
-            std::cout << 4 << '\n';
+            std::cout << "ERROR: Could not copy V_gpu to device" << '\n';
             exit(1);
         }
-        err=cudaMemcpy(K_gpu, EK, sizeof(cufftDoubleComplex)*xDim*yDim, 
+        err=cudaMemcpy(wfc_gpu, wfc, sizeof(cufftDoubleComplex)*xDim*yDim,
                        cudaMemcpyHostToDevice);
         if(err!=cudaSuccess){
-            std::cout << 5 << '\n';
+            std::cout << "ERROR: Could not copy wfc_gpu to device" << '\n';
             exit(1);
         }
-        err=cudaMemcpy(V_gpu, EV, sizeof(cufftDoubleComplex)*xDim*yDim, 
-                       cudaMemcpyHostToDevice);
-        if(err!=cudaSuccess){
-            std::cout << 6 << '\n';
-            exit(1);
-        }
-        err=cudaMemcpy(wfc_gpu, wfc, sizeof(cufftDoubleComplex)*xDim*yDim, 
-                       cudaMemcpyHostToDevice);
-        if(err!=cudaSuccess){
-            std::cout << 7 << '\n';
-            exit(1);
-        }
-            
+
         FileIO::writeOutDouble(buffer, data_dir + "V_opt",V_opt,xDim*yDim,0);
         evolve(wave, opr, par_sum,
                esteps, cupar, 1, 0, par, buffer);

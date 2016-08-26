@@ -1,5 +1,5 @@
 /*
-* unit_test.cc - GPUE: Split Operator based GPU solver for Nonlinear 
+* unit_test.cu - GPUE: Split Operator based GPU solver for Nonlinear 
 Schrodinger Equation, Copyright (C) 2011-2015, Lee J. O'Riordan 
 <loriordan@gmail.com>, Tadhg Morgan, Neil Crowley. All rights reserved.
 
@@ -206,6 +206,8 @@ void parser_test(){
     std::cout << "Testing command-line parser with all arguments..." << '\n';
     std::vector<std::string> argarray(10);
 
+    // I apologize for the mess... If you have a better way of creating the 
+    // char ** for this without running into memory issues, let me know!
     char *fake_fullargv[] = {strdup("./gpue"), strdup("-d"), strdup("0"), strdup("-e"), strdup("1000"), strdup("-G"), strdup("1"), strdup("-g"), strdup("1e4"), strdup("-i"), strdup("0"), strdup("-k"), strdup("0"), strdup("-L"), strdup("0"), strdup("-n"), strdup("1"), strdup("-O"), strdup("0"), strdup("-o"), strdup("0"), strdup("-P"), strdup("0"), strdup("-p"), strdup("100"), strdup("-S"), strdup("0"), strdup("-T"), strdup("1e-4"), strdup("-t"), strdup("1e-4"), strdup("-U"), strdup("0"), strdup("-V"), strdup("0"), strdup("-W"), strdup("-w"), strdup("0"), strdup("-X"), strdup("1.0"), strdup("-x"), strdup("256"), strdup("-Y"), strdup("1.0"), strdup("-y"), strdup("256"), strdup("-r"), strdup("-l"), strdup("-a"), strdup("-s"), NULL};
     int fake_argc = sizeof(fake_fullargv) / sizeof(char *) - 1;
 
@@ -253,7 +255,8 @@ void evolve_test(){
 
     std::cout << "Testing the evolve function" << '\n';
 
-    char * fake_argv[] = {strdup("./gpue"), strdup("-d"), strdup("0"), strdup("-e"), strdup("2.01e4"), strdup("-G"), strdup("1.0"), strdup("-g"), strdup("0"), strdup("-i"), strdup("1.0"), strdup("-k"), strdup("0"), strdup("-L"), strdup("0"), strdup("-n"), strdup("1e6"), strdup("-O"), strdup("0.0"), strdup("-o"), strdup("0.0"), strdup("-P"), strdup("0.0"), strdup("-p"), strdup("1000"), strdup("-S"), strdup("0.0"), strdup("-T"), strdup("1e-4"), strdup("-t"), strdup("1e-4"), strdup("-U"), strdup("0"), strdup("-V"), strdup("0"), strdup("-w"), strdup("0.0"), strdup("-X"), strdup("1.0"), strdup("-x"), strdup("256"), strdup("-Y"), strdup("1.0"), strdup("-y"), strdup("256"), strdup("-W"), strdup("-D"), strdup("data"), NULL};
+    // Note: the omega_z value (-o flag) is arbitrary
+    char * fake_argv[] = {strdup("./gpue"), strdup("-d"), strdup("0"), strdup("-e"), strdup("2.01e4"), strdup("-G"), strdup("1.0"), strdup("-g"), strdup("0"), strdup("-i"), strdup("1.0"), strdup("-k"), strdup("0"), strdup("-L"), strdup("0"), strdup("-n"), strdup("1e6"), strdup("-O"), strdup("0.0"), strdup("-o"), strdup("10.0"), strdup("-P"), strdup("0.0"), strdup("-p"), strdup("1000"), strdup("-S"), strdup("0.0"), strdup("-T"), strdup("1e-4"), strdup("-t"), strdup("1e-4"), strdup("-U"), strdup("0"), strdup("-V"), strdup("0"), strdup("-w"), strdup("0.0"), strdup("-X"), strdup("1.0"), strdup("-x"), strdup("256"), strdup("-Y"), strdup("1.0"), strdup("-y"), strdup("256"), strdup("-W"), strdup("-D"), strdup("data"), NULL};
     int fake_argc = sizeof(fake_argv) / sizeof(char *) - 1;
 
     // Now to read into gpue and see what happens
@@ -313,28 +316,46 @@ void evolve_test(){
 
     std::cout << "omegaY is: " << par.ival("omegaY") << '\t'
               << "omegaX is: " << par.dval("omegaX") << '\n';
+
+/*
+    for (int i = 0; i < xDim * yDim; ++i){
+        std::cout << i << '\t' << wfc[i].x << '\t' << wfc[i].y << '\n';
+    }
+*/
+
+    std::cout << "gsteps: " << gsteps << '\n';
    
     if(gsteps > 0){
         err=cudaMemcpy(K_gpu, GK, sizeof(cufftDoubleComplex)*xDim*yDim,
                        cudaMemcpyHostToDevice);
-        if(err!=cudaSuccess)
+        if(err!=cudaSuccess){
+            std::cout << "ERROR: Could not copy K_gpu to device" << '\n';
             exit(1);
+        }
         err=cudaMemcpy(V_gpu, GV, sizeof(cufftDoubleComplex)*xDim*yDim,
                        cudaMemcpyHostToDevice);
-        if(err!=cudaSuccess)
+        if(err!=cudaSuccess){
+            std::cout << "ERROR: Could not copy V_gpu to device" << '\n';
             exit(1);
+        }
         err=cudaMemcpy(xPy_gpu, xPy, sizeof(double)*xDim*yDim,
                        cudaMemcpyHostToDevice);
-        if(err!=cudaSuccess)
+        if(err!=cudaSuccess){
+            std::cout << "ERROR: Could not copy xPy_gpu to device" << '\n';
             exit(1);
+        }
         err=cudaMemcpy(yPx_gpu, yPx, sizeof(double)*xDim*yDim,
                        cudaMemcpyHostToDevice);
-        if(err!=cudaSuccess)
+        if(err!=cudaSuccess){
+            std::cout << "ERROR: Could not copy yPx_gpu to device" << '\n';
             exit(1);
+        }
         err=cudaMemcpy(wfc_gpu, wfc, sizeof(cufftDoubleComplex)*xDim*yDim,
                        cudaMemcpyHostToDevice);
-        if(err!=cudaSuccess)
+        if(err!=cudaSuccess){
+            std::cout << "ERROR: Could not copy wfc_gpu to device" << '\n';
             exit(1);
+        }
     
         evolve(wave, opr, par_sum,
                gsteps, cupar, 0, 0, par, buffer);
@@ -365,43 +386,31 @@ void evolve_test(){
         err=cudaMemcpy(xPy_gpu, ExPy, sizeof(cufftDoubleComplex)*xDim*yDim,
                        cudaMemcpyHostToDevice);
         if(err!=cudaSuccess){
-            std::cout << 1 << '\n';
+            std::cout << "ERROR: Could not copy xPy_gpu to device" << '\n';
             exit(1);
         }
         err=cudaMemcpy(yPx_gpu, EyPx, sizeof(cufftDoubleComplex)*xDim*yDim,
                        cudaMemcpyHostToDevice);
         if(err!=cudaSuccess){
-            std::cout << 2 << '\n';
-            exit(1);
-        }
-        err=cudaMemcpy(xPy_gpu, ExPy, sizeof(cufftDoubleComplex)*xDim*yDim,
-                       cudaMemcpyHostToDevice);
-        if(err!=cudaSuccess){
-            std::cout << 3 << '\n';
-            exit(1);
-        }
-        err=cudaMemcpy(yPx_gpu, EyPx, sizeof(cufftDoubleComplex)*xDim*yDim,
-                       cudaMemcpyHostToDevice);
-        if(err!=cudaSuccess){
-            std::cout << 4 << '\n';
+            std::cout << "ERROR: Could not copy yPx_gpu to device" << '\n';
             exit(1);
         }
         err=cudaMemcpy(K_gpu, EK, sizeof(cufftDoubleComplex)*xDim*yDim,
                        cudaMemcpyHostToDevice);
         if(err!=cudaSuccess){
-            std::cout << 5 << '\n';
+            std::cout << "ERROR: Could not copy K_gpu to device" << '\n';
             exit(1);
         }
         err=cudaMemcpy(V_gpu, EV, sizeof(cufftDoubleComplex)*xDim*yDim,
                        cudaMemcpyHostToDevice);
         if(err!=cudaSuccess){
-            std::cout << 6 << '\n';
+            std::cout << "ERROR: Could not copy V_gpu to device" << '\n';
             exit(1);
         }
         err=cudaMemcpy(wfc_gpu, wfc, sizeof(cufftDoubleComplex)*xDim*yDim,
                        cudaMemcpyHostToDevice);
         if(err!=cudaSuccess){
-            std::cout << 7 << '\n';
+            std::cout << "ERROR: Could not copy wfc_gpu to device" << '\n';
             exit(1);
         }
 
@@ -423,37 +432,82 @@ void evolve_test(){
     // After evolution
     wfc = wave.cufftDoubleComplexval("wfc");
     wfc_gpu = wave.cufftDoubleComplexval("wfc_gpu");
+    unsigned int gSize = xDim * yDim;
 
-    // Now to grab K and V
-    K_gpu =
-        opr.cufftDoubleComplexval("K_gpu");
-    V_gpu = opr.cufftDoubleComplexval("V_gpu");
-
+    // Now to grab K and V, note that these are different than the values used 
+    // for K / V_gpu or for E / G K / V in the evolve function
+    // The additional 0 in the gpu variable name indicate this (sorry)
+    double *K_0_gpu = opr.dsval("K");
     double *K = opr.dsval("K");
+    double *V_0_gpu = opr.dsval("V");
     double *V = opr.dsval("V");
 
     // Now we need som CUDA specific variables for the kernels later on...
     int threads = par.ival("threads");
     dim3 grid = cupar.dim3val("grid");
 
-    // In the example python code, it was necessary to reshape everything, 
-    // But let's see what happens if I don't do that here...
+    // Momentum-space (p) wavefunction
+    double2 *wfc_p = wfc;
+    double2 *wfc_p_gpu = wfc_gpu;
 
-    cufftHandle plan_2d = cupar.cufftHandleval("plan_2d");
+    // Conjugate (c) wavefunction
+    double2 *wfc_c = wfc;
+    double2 *wfc_c_gpu = wfc_gpu;
 
-    double2 *wfc_p = wfc_gpu;
-    cufftExecZ2Z(plan_2d, wfc_gpu, wfc_p, CUFFT_FORWARD);
-
-    double2 *wfc_c = wfc_gpu;
-    vecConjugate<<<grid,threads>>>(wfc_gpu, wfc_c);
-
+    // Energies
     double2 *Energy_1, *Energy_2, *Energy_k, *Energy_v;
     Energy_1 = wfc_gpu;
     Energy_2 = wfc_gpu;
-    vecMult<<<grid,threads>>>(wfc_p,K,wfc_p);
+
+    // Plan for 2d FFT
+    cufftHandle plan_2d = cupar.cufftHandleval("plan_2d");
+
+    std::cout << "allocating space on device..." << '\n';
+
+    // Allocating space on GPU
+    cudaMalloc((void **) &wfc_gpu, sizeof(cufftDoubleComplex) * gSize);
+    cudaMalloc((void **) &K_0_gpu, sizeof(double) * gSize);
+    cudaMalloc((void **) &V_0_gpu, sizeof(double) * gSize);
+    cudaMalloc((void **) &wfc_p_gpu, sizeof(cufftDoubleComplex) * gSize);
+    cudaMalloc((void **) &wfc_c_gpu, sizeof(cufftDoubleComplex) * gSize);
+    cudaMalloc((void **) &par_sum, sizeof(cufftDoubleComplex)*(gSize/threads));
+
+    std::cout << "copying contents... " << '\n';
+
+    // Copy variables over to device
+    cudaMemcpy(wfc_gpu, wfc, sizeof(cufftDoubleComplex) * gSize,
+               cudaMemcpyHostToDevice);
+    std::cout << "wfc copied..." << '\n';
+    cudaMemcpy(K_0_gpu, K, sizeof(cufftDoubleComplex) * gSize,
+               cudaMemcpyHostToDevice);
+    std::cout << "K copied..." << '\n';
+    cudaMemcpy(V_0_gpu, GV, sizeof(cufftDoubleComplex) * gSize,
+               cudaMemcpyHostToDevice);
+    std::cout << "V copied..." << '\n';
+    cudaMemcpy(wfc_p_gpu, wfc_p, sizeof(cufftDoubleComplex) * gSize,
+               cudaMemcpyHostToDevice);
+    std::cout << "wfc_p copied..." << '\n';
+    cudaMemcpy(wfc_c_gpu, wfc_c, sizeof(cufftDoubleComplex) * gSize,
+               cudaMemcpyHostToDevice);
+    std::cout << "wfc_c copied..." << '\n';
+
+    std::cout << "performing energy calculations..." << '\n';
+
+
+    // In the example python code, it was necessary to reshape everything, 
+    // But let's see what happens if I don't do that here...
+
+    // FFT for the wfc in momentum-space
+    cufftExecZ2Z(plan_2d, wfc_gpu, wfc_p, CUFFT_FORWARD);
+
+    // Conjugate for the wfc
+    vecConjugate<<<grid,threads>>>(wfc_gpu, wfc_c);
+
+    // K * wfc
+    vecMult<<<grid,threads>>>(wfc_gpu,K_0_gpu,wfc_p);
     cufftExecZ2Z(plan_2d, wfc_p, Energy_1, CUFFT_INVERSE); 
 
-    vecMult<<<grid,threads>>>(wfc_gpu, V, Energy_2);
+    vecMult<<<grid,threads>>>(wfc_gpu, V_0_gpu, Energy_2);
 
 /*
     for (int i = 0; i < xDim * yDim; ++i){
@@ -467,9 +521,13 @@ void evolve_test(){
     free(x);free(y);
     cudaFree(wfc_gpu); cudaFree(K_gpu); cudaFree(V_gpu); cudaFree(yPx_gpu);
     cudaFree(xPy_gpu); cudaFree(par_sum);
+
+    std::cout << "Evolution test complete." << '\n';
+    std::cout << "EVOLUTION TEST UNFINISHED!" << '\n';
     
 }
 
+/*
 // Performs simple trapezoidal integral -- following python notation
 // Note: Because of the shape of the wfc array, we may need to create a temp 
 //       array to do the actual integration here. Look into it!
@@ -480,3 +538,4 @@ double trapz(double *array, int dimension, double dx){
     }
     return integral;
 }
+*/
