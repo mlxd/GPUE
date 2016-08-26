@@ -33,7 +33,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../include/parser.h"
 #include "../include/unit_test.h"
 
-// note: read variables into appendData directly.
+struct stat st = {0};
 
 Grid parseArgs(int argc, char** argv){
 
@@ -264,6 +264,9 @@ Grid parseArgs(int argc, char** argv){
             {
                 std::string data_dir = optarg;
                 std::cout << "Data directory is: " << data_dir << '\n';
+                if (stat(data_dir.c_str(), &st) == -1) {
+                    mkdir(data_dir.c_str(), 0700);
+                }
                 par.store("data_dir", data_dir + "/");
                 break;
             }

@@ -604,8 +604,8 @@ void evolve(Wave &wave, Op &opr,
     opr.store("xPy_gpu", gpu1dxPy);
     wave.store("Phi_gpu", Phi_gpu);
     opr.store("EV", EV);
-    opr.store("V_gpu", V_gpu);
-    opr.store("K_gpu", K_gpu);
+    //opr.store("V_gpu", V_gpu);
+    //opr.store("K_gpu", K_gpu);
     opr.store("EV_opt", EV_opt);
 
     // getting data from Cuda class

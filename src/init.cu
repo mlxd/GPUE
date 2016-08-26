@@ -41,7 +41,7 @@ int initialise(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     int N = par.ival("atoms");
     int xDim = par.ival("xDim");
     int yDim = par.ival("yDim");
-    int threads = par.ival("threads");
+    int threads;
     unsigned int gSize = xDim*yDim;
     double omega = par.dval("omega");
     double gdt = par.dval("gdt");
@@ -139,7 +139,7 @@ int initialise(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     
     double mass = 1.4431607e-25; //Rb 87 mass, kg
     par.store("mass",mass);
-    double a_s = 4.67e-9;
+    double a_s = 4.76e-9;
     par.store("a_s",a_s);
 
     double sum = 0.0;
@@ -195,20 +195,23 @@ int initialise(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     /*
      * R-space and K-space grids
      */
+    std::cout << "dx and dy are: " << '\n';
+    std::cout << dx << '\t' << dy << '\n';
     for(i=0; i<xDim/2; ++i){
-        x[i] = -xMax + (i+1)*dx;        
-        x[i + (xDim/2)] = (i+1)*dx;
+        x[i] = -xMax + i*dx;        
+        x[i + (xDim/2)] = i*dx;
         
-        y[i] = -yMax + (i+1)*dy;        
-        y[i + (yDim/2)] = (i+1)*dy;
+        y[i] = -yMax + i*dy;        
+        y[i + (yDim/2)] = i*dy;
         
-        xp[i] = (i+1)*dpx;
-        xp[i + (xDim/2)] = -pxMax + (i+1)*dpx;
+        xp[i] = i*dpx;
+        xp[i + (xDim/2)] = -pxMax + i*dpx;
         
-        yp[i] = (i+1)*dpy;
-        yp[i + (yDim/2)] = -pyMax + (i+1)*dpy;
+        yp[i] = i*dpy;
+        yp[i + (yDim/2)] = -pyMax + i*dpy;
 
-        //std::cout << x[i] << '\t' << y[i] << '\t' << xp[i] << '\t' << yp[i] << '\n';
+        std::cout << x[i] << '\t' << y[i] << '\t' << xp[i] << '\t' << yp[i] << '\n';
+        std::cout << x[i+xDim/2] << '\t' << y[i+xDim/2] << '\t' << xp[i+xDim/2] << '\t' << yp[i+xDim/2] << '\n';
     }
     
 
@@ -323,6 +326,9 @@ int initialise(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     FileIO::writeOutDouble(buffer, data_dir + "y",y,yDim,0);
     FileIO::writeOutDouble(buffer, data_dir + "px",xp,xDim,0);
     FileIO::writeOutDouble(buffer, data_dir + "py",yp,yDim,0);
+    FileIO::writeOut(buffer, data_dir + "GK",GK,xDim*yDim,0);
+    FileIO::writeOut(buffer, data_dir + "GV",GV,xDim*yDim,0);
+
     //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%//
 
     std::cout << "wrote initial variables" << '\n';
