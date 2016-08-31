@@ -1,5 +1,4 @@
-/*
-* evolution.cu - GPUE: Split Operator based GPU solver for Nonlinear 
+/*** evolution.cu - GPUE: Split Operator based GPU solver for Nonlinear 
 Schrodinger Equation, Copyright (C) 2011-2015, Lee J. O'Riordan 
 <loriordan@gmail.com>, Tadhg Morgan, Neil Crowley. All rights reserved.
 
@@ -42,7 +41,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string>
 
 void evolve(Wave &wave, Op &opr,
-            cufftDoubleComplex *gpuParSum, int numSteps, Cuda cupar,
+            cufftDoubleComplex *gpuParSum, int numSteps, Cuda &cupar,
             unsigned int gstate, unsigned int ramp, Grid &par, 
             std::string buffer){
 
@@ -86,6 +85,11 @@ void evolve(Wave &wave, Op &opr,
         opr.cufftDoubleComplexval("K_gpu");
     cufftDoubleComplex *V_gpu =
         opr.cufftDoubleComplexval("V_gpu");
+    cufftDoubleComplex *GK = opr.cufftDoubleComplexval("GK");
+    cufftDoubleComplex *GV = opr.cufftDoubleComplexval("GV");
+
+    std::cout << x[0] << '\t' << EV[0].x << '\t' << wfc[0].x << '\t'
+              << EV_opt[0].x << '\t' << '\n';
 
     // getting data from Cuda class
     cufftResult result = cupar.cufftResultval("result");
@@ -98,6 +102,14 @@ void evolve(Wave &wave, Op &opr,
     // Multiplication is faster than divisions.
     double renorm_factor_2d=1.0/pow(gridSize,0.5);
     double renorm_factor_1d=1.0/pow(xDim,0.5);
+
+    // outputting a bunch of variables just to check thigs out...
+    std::cout << omega << '\t' << angle_sweep << '\t' << gdt << '\t'
+              << dt << '\t' << omegaX << '\t' << omegaY << '\t' 
+              << mass << '\t' << dx << '\t' << dy << '\t' << interaction << '\t'
+              << laser_power << '\t' << N << '\t' << xDim << '\t' 
+              << yDim << '\n';
+
 
     clock_t begin, end;
     double time_spent;
@@ -193,15 +205,15 @@ void evolve(Wave &wave, Op &opr,
                    ramp, gstate, ramp | (gstate << 1));
             switch (ramp | (gstate << 1)) {
                 case 0: //Groundstate solver, constant Omega value.
-                    //std::cout << "we are in case 0" << '\n';
+                    std::cout << "we are in case 0" << '\n';
                     fileName = "wfc_0_const";
                     break;
                 case 1: //Groundstate solver, ramped Omega value.
-                    //std::cout << "we are in state 1" << '\n';
+                    std::cout << "we are in state 1" << '\n';
                     fileName = "wfc_0_ramp";
                     break;
                 case 2: //Real-time evolution, constant Omega value.
-                    //std::cout << "we are in case 2" << '\n';
+                    std::cout << "we are in case 2" << '\n';
                     fileName = "wfc_ev";
                     vortexLocation = (int *) calloc(xDim * yDim, sizeof(int));
                     num_vortices[0] = Tracker::findVortex(vortexLocation, wfc,
@@ -231,9 +243,9 @@ void evolve(Wave &wave, Op &opr,
                                     vort_angle + PI * angle_sweep / 180.0,
                                     laser_power * HBAR * sqrt(omegaX * omegaY),
                                     V_opt, x, y, par, opr);
-                        V = opr.dsval("V");
-                        V_opt = opr.dsval("V_opt");
-                        EV_opt = opr.cufftDoubleComplexval("EV_opt");
+                        //V = opr.dsval("V");
+                        //V_opt = opr.dsval("V_opt");
+                        //EV_opt = opr.cufftDoubleComplexval("EV_opt");
                         sepAvg = Tracker::vortSepAvg(vortCoords, central_vortex,
                                                      num_vortices[0]);
                         if (kick_it == 2) {
@@ -376,6 +388,8 @@ void evolve(Wave &wave, Op &opr,
          * U_r(dt/2)*wfc
          */ 
         if(nonlin == 1){
+            //std::cout << Dt << '\t' << mass << '\t' << omegaZ << '\t' 
+            //          << gstate << '\t' << N*interaction << '\n';
             cMultDensity<<<grid,threads>>>(V_gpu,gpuWfc,gpuWfc,0.5*Dt,
                                            mass,omegaZ,gstate,N*interaction);
         }

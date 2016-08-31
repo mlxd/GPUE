@@ -78,7 +78,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * @return	0 for success. See CUDA failure codes in cuda.h for other values.
  */
 void evolve( Wave &wave, Op &opr,
-            cufftDoubleComplex *gpuParSum, int numSteps, Cuda cupar,
+            cufftDoubleComplex *gpuParSum, int numSteps, Cuda &cupar,
             unsigned int gstate, unsigned int ramp, Grid &par, 
             std::string buffer);
 

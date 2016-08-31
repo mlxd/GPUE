@@ -210,8 +210,8 @@ int initialise(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
         yp[i] = i*dpy;
         yp[i + (yDim/2)] = -pyMax + i*dpy;
 
-        std::cout << x[i] << '\t' << y[i] << '\t' << xp[i] << '\t' << yp[i] << '\n';
-        std::cout << x[i+xDim/2] << '\t' << y[i+xDim/2] << '\t' << xp[i+xDim/2] << '\t' << yp[i+xDim/2] << '\n';
+        //std::cout << x[i] << '\t' << y[i] << '\t' << xp[i] << '\t' << yp[i] << '\n';
+        //std::cout << x[i+xDim/2] << '\t' << y[i+xDim/2] << '\t' << xp[i+xDim/2] << '\t' << yp[i+xDim/2] << '\n';
     }
     
 
@@ -283,7 +283,9 @@ int initialise(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
                 
             V[(i*yDim + j)] = 0.5*mass*( pow(omegaX*(x[i]+xOffset),2) + 
                                          pow(gammaY*omegaY*(y[j]+yOffset),2) );
+            //V[(i*yDim + j)] = 0;
             K[(i*yDim + j)] = (HBAR*HBAR/(2*mass))*(xp[i]*xp[i] + yp[j]*yp[j]);
+            //K[(i*yDim + j)] = 0;
 
             GV[(i*yDim + j)].x = exp( -V[(i*xDim + j)]*(gdt/(2*HBAR)));
             GK[(i*yDim + j)].x = exp( -K[(i*xDim + j)]*(gdt/HBAR));
@@ -413,7 +415,7 @@ int initialise(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     opr.store("EV_opt", EV_opt);
     wave.store("wfc_backup", wfc_backup);
     opr.store("GK", GK);
-    opr.store("GV", GK);
+    opr.store("GV", GV);
     opr.store("EV", EV);
     opr.store("EK", EK);
     opr.store("ExPy", ExPy);
@@ -520,6 +522,8 @@ int main(int argc, char **argv){
             std::cout << "ERROR: Could not copy V_gpu to device" << '\n';
             exit(1);
         }
+        FileIO::writeOut(buffer, data_dir + "GK1",GK,xDim*yDim,0);
+        FileIO::writeOut(buffer, data_dir + "GV1",GV,xDim*yDim,0);
         err=cudaMemcpy(xPy_gpu, xPy, sizeof(double)*xDim*yDim,
                        cudaMemcpyHostToDevice);
         if(err!=cudaSuccess){
@@ -538,6 +542,17 @@ int main(int argc, char **argv){
             std::cout << "ERROR: Could not copy wfc_gpu to device" << '\n';
             exit(1);
         } 
+        opr.store("yPx", yPx);
+        opr.store("xPy", xPy);
+        opr.store("GK", GK);
+        opr.store("GV", GV);
+        wave.store("wfc", wfc);
+        opr.store("K_gpu", K_gpu);
+        opr.store("V_gpu", V_gpu);
+        wave.store("wfc_gpu", wfc_gpu);
+        opr.store("xPy_gpu", xPy_gpu);
+        opr.store("yPx_gpu", yPx_gpu);
+        
         evolve(wave, opr, par_sum,
                gsteps, cupar, 0, 0, par, buffer);
         wfc = wave.cufftDoubleComplexval("wfc");
@@ -552,8 +567,8 @@ int main(int argc, char **argv){
     //free(GV); free(GK); free(xPy); free(yPx);
 
     // Re-initializing wfc after evolution
-    wfc = wave.cufftDoubleComplexval("wfc");
-    wfc_gpu = wave.cufftDoubleComplexval("wfc_gpu");
+    //wfc = wave.cufftDoubleComplexval("wfc");
+    //wfc_gpu = wave.cufftDoubleComplexval("wfc_gpu");
 
     std::cout << "evolution started..." << '\n';
     std::cout << "esteps: " << esteps << '\n';
@@ -594,6 +609,17 @@ int main(int argc, char **argv){
             std::cout << "ERROR: Could not copy wfc_gpu to device" << '\n';
             exit(1);
         }
+
+        opr.store("yPx", yPx);
+        opr.store("xPy", xPy);
+        opr.store("EK", EK);
+        opr.store("EV", EV);
+        wave.store("wfc", wfc);
+        opr.store("K_gpu", K_gpu);
+        opr.store("V_gpu", V_gpu);
+        wave.store("wfc_gpu", wfc_gpu);
+        opr.store("xPy_gpu", xPy_gpu);
+        opr.store("yPx_gpu", yPx_gpu);
 
         FileIO::writeOutDouble(buffer, data_dir + "V_opt",V_opt,xDim*yDim,0);
         evolve(wave, opr, par_sum,
