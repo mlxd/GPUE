@@ -63,6 +63,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <getopt.h>
 #include "tracker.h"
 #include "ds.h"
+#include "constants.h"
+
 #ifdef __linux
 	#include<omp.h>
 #elif __APPLE__
@@ -112,7 +114,7 @@ void parSum(double2* gpuWfc, double2* gpuParSum, Grid &par,
 */
 void optLatSetup(struct Vtx::Vortex centre, double* V, 
                  struct Vtx::Vortex *vArray, int num_vortices, double theta_opt,
-                 double intensity, double* v_opt, double *x, double *y, 
+                 double intensity, double* v_opt, double *x, double *y,
                  Grid &par, Op &opr);
 
 /**

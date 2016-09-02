@@ -63,6 +63,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <getopt.h>
 #include "tracker.h"
 #include "ds.h"
+#include "split_op.h"
+#include "kernels.h"
+#include "constants.h"
+#include "fileIO.h"
+#include "lattice.h"
+#include "manip.h"
+#include "unit_test.h"
+
+
 /* Function declarations */
 /*
  * arg1 = Function result code from CUDA CUFFT calls.
@@ -77,7 +86,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * @param	c Descriptor of CUDA operation
  * @return	0 for success. See CUDA failure codes in cuda.h for other values.
  */
-void evolve( Wave &wave, Op &opr,
+void evolve(Wave &wave, Op &opr,
             cufftDoubleComplex *gpuParSum, int numSteps, Cuda &cupar,
             unsigned int gstate, unsigned int ramp, Grid &par, 
             std::string buffer);

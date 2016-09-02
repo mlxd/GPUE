@@ -84,6 +84,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * @param	Grid class
  * @param	Wave class
  */
-int initialise(Op &opr, Cuda &cupar, Grid &par, Wave &wave);
+template <typename O>
+int initialise(O &opr, Cuda &cupar, Grid &par, Wave &wave);
 
 #endif

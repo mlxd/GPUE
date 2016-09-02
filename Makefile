@@ -1,17 +1,17 @@
-CUDA_HOME = /apps/free/cuda/7.5.18/
+CUDA_HOME = /opt/cuda/
 GPU_ARCH	= sm_30
 OS:=	$(shell uname)
 ifeq ($(OS),Darwin)
 CUDA_LIB	= $(CUDA_HOME)/lib
 CUDA_HEADER	= $(CUDA_HOME)/include
 CC		= $(CUDA_HOME)/bin/nvcc -ccbin /usr/bin/clang --ptxas-options=-v#-save-temps
-CFLAGS		= -g -O3 -m64 -std=c++11
+CFLAGS		= -g -std=c++11
 else
 CUDA_LIB	= $(CUDA_HOME)/lib64
 CUDA_HEADER	= $(CUDA_HOME)/include
 CC		= $(CUDA_HOME)/bin/nvcc --ptxas-options=-v --compiler-options -Wall #-save-temps
 CHOSTFLAGS	= #-fopenmp
-CFLAGS		= -g -O3 -std=c++11 -Xcompiler '-std=c++11' -Xcompiler '-fopenmp' #-malign-double
+CFLAGS		= -g -std=c++11 -Xcompiler '-std=c++11' -Xcompiler '-fopenmp' #-malign-double
 endif
 
 CLINKER		= $(CC) 
@@ -20,7 +20,7 @@ INCFLAGS	= -I$(CUDA_HEADER)
 LDFLAGS		= -L$(CUDA_LIB) 
 EXECS		= gpue # BINARY NAME HERE
 
-gpue: fileIO.o kernels.o split_op.o tracker.o minions.o ds.o edge.o node.o lattice.o manip.o vort.o parser.o evolution.o init.o unit_test.o
+gpue: fileIO.o kernels.o split_op.o tracker.o minions.o ds.o edge.o node.o lattice.o manip.o vort.o parser.o evolution.o init.o unit_test.o operators.o
 	$(CC) *.o $(INCFLAGS) $(CFLAGS) $(LDFLAGS) $(CHOSTFLAGS) -lm -lcufft -lcudart -o gpue
 	#rm -rf ./*.o
 
@@ -38,6 +38,9 @@ fileIO.o: ./include/fileIO.h ./src/fileIO.cc Makefile
 
 tracker.o: ./src/tracker.cc ./include/tracker.h ./include/fileIO.h
 	$(CC) -c ./src/tracker.cc -o $@ $(INCFLAGS) $(CFLAGS) $(LDFLAGS) $(CHOSTFLAGS)
+
+operators.o: ./src/operators.cc ./include/operators.h
+	$(CC) -c ./src/operators.cc -o $@ $(INCFLAGS) $(CFLAGS) $(LDFLAGS) $(CHOSTFLAGS)
 
 minions.o: ./src/minions.cc ./include/minions.h
 	$(CC) -c ./src/minions.cc -o $@ $(INCFLAGS) $(CFLAGS) $(LDFLAGS) $(CHOSTFLAGS)

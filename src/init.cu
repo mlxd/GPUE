@@ -33,7 +33,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "../include/init.h"
 
-int initialise(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
+template <typename O>
+int initialise(O &opr, Cuda &cupar, Grid &par, Wave &wave){
 
     // Re-establishing variables from parsed Grid class
     // Initializes uninitialized variables to 0 values
@@ -285,6 +286,8 @@ int initialise(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
                                          pow(gammaY*omegaY*(y[j]+yOffset),2) );
             //V[(i*yDim + j)] = 0;
             K[(i*yDim + j)] = (HBAR*HBAR/(2*mass))*(xp[i]*xp[i] + yp[j]*yp[j]);
+            // We want something like...
+            // K[(i*yDim + j)] = opr.K_at(i,j);
             //K[(i*yDim + j)] = 0;
 
             GV[(i*yDim + j)].x = exp( -V[(i*xDim + j)]*(gdt/(2*HBAR)));

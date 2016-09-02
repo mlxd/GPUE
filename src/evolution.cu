@@ -31,14 +31,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include "../include/evolution.h"
-#include "../include/split_op.h"
-#include "../include/kernels.h"
-#include "../include/constants.h"
-#include "../include/fileIO.h"
-#include "../include/lattice.h"
-#include "../include/manip.h"
-#include "../include/unit_test.h"
-#include <string>
 
 void evolve(Wave &wave, Op &opr,
             cufftDoubleComplex *gpuParSum, int numSteps, Cuda &cupar,
@@ -126,9 +118,9 @@ void evolve(Wave &wave, Op &opr,
     double omega_0=omega*omegaX;
 
     #if 0 
-    /** Determines the initial average density at the condensate central 
-    * position and calculates a value for the healing length from this. Used 
-    * thereafter as the lower limit for distances between vortices. **/
+    // Determines the initial average density at the condensate central 
+    // position and calculates a value for the healing length from this. Used 
+    // thereafter as the lower limit for distances between vortices.
 
     int gridSum = 1<<6;
 
@@ -147,9 +139,9 @@ void evolve(Wave &wave, Op &opr,
     printf("Avg healing length at centre=%E\n",xi);
     #endif
 
-    /** ** ############################################################## ** **/
-    /** **         HERE BE DRAGONS OF THE MOST DANGEROUS KIND!            ** **/
-    /** ** ############################################################## ** **/
+    // ** ############################################################## ** //
+    // **         HERE BE DRAGONS OF THE MOST DANGEROUS KIND!            ** //
+    // ** ############################################################## ** //
 
     // Double buffering and will attempt to thread free and calloc operations to
     // hide time penalty. Or may not bother.
@@ -358,23 +350,13 @@ void evolve(Wave &wave, Op &opr,
             //std::cout << "written" << '\n';
             //printf("Energy[t@%d]=%E\n",i,energy_angmom(V_gpu, 
             //       K_gpu, dx, dy, gpuWfc,gstate));
-/*
-            cudaMemcpy(V_gpu, V, sizeof(double)*xDim*yDim, 
-                         cudaMemcpyHostToDevice);
-            cudaMemcpy(K_gpu, K, sizeof(double)*xDim*yDim, 
-                       cudaMemcpyHostToDevice);
-            cudaMemcpy(V_gpu, , sizeof(double)*xDim*yDim, 
-                       cudaMemcpyHostToDevice);
-            cudaMemcpy(K_gpu, K, sizeof(double)*xDim*yDim, 
-                       cudaMemcpyHostToDevice);
-*/
         }
 
         // No longer writing out
 
-        /** ** ########################################################## ** **/
-        /** **                     More F'n' Dragons!                     ** **/
-        /** ** ########################################################## ** **/
+        // ** ########################################################## ** //
+        // **                     More F'n' Dragons!                     ** //
+        // ** ########################################################## ** //
 
         // If not already kicked at this time step more than 6 times... kick it!
         if(i%((int)t_kick+1) == 0 && num_kick<=6 && gstate==1 && kick_it == 1 ){
@@ -382,11 +364,9 @@ void evolve(Wave &wave, Op &opr,
                        cudaMemcpyHostToDevice);
             ++num_kick;
         }
-        /** ** ########################################################## ** **/
+        // ** ########################################################## ** //
 
-        /*
-         * U_r(dt/2)*wfc
-         */ 
+        // U_r(dt/2)*wfc
         if(nonlin == 1){
             //std::cout << Dt << '\t' << mass << '\t' << omegaZ << '\t' 
             //          << gstate << '\t' << N*interaction << '\n';
@@ -397,9 +377,7 @@ void evolve(Wave &wave, Op &opr,
             cMult<<<grid,threads>>>(V_gpu,gpuWfc,gpuWfc);
         }
                 
-        /*
-         * U_p(dt)*fft2(wfc)
-         */        
+        // U_p(dt)*fft2(wfc)
         result = cufftExecZ2Z(plan_2d,gpuWfc,gpuWfc,CUFFT_FORWARD);
 
         // Normalise
@@ -410,9 +388,7 @@ void evolve(Wave &wave, Op &opr,
         // Normalise
         scalarMult<<<grid,threads>>>(gpuWfc,renorm_factor_2d,gpuWfc);
         
-        /*
-         * U_r(dt/2)*wfc
-         */    
+        // U_r(dt/2)*wfc
         if(nonlin == 1){
             cMultDensity<<<grid,threads>>>(V_gpu,gpuWfc,gpuWfc,Dt*0.5,
                                            mass,omegaZ,gstate,N*interaction);
@@ -429,8 +405,7 @@ void evolve(Wave &wave, Op &opr,
                        cudaMemcpyHostToDevice);
             printf("Got here: Cuda memcpy EV into GPU\n");
         }
-        /**********************************************************************/
-        /* Angular momentum xPy-yPx (if engaged)  */
+        // Angular momentum xPy-yPx (if engaged)  //
         if(lz == 1){
             switch(i%2 | (gstate<<1)){
                 case 0: //Groundstate solver, even step
@@ -579,7 +554,6 @@ void evolve(Wave &wave, Op &opr,
             
             }
         }
-        /**************************************************************/
     
         if(gstate==0){
             parSum(gpuWfc, gpuParSum, par, cupar);
@@ -588,11 +562,6 @@ void evolve(Wave &wave, Op &opr,
 
     // std::cout << "finished evolution" << '\n';
     // Storing wavefunctions for later
-/*
-    for (int i = 0; i < xDim * yDim; ++i){
-        std::cout << i << '\t' << wfc[i].x << '\t' << wfc[i].y << '\n';
-    }
-*/
     //std::cout << gpuWfc[0].x << '\t' << gpuWfc[0].y << '\n';
     wave.store("wfc", wfc);
     wave.store("wfc_gpu", gpuWfc);

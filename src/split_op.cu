@@ -130,9 +130,9 @@ void optLatSetup(struct Vtx::Vortex centre, double* V,
     double sepMin = Tracker::vortSepAvg(vArray,centre,num_vortices);
     sepMin = sepMin*(1 + sepMinEpsilon);
     par.store("Vort_sep",(double)sepMin);
-    /*
-    * Defining the necessary k vectors for the optical lattice
-    */
+    
+    // Defining the necessary k vectors for the optical lattice
+    
 
     // Additional /2 as a result of lambda/2 period
     double k_mag = ((2*PI/(sepMin*dx))/2)*(2/sqrt(3));
@@ -147,11 +147,6 @@ void optLatSetup(struct Vtx::Vortex centre, double* V,
     
     double2 *r_opt = (double2*) malloc(sizeof(double2)*xDim);
 
-/*    for (int ii = 0; ii < xDim; ++ii){
-        r_opt[ii].x = 0.0 + (xDim/sepMin)*PI*(ii-centre.coords.x)/(xDim-1);
-        r_opt[ii].y = 0.0 + (xDim/sepMin)*PI*(ii-centre.coords.y)/(yDim-1);
-    }
-*/
     //FileIO::writeOut(buffer,data_dir + "r_opt",r_opt,xDim,0);
     par.store("k[0].x",(double)k[0].x);
     par.store("k[0].y",(double)k[0].y);
@@ -178,14 +173,7 @@ void optLatSetup(struct Vtx::Vortex centre, double* V,
                                        k[1].y*( y[j] + y_shift ) ) ), 2) +
                                 pow( ( cos( k[2].x*( x[i] + x_shift ) + 
                                        k[2].y*( y[j] + y_shift ) ) ), 2)
-/*                  
-                              + pow( abs( cos( k[0].x*( r_opt[i].x + x_shift ) +
-                                     k[0].y*( r_opt[j].y + y_shift ) ) ), 2)
-                              + pow( abs( cos( k[1].x*( r_opt[i].x + x_shift ) +
-                                     k[1].y*( r_opt[j].y + y_shift ) ) ), 2)
-                              + pow( abs( cos( k[2].x*( r_opt[i].x + x_shift ) +
-                                     k[2].y*( r_opt[j].y + y_shift ) ) ), 2)
-*/              );
+                                );
             EV_opt[(j*xDim + i)].x=cos( -(V[(j*xDim + i)] + 
                                    v_opt[j*xDim + i])*(dt/(2*HBAR)));
             EV_opt[(j*xDim + i)].y=sin( -(V[(j*xDim + i)] + 

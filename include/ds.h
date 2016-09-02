@@ -61,6 +61,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <cuda_runtime.h>
 #include <cufft.h>
 #include <typeinfo>
+#include <cassert>
 #include <iostream>
 
 /*----------------------------------------------------------------------------//
@@ -171,8 +172,11 @@ typedef class Cuda Cuda;
  */
 class Op{
     private:
+        typedef double* (*functionPtr)(Grid);
         std::unordered_map<std::string, double*> Op_dstar;
         std::unordered_map<std::string, cufftDoubleComplex*> Op_cdc;
+        std::unordered_map<std::string, functionPtr> K_fns;
+        std::unordered_map<std::string, functionPtr> V_fns;
         // double *V, *V_opt, *K, *xPy, *yPx, *xPy_gpu, *yPx_gpu;
         //cufftDoubleComplex *GK,*GV_half,*GV,*EK,*EV,*EV_opt,*GxPy,*GyPx,
         //                   *ExPy,*EyPx,*EappliedField,*K_gpu,*V_gpu;
@@ -185,6 +189,12 @@ class Op{
         // Functions to retrieve data
         double *dsval(std::string id);
         cufftDoubleComplex *cufftDoubleComplexval(std::string id);
+
+        // Function to initialize all parameters for the operator class in 2d
+        void init_2d();
+
+        // ... and 3d
+        void init_3d();
 };
 typedef class Op Op;
 

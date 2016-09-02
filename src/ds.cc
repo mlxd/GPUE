@@ -255,6 +255,10 @@ cufftDoubleComplex *Op::cufftDoubleComplexval(std::string id){
     return it->second;
 }
 
+void Op::init_2d(){
+    std::cout << "initializing opr class for 2d" << '\n';
+}
+
 /*----------------------------------------------------------------------------//
 * WAVE
 *-----------------------------------------------------------------------------*/
