@@ -36,6 +36,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 template <typename O>
 int initialise(O &opr, Cuda &cupar, Grid &par, Wave &wave){
 
+    // Setting functions for operators
+    opr.set_fns();
+
     // Re-establishing variables from parsed Grid class
     // Initializes uninitialized variables to 0 values
     std::string data_dir = par.sval("data_dir");
@@ -134,9 +137,11 @@ int initialise(O &opr, Cuda &cupar, Grid &par, Wave &wave){
     
     int i,j; //Used in for-loops for indexing
     
+/*
     double xOffset, yOffset;
     xOffset=0.0;//5.0e-6;
     yOffset=0.0;//5.0e-6;
+*/
     
     double mass = 1.4431607e-25; //Rb 87 mass, kg
     par.store("mass",mass);
@@ -214,6 +219,11 @@ int initialise(O &opr, Cuda &cupar, Grid &par, Wave &wave){
         //std::cout << x[i] << '\t' << y[i] << '\t' << xp[i] << '\t' << yp[i] << '\n';
         //std::cout << x[i+xDim/2] << '\t' << y[i+xDim/2] << '\t' << xp[i+xDim/2] << '\t' << yp[i+xDim/2] << '\n';
     }
+
+    par.store("x", x);
+    par.store("y", y);
+    par.store("xp", xp);
+    par.store("yp", yp);
     
 
     //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%//
@@ -282,10 +292,12 @@ int initialise(O &opr, Cuda &cupar, Grid &par, Wave &wave){
                                           sin(Phi[(i*xDim + j)]);
             }
                 
-            V[(i*yDim + j)] = 0.5*mass*( pow(omegaX*(x[i]+xOffset),2) + 
-                                         pow(gammaY*omegaY*(y[j]+yOffset),2) );
+            //V[(i*yDim + j)] = 0.5*mass*( pow(omegaX*(x[i]+xOffset),2) + 
+            //                             pow(gammaY*omegaY*(y[j]+yOffset),2));
+            V[(i*yDim + j)] = opr.V_fn(par.Vfn)(par, i, j, 0);
             //V[(i*yDim + j)] = 0;
-            K[(i*yDim + j)] = (HBAR*HBAR/(2*mass))*(xp[i]*xp[i] + yp[j]*yp[j]);
+            //K[(i*yDim + j)] = (HBAR*HBAR/(2*mass))*(xp[i]*xp[i]+yp[j]*yp[j]);
+            K[(i*yDim + j)] = opr.K_fn(par.Kfn)(par, i, j, 0);
             // We want something like...
             // K[(i*yDim + j)] = opr.K_at(i,j);
             //K[(i*yDim + j)] = 0;

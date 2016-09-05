@@ -72,6 +72,8 @@ Grid parseArgs(int argc, char** argv){
     par.store("omegaX", 6.283);
     par.store("omegaY", 6.283);
     par.store("data_dir", "");
+    par.Kfn = "rotation_K";
+    par.Vfn = "harmonic_V";
 
     optind = 1;
 

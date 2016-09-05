@@ -128,6 +128,9 @@ class Grid{
 
         // Function for file writing
         void write(std::string filename);
+
+        // Key vallues for operators
+        std::string Kfn, Vfn;
 };
 typedef class Grid Grid;
 
@@ -172,11 +175,13 @@ typedef class Cuda Cuda;
  */
 class Op{
     private:
-        typedef double* (*functionPtr)(Grid);
+        typedef double (*functionPtr)(Grid&, int i, int j , int k);
         std::unordered_map<std::string, double*> Op_dstar;
         std::unordered_map<std::string, cufftDoubleComplex*> Op_cdc;
-        std::unordered_map<std::string, functionPtr> K_fns;
-        std::unordered_map<std::string, functionPtr> V_fns;
+        std::unordered_map<std::string, functionPtr> Op_K_fns;
+        std::unordered_map<std::string, functionPtr> Op_V_fns;
+        //K_fns.emplace("rotation_K", rotation_K);
+        //V_fns["harmonic_V"] = harmonic_V;
         // double *V, *V_opt, *K, *xPy, *yPx, *xPy_gpu, *yPx_gpu;
         //cufftDoubleComplex *GK,*GV_half,*GV,*EK,*EV,*EV_opt,*GxPy,*GyPx,
         //                   *ExPy,*EyPx,*EappliedField,*K_gpu,*V_gpu;
@@ -189,6 +194,13 @@ class Op{
         // Functions to retrieve data
         double *dsval(std::string id);
         cufftDoubleComplex *cufftDoubleComplexval(std::string id);
+
+        // Map for function pointers and keys K and V
+        functionPtr K_fn(std::string id);
+        functionPtr V_fn(std::string id);
+
+        // Function to set K and V function pointers
+        void set_fns();
 
         // Function to initialize all parameters for the operator class in 2d
         void init_2d();

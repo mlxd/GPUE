@@ -32,7 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include "../include/ds.h"
-#include <cassert>
+#include "../include/operators.h"
 
 /*----------------------------------------------------------------------------//
 * GRID
@@ -255,6 +255,42 @@ cufftDoubleComplex *Op::cufftDoubleComplexval(std::string id){
     return it->second;
 }
 
+// Map for function pointers and keys K and V
+Op::functionPtr Op::K_fn(std::string id){
+    auto it = Op_K_fns.find(id);
+    if (it == Op_K_fns.end()){
+        std::cout << "ERROR: could not find string " << id 
+                  << " in Op::Op_K_fns. Did you mean: " << '\n';
+        for (auto item : Op_K_fns){
+            std::cout << item.first << '\n';
+        }
+    }
+    return it->second;
+}
+
+Op::functionPtr Op::V_fn(std::string id){
+    auto it = Op_V_fns.find(id);
+    if (it == Op_V_fns.end()){
+        std::cout << "ERROR: could not find string " << id 
+                  << " in Op::Op_V_fns. Did you mean: " << '\n';
+        for (auto item : Op_V_fns){
+            std::cout << item.first << '\n';
+        }
+    }
+    return it->second;
+}
+
+// Function to set functionPtrs for K and V
+// Unfortunately, these must be set one at a time.
+void Op::set_fns(){
+
+    Op_K_fns["rotation_K"] = rotation_K;
+    Op_V_fns["harmonic_V"] = harmonic_V;
+    //Op_K_fns.emplace("rotation_K", rotation_K);
+    //Op_V_fns.emplace("harmonic_V", harmonic_V);
+    
+}
+
 void Op::init_2d(){
     std::cout << "initializing opr class for 2d" << '\n';
 }
@@ -303,7 +339,7 @@ template <typename T> void print_map(std::unordered_map<std::string, T> map){
     std::cout << "Contents of map are: " << '\n';
     std::cout << "key: " << '\t' << "element: " << '\n';
     for (auto element : map){
-    std::cout << element.fitst << '\t' << element.second << '\n';
+        std::cout << element.first << '\t' << element.second << '\n';
     }
 }
 */

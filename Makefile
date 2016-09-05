@@ -54,7 +54,7 @@ unit_test.o: ./src/unit_test.cu ./include/unit_test.h
 evolution.o: ./src/evolution.cu ./include/evolution.h ./include/split_op.h ./include/constants.h ./include/kernels.h ./include/fileIO.h 
 	$(CC) -c ./src/evolution.cu -o $@ $(INCFLAGS) $(CFLAGS) $(LDFLAGS) -Xcompiler "-fopenmp" -arch=$(GPU_ARCH)
 
-ds.o: ./src/ds.cc ./include/ds.h
+ds.o: ./src/ds.cc ./include/ds.h ./include/operators.h
 	$(CC) -c ./src/ds.cc -o $@ $(INCFLAGS) $(CFLAGS) $(LDFLAGS) $(CHOSTFLAGS)
 
 node.o: ./src/node.cc ./include/node.h
