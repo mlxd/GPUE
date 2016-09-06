@@ -419,12 +419,12 @@ void evolve(Wave &wave, Op &opr,
                                                 (double*) gpu1dxPy, gpuWfc);
                     result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_INVERSE);
                     scalarMult<<<grid,threads>>>(gpuWfc,
-                                                 renorm_factor_1d,gpuWfc);
+                                                 renorm_factor_1d, gpuWfc);
     
                     // 2D forward
                     result = cufftExecZ2Z(plan_2d,gpuWfc,gpuWfc,CUFFT_FORWARD); 
                     scalarMult<<<grid,threads>>>(gpuWfc,
-                                                 renorm_factor_2d,gpuWfc);
+                                                 renorm_factor_2d, gpuWfc);
     
                     // 1D inverse to wfc_yPx
                     result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_INVERSE); 
@@ -436,12 +436,12 @@ void evolve(Wave &wave, Op &opr,
                     // wfc_PxPy
                     result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_FORWARD); 
                     scalarMult<<<grid,threads>>>(gpuWfc,
-                                                 renorm_factor_1d,gpuWfc);
+                                                 renorm_factor_1d, gpuWfc);
     
                     // 2D Inverse
                     result = cufftExecZ2Z(plan_2d,gpuWfc,gpuWfc,CUFFT_INVERSE);
                     scalarMult<<<grid,threads>>>(gpuWfc,
-                                                 renorm_factor_2d,gpuWfc);
+                                                 renorm_factor_2d, gpuWfc);
                     break;
                 
                 case 1:    //Groundstate solver, odd step

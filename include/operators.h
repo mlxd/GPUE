@@ -65,6 +65,16 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 double rotation_K(Grid &par, int i, int j, int k);
 
  /**
+ * @brief       determines K for the standard rotational case
+ * @ingroup     data
+ * @param       Grid simulation data
+ * @param       location in x, y, z
+ * @return      K at that location
+ */
+double rotation_gauge_K(Grid &par, int i, int j, int k);
+
+
+ /**
  * @brief       determines V for the standard harmonic case
  * @ingroup     data
  * @param       Grid simulation data

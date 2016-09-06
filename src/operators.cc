@@ -40,6 +40,23 @@ double rotation_K(Grid &par, int i, int j, int k){
     return (HBAR*HBAR/(2*mass))*(xp[i]*xp[i] + yp[j]*yp[j]);
 }
 
+double rotation_gauge_K(Grid &par, int i, int j, int k){
+    double *xp = par.dsval("xp");
+    double *yp = par.dsval("yp");
+    double *x = par.dsval("x");
+    double *y = par.dsval("y");
+    double xMax = par.dval("xMax");
+    double yMax = par.dval("yMax");
+    double omega = par.dval("omega");
+    double mass = par.dval("mass");
+    double p1 = sqrt(xp[i]*xp[i] + yp[j]*yp[j]);
+    double p2 = sqrt(x[i]*x[i] + y[i]*y[i]);
+    //double p2 = sqrt((x[i]*y[j]/yMax) * (x[i]*y[j]/yMax)
+    //                  + (y[j]*x[i]/xMax) * (y[j]*x[i]/xMax));
+    double p = p1 - omega * mass * p2;
+    return (HBAR*HBAR/(2*mass))*p*p;
+}
+
 // Function for simple 2d harmonic V with i and j as the iterators
 double harmonic_V(Grid &par, int i , int j, int k){
     double *x = par.dsval("x");

@@ -285,6 +285,7 @@ Op::functionPtr Op::V_fn(std::string id){
 void Op::set_fns(){
 
     Op_K_fns["rotation_K"] = rotation_K;
+    Op_K_fns["rotation_gauge_K"] = rotation_gauge_K;
     Op_V_fns["harmonic_V"] = harmonic_V;
     //Op_K_fns.emplace("rotation_K", rotation_K);
     //Op_V_fns.emplace("harmonic_V", harmonic_V);
