@@ -40,21 +40,21 @@ double rotation_K(Grid &par, int i, int j, int k){
     return (HBAR*HBAR/(2*mass))*(xp[i]*xp[i] + yp[j]*yp[j]);
 }
 
+// Function for simple 2d rotation with i and j as the interators
 double rotation_gauge_K(Grid &par, int i, int j, int k){
     double *xp = par.dsval("xp");
     double *yp = par.dsval("yp");
     double *x = par.dsval("x");
     double *y = par.dsval("y");
-    double xMax = par.dval("xMax");
-    double yMax = par.dval("yMax");
     double omega = par.dval("omega");
+    double omegaX = par.dval("omegaX");
+    double omega_0 = omega * omegaX;
     double mass = par.dval("mass");
-    double p1 = sqrt(xp[i]*xp[i] + yp[j]*yp[j]);
-    double p2 = sqrt(x[i]*x[i] + y[i]*y[i]);
-    //double p2 = sqrt((x[i]*y[j]/yMax) * (x[i]*y[j]/yMax)
-    //                  + (y[j]*x[i]/xMax) * (y[j]*x[i]/xMax));
-    double p = p1 - omega * mass * p2;
-    return (HBAR*HBAR/(2*mass))*p*p;
+    double p1 = HBAR*HBAR*(xp[i]*xp[i] + yp[j]*yp[j]);
+    double p2 = mass*mass*omega_0*omega_0*(x[i]*x[i] + y[j]*y[j]);
+    double p3 = 2*HBAR*mass*omega_0*(xp[i]*y[j] - yp[j]*x[i]);
+
+    return (1/(2*mass))*(p1 + p2 + p3) *0.5;
 }
 
 // Function for simple 2d harmonic V with i and j as the iterators
@@ -72,3 +72,38 @@ double harmonic_V(Grid &par, int i , int j, int k){
 
 }
 
+// Function for simple 2d harmonic V with i and j as iterators, gauge
+double harmonic_gauge_V(Grid &par, int i , int j, int k){
+    double *x = par.dsval("x");
+    double *y = par.dsval("y");
+    double omega = par.dval("omega");
+    double omegaX = par.dval("omegaX");
+    double omegaY = par.dval("omegaY");
+    double gammaY = par.dval("gammaY");
+    double omega_0 = omega * omegaX;
+    double omega_1 = omega * omegaY;
+    double yOffset = 0.0;
+    double xOffset = 0.0;
+    double mass = par.dval("mass");
+    double ox = omegaX - omega_0;
+    double oy = omegaY - omega_1;
+    double v1 = ox * (x[i]+xOffset) * ox * (x[i]+xOffset) 
+                + gammaY*oy*(y[j]+yOffset) * gammaY*oy*(y[j]+yOffset);
+    return 0.5 * mass * (v1 );
+    //return 0.5*mass*( pow(omegaX*(x[i]+xOffset) - omega_0,2) + 
+    //       pow(gammaY*omegaY*(y[j]+yOffset) - omega_1,2) );
+
+}
+
+// Fuinctions for Ax, y, z for rotation along the z axis
+double rotation_Ax(Grid &par, int i, int j, int k){
+    double *y = par.dsval("y");
+    double *xp = par.dsval("xp");
+    return -y[j]*xp[i];
+}
+
+double rotation_Ay(Grid &par, int i, int j, int k){
+    double *x = par.dsval("x");
+    double *yp = par.dsval("yp");
+    return x[i]*yp[j];
+}

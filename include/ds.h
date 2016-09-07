@@ -129,8 +129,9 @@ class Grid{
         // Function for file writing
         void write(std::string filename);
 
-        // Key vallues for operators
-        std::string Kfn, Vfn;
+        // Key values for operators
+        // Note that Vector potential only have a single string for x, y, z
+        std::string Kfn, Vfn, Afn;
 };
 typedef class Grid Grid;
 
@@ -180,6 +181,9 @@ class Op{
         std::unordered_map<std::string, cufftDoubleComplex*> Op_cdc;
         std::unordered_map<std::string, functionPtr> Op_K_fns;
         std::unordered_map<std::string, functionPtr> Op_V_fns;
+        std::unordered_map<std::string, functionPtr> Op_Ax_fns;
+        std::unordered_map<std::string, functionPtr> Op_Ay_fns;
+        std::unordered_map<std::string, functionPtr> Op_Az_fns;
         //K_fns.emplace("rotation_K", rotation_K);
         //V_fns["harmonic_V"] = harmonic_V;
         // double *V, *V_opt, *K, *xPy, *yPx, *xPy_gpu, *yPx_gpu;
@@ -198,6 +202,9 @@ class Op{
         // Map for function pointers and keys K and V
         functionPtr K_fn(std::string id);
         functionPtr V_fn(std::string id);
+        functionPtr Ax_fn(std::string id);
+        functionPtr Ay_fn(std::string id);
+        functionPtr Az_fn(std::string id);
 
         // Function to set K and V function pointers
         void set_fns();

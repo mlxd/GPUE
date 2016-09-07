@@ -280,6 +280,43 @@ Op::functionPtr Op::V_fn(std::string id){
     return it->second;
 }
 
+// Map for function pointers for Ax, Ay, and Az
+Op::functionPtr Op::Ax_fn(std::string id){
+    auto it = Op_Ax_fns.find(id);
+    if (it == Op_Ax_fns.end()){
+        std::cout << "ERROR: could not find string " << id 
+                  << " in Op::Op_Ax_fns. Did you mean: " << '\n';
+        for (auto item : Op_Ax_fns){
+            std::cout << item.first << '\n';
+        }
+    }
+    return it->second;
+}
+
+Op::functionPtr Op::Ay_fn(std::string id){
+    auto it = Op_Ay_fns.find(id);
+    if (it == Op_Ay_fns.end()){
+        std::cout << "ERROR: could not find string " << id 
+                  << " in Op::Op_Ay_fns. Did you mean: " << '\n';
+        for (auto item : Op_Ay_fns){
+            std::cout << item.first << '\n';
+        }
+    }
+    return it->second;
+}
+
+Op::functionPtr Op::Az_fn(std::string id){
+    auto it = Op_Az_fns.find(id);
+    if (it == Op_Az_fns.end()){
+        std::cout << "ERROR: could not find string " << id 
+                  << " in Op::Op_Az_fns. Did you mean: " << '\n';
+        for (auto item : Op_Az_fns){
+            std::cout << item.first << '\n';
+        }
+    }
+    return it->second;
+}
+
 // Function to set functionPtrs for K and V
 // Unfortunately, these must be set one at a time.
 void Op::set_fns(){
@@ -287,6 +324,9 @@ void Op::set_fns(){
     Op_K_fns["rotation_K"] = rotation_K;
     Op_K_fns["rotation_gauge_K"] = rotation_gauge_K;
     Op_V_fns["harmonic_V"] = harmonic_V;
+    Op_V_fns["harmonic_gauge_V"] = harmonic_gauge_V;
+    Op_Ay_fns["rotation"] = rotation_Ay;
+    Op_Ax_fns["rotation"] = rotation_Ax;
     //Op_K_fns.emplace("rotation_K", rotation_K);
     //Op_V_fns.emplace("harmonic_V", harmonic_V);
     

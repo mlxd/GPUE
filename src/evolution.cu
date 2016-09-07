@@ -56,8 +56,8 @@ void evolve(Wave &wave, Op &opr,
     double *V = opr.dsval("V");
     double *V_opt = opr.dsval("V_opt");
     double *Phi = wave.dsval("Phi");
-    double *gpu1dyPx = opr.dsval("yPx_gpu");
-    double *gpu1dxPy = opr.dsval("xPy_gpu");
+    double *gpu1dAx = opr.dsval("Ax_gpu");
+    double *gpu1dAy = opr.dsval("Ay_gpu");
     double *Phi_gpu = wave.dsval("Phi_gpu");
     int kick_it = par.ival("kick_it");
     bool write_it = par.bval("write_it");
@@ -405,18 +405,18 @@ void evolve(Wave &wave, Op &opr,
                        cudaMemcpyHostToDevice);
             printf("Got here: Cuda memcpy EV into GPU\n");
         }
-        // Angular momentum xPy-yPx (if engaged)  //
+        // Angular momentum Ay-Ax (if engaged)  //
         if(lz == 1){
             switch(i%2 | (gstate<<1)){
                 case 0: //Groundstate solver, even step
                     //std::cout << "GS solve even." << '\n';
 
-                    // wfc_xPy
+                    // wfc_Ay
                     result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_FORWARD); 
                     scalarMult<<<grid,threads>>>(gpuWfc,
                                                  renorm_factor_1d,gpuWfc);
                     angularOp<<<grid,threads>>>(omega_0, Dt, gpuWfc, 
-                                                (double*) gpu1dxPy, gpuWfc);
+                                                (double*) gpu1dAy, gpuWfc);
                     result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_INVERSE);
                     scalarMult<<<grid,threads>>>(gpuWfc,
                                                  renorm_factor_1d, gpuWfc);
@@ -426,14 +426,14 @@ void evolve(Wave &wave, Op &opr,
                     scalarMult<<<grid,threads>>>(gpuWfc,
                                                  renorm_factor_2d, gpuWfc);
     
-                    // 1D inverse to wfc_yPx
+                    // 1D inverse to wfc_Ax
                     result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_INVERSE); 
                     scalarMult<<<grid,threads>>>(gpuWfc,
                                                  renorm_factor_1d,gpuWfc);
                     angularOp<<<grid,threads>>>(omega_0, Dt, gpuWfc, 
-                                                (double*) gpu1dyPx, gpuWfc);
+                                                (double*) gpu1dAx, gpuWfc);
     
-                    // wfc_PxPy
+                    // wfc_PAy
                     result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_FORWARD); 
                     scalarMult<<<grid,threads>>>(gpuWfc,
                                                  renorm_factor_1d, gpuWfc);
@@ -452,14 +452,14 @@ void evolve(Wave &wave, Op &opr,
                     scalarMult<<<grid,threads>>>(gpuWfc,
                                                  renorm_factor_2d,gpuWfc);
 
-                    // 1D inverse to wfc_yPx
+                    // 1D inverse to wfc_Ax
                     result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_INVERSE);
                     scalarMult<<<grid,threads>>>(gpuWfc,
                                                  renorm_factor_1d,gpuWfc);
                     angularOp<<<grid,threads>>>(omega_0, Dt, gpuWfc, 
-                                                (double*) gpu1dyPx, gpuWfc);
+                                                (double*) gpu1dAx, gpuWfc);
 
-                    // wfc_PxPy
+                    // wfc_PAy
                     result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_FORWARD); 
                     scalarMult<<<grid,threads>>>(gpuWfc,
                                                  renorm_factor_1d,gpuWfc);
@@ -469,12 +469,12 @@ void evolve(Wave &wave, Op &opr,
                     scalarMult<<<grid,threads>>>(gpuWfc,
                                                  renorm_factor_2d,gpuWfc);
                     
-                    // wfc_xPy
+                    // wfc_Ay
                     result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_FORWARD); 
                     scalarMult<<<grid,threads>>>(gpuWfc,
                                                  renorm_factor_1d,gpuWfc);
                     angularOp<<<grid,threads>>>(omega_0, Dt, gpuWfc, 
-                                                (double*) gpu1dxPy, gpuWfc);
+                                                (double*) gpu1dAy, gpuWfc);
                     result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_INVERSE);
                     scalarMult<<<grid,threads>>>(gpuWfc,
                                                  renorm_factor_1d,gpuWfc);
@@ -483,12 +483,12 @@ void evolve(Wave &wave, Op &opr,
                 case 2: //Real time evolution, even step
                     //std::cout << "RT solver even." << '\n';
 
-                    // wfc_xPy
+                    // wfc_Ay
                     result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_FORWARD); 
                     scalarMult<<<grid,threads>>>(gpuWfc,
                                                  renorm_factor_1d,gpuWfc);
                     cMult<<<grid,threads>>>(gpuWfc, 
-                        (cufftDoubleComplex*) gpu1dxPy, gpuWfc);
+                        (cufftDoubleComplex*) gpu1dAy, gpuWfc);
                     result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_INVERSE);
                     scalarMult<<<grid,threads>>>(gpuWfc,
                                                  renorm_factor_1d,gpuWfc);
@@ -498,14 +498,14 @@ void evolve(Wave &wave, Op &opr,
                     scalarMult<<<grid,threads>>>(gpuWfc,
                                                  renorm_factor_2d,gpuWfc);
 
-                    // 1D inverses to wfc_yPx
+                    // 1D inverses to wfc_Ax
                     result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_INVERSE);
                     scalarMult<<<grid,threads>>>(gpuWfc,
                                                  renorm_factor_1d,gpuWfc);
                     cMult<<<grid,threads>>>(gpuWfc, 
-                        (cufftDoubleComplex*) gpu1dyPx, gpuWfc);
+                        (cufftDoubleComplex*) gpu1dAx, gpuWfc);
 
-                    // wfc_PxPy
+                    // wfc_PAy
                     result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_FORWARD); 
                     scalarMult<<<grid,threads>>>(gpuWfc,
                                                  renorm_factor_1d,gpuWfc);
@@ -524,14 +524,14 @@ void evolve(Wave &wave, Op &opr,
                     scalarMult<<<grid,threads>>>(gpuWfc,
                                                  renorm_factor_2d,gpuWfc);
 
-                    // 1D inverse to wfc_yPx
+                    // 1D inverse to wfc_Ax
                     result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_INVERSE); 
                     scalarMult<<<grid,threads>>>(gpuWfc,
                                                  renorm_factor_1d,gpuWfc);
                     cMult<<<grid,threads>>>(gpuWfc, 
-                        (cufftDoubleComplex*) gpu1dyPx, gpuWfc);
+                        (cufftDoubleComplex*) gpu1dAx, gpuWfc);
 
-                    // wfc_PxPy
+                    // wfc_PAy
                     result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_FORWARD);
                     scalarMult<<<grid,threads>>>(gpuWfc,
                                                  renorm_factor_1d,gpuWfc);
@@ -541,12 +541,12 @@ void evolve(Wave &wave, Op &opr,
                     scalarMult<<<grid,threads>>>(gpuWfc,
                                                  renorm_factor_2d,gpuWfc);
                     
-                    // wfc_xPy
+                    // wfc_Ay
                     result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_FORWARD); 
                     scalarMult<<<grid,threads>>>(gpuWfc,
                                                  renorm_factor_1d,gpuWfc);
                     cMult<<<grid,threads>>>(gpuWfc, 
-                        (cufftDoubleComplex*) gpu1dxPy, gpuWfc);
+                        (cufftDoubleComplex*) gpu1dAy, gpuWfc);
                     result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_INVERSE);
                     scalarMult<<<grid,threads>>>(gpuWfc,
                                                  renorm_factor_1d,gpuWfc);
@@ -583,8 +583,8 @@ void evolve(Wave &wave, Op &opr,
     opr.store("V", V);
     opr.store("V_opt", V_opt);
     wave.store("Phi", Phi);
-    opr.store("yPx_gpu", gpu1dyPx);
-    opr.store("xPy_gpu", gpu1dxPy);
+    opr.store("Ax_gpu", gpu1dAx);
+    opr.store("Ay_gpu", gpu1dAy);
     wave.store("Phi_gpu", Phi_gpu);
     opr.store("EV", EV);
     //opr.store("V_gpu", V_gpu);
