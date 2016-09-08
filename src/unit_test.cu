@@ -47,8 +47,8 @@ void parameter_test();
 // Test for the parsing function
 void parser_test();
 
-// Testing the evolve function in evolution.cu
-void evolve_test();
+// Testing the evolve_2d function in evolution.cu
+void evolve_2d_test();
 
 // Kernel testing will be added later
 
@@ -60,7 +60,7 @@ void test_all(){
     std::cout << "Starting unit tests..." << '\n';
     parameter_test();
     parser_test();
-    evolve_test();
+    evolve_2d_test();
 
     std::cout << "All tests completed. GPUE passed." << '\n';
 }
@@ -248,12 +248,12 @@ void parser_test(){
 
 }
 
-// Testing the evolve function in evolution.cu
-void evolve_test(){
+// Testing the evolve_2d function in evolution.cu
+void evolve_2d_test(){
     // First, we need to create all the necessary data structures for the
-    // The evolve function, FOLLOWING INIT.CU
+    // The evolve_2d function, FOLLOWING INIT.CU
 
-    std::cout << "Testing the evolve function" << '\n';
+    std::cout << "Testing the evolve_2d function" << '\n';
 
     // Note: the omega_z value (-o flag) is arbitrary
     char * fake_argv[] = {strdup("./gpue"), strdup("-d"), strdup("0"), strdup("-e"), strdup("2.01e4"), strdup("-G"), strdup("1.0"), strdup("-g"), strdup("0"), strdup("-i"), strdup("1.0"), strdup("-k"), strdup("0"), strdup("-L"), strdup("0"), strdup("-n"), strdup("1e6"), strdup("-O"), strdup("0.0"), strdup("-o"), strdup("10.0"), strdup("-P"), strdup("0.0"), strdup("-p"), strdup("1000"), strdup("-S"), strdup("0.0"), strdup("-T"), strdup("1e-4"), strdup("-t"), strdup("1e-4"), strdup("-U"), strdup("0"), strdup("-V"), strdup("0"), strdup("-w"), strdup("0.0"), strdup("-X"), strdup("1.0"), strdup("-x"), strdup("256"), strdup("-Y"), strdup("1.0"), strdup("-y"), strdup("256"), strdup("-W"), strdup("-D"), strdup("data"), NULL};
@@ -281,7 +281,7 @@ void evolve_test(){
     */
     //************************************************************//
 
-    initialise(opr, cupar, par, wave);
+    init_2d(opr, cupar, par, wave);
 
     // Re-establishing variables from parsed Grid class
     double dx = par.dval("dx");
@@ -357,7 +357,7 @@ void evolve_test(){
             exit(1);
         }
     
-        evolve(wave, opr, par_sum,
+        evolve_2d(wave, opr, par_sum,
                gsteps, cupar, 0, 0, par, buffer);
         wfc = wave.cufftDoubleComplexval("wfc");
         wfc_gpu = wave.cufftDoubleComplexval("wfc_gpu");
@@ -414,7 +414,7 @@ void evolve_test(){
             exit(1);
         }
 
-        evolve(wave, opr, par_sum,
+        evolve_2d(wave, opr, par_sum,
                esteps, cupar, 1, 0, par, buffer);
 
     }
@@ -428,14 +428,14 @@ void evolve_test(){
     // test and we do not care that much about perfomance, we will be using the 
     // CPU instead. We may later add in the appropriate GPU kernels.
 
-    // We first need to grab the wavefunctions from the evolve function
+    // We first need to grab the wavefunctions from the evolve_2d function
     // After evolution
     wfc = wave.cufftDoubleComplexval("wfc");
     wfc_gpu = wave.cufftDoubleComplexval("wfc_gpu");
     unsigned int gSize = xDim * yDim;
 
     // Now to grab K and V, note that these are different than the values used 
-    // for K / V_gpu or for E / G K / V in the evolve function
+    // for K / V_gpu or for E / G K / V in the evolve_2d function
     // The additional 0 in the gpu variable name indicate this (sorry)
     double *K_0_gpu = opr.dsval("K");
     double *K = opr.dsval("K");

@@ -32,10 +32,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "../include/evolution.h"
 
-void evolve(Wave &wave, Op &opr,
-            cufftDoubleComplex *gpuParSum, int numSteps, Cuda &cupar,
-            unsigned int gstate, unsigned int ramp, Grid &par, 
-            std::string buffer){
+void evolve_2d(Wave &wave, Op &opr,
+               cufftDoubleComplex *gpuParSum, int numSteps, Cuda &cupar,
+               unsigned int gstate, unsigned int ramp, Grid &par, 
+               std::string buffer){
 
     // Re-establishing variables from parsed Grid class
     std::string data_dir = par.sval("data_dir");
@@ -433,7 +433,7 @@ void evolve(Wave &wave, Op &opr,
                     angularOp<<<grid,threads>>>(omega_0, Dt, gpuWfc, 
                                                 (double*) gpu1dAx, gpuWfc);
     
-                    // wfc_PAy
+                    // wfc_Ay
                     result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_FORWARD); 
                     scalarMult<<<grid,threads>>>(gpuWfc,
                                                  renorm_factor_1d, gpuWfc);
@@ -459,7 +459,7 @@ void evolve(Wave &wave, Op &opr,
                     angularOp<<<grid,threads>>>(omega_0, Dt, gpuWfc, 
                                                 (double*) gpu1dAx, gpuWfc);
 
-                    // wfc_PAy
+                    // wfc_Ay
                     result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_FORWARD); 
                     scalarMult<<<grid,threads>>>(gpuWfc,
                                                  renorm_factor_1d,gpuWfc);
@@ -505,7 +505,7 @@ void evolve(Wave &wave, Op &opr,
                     cMult<<<grid,threads>>>(gpuWfc, 
                         (cufftDoubleComplex*) gpu1dAx, gpuWfc);
 
-                    // wfc_PAy
+                    // wfc_Ay
                     result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_FORWARD); 
                     scalarMult<<<grid,threads>>>(gpuWfc,
                                                  renorm_factor_1d,gpuWfc);
@@ -531,7 +531,7 @@ void evolve(Wave &wave, Op &opr,
                     cMult<<<grid,threads>>>(gpuWfc, 
                         (cufftDoubleComplex*) gpu1dAx, gpuWfc);
 
-                    // wfc_PAy
+                    // wfc_Ay
                     result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_FORWARD);
                     scalarMult<<<grid,threads>>>(gpuWfc,
                                                  renorm_factor_1d,gpuWfc);

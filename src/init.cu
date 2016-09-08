@@ -33,8 +33,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "../include/init.h"
 
-template <typename O>
-int initialise(O &opr, Cuda &cupar, Grid &par, Wave &wave){
+int init_2d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
 
     // Setting functions for operators
     opr.set_fns();
@@ -469,7 +468,7 @@ int main(int argc, char **argv){
     */
     //************************************************************//
 
-    initialise(opr, cupar, par, wave);
+    init_2d(opr, cupar, par, wave);
 
     std::cout << "initialized" << '\n';
 
@@ -563,7 +562,7 @@ int main(int argc, char **argv){
         opr.store("Ay_gpu", Ay_gpu);
         opr.store("Ax_gpu", Ax_gpu);
         
-        evolve(wave, opr, par_sum,
+        evolve_2d(wave, opr, par_sum,
                gsteps, cupar, 0, 0, par, buffer);
         wfc = wave.cufftDoubleComplexval("wfc");
         wfc_gpu = wave.cufftDoubleComplexval("wfc_gpu");
@@ -632,7 +631,7 @@ int main(int argc, char **argv){
         opr.store("Ax_gpu", Ax_gpu);
 
         FileIO::writeOutDouble(buffer, data_dir + "V_opt",V_opt,xDim*yDim,0);
-        evolve(wave, opr, par_sum,
+        evolve_2d(wave, opr, par_sum,
                esteps, cupar, 1, 0, par, buffer);
     
         wfc = wave.cufftDoubleComplexval("wfc");

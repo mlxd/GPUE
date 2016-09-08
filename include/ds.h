@@ -209,11 +209,6 @@ class Op{
         // Function to set K and V function pointers
         void set_fns();
 
-        // Function to initialize all parameters for the operator class in 2d
-        void init_2d();
-
-        // ... and 3d
-        void init_3d();
 };
 typedef class Op Op;
 
