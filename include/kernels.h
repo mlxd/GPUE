@@ -182,6 +182,15 @@ __global__ void scalarDiv(double2* in, double factor, double2* out);
 __global__ void scalarMult(double2* in, double factor, double2* out);
 
 /**
+* @brief        Complex field raised to a power
+* @ingroup      gpu
+* @param        in Complex field to be scaled (multiplied, not divided)
+* @param        power parameter
+* @param        out Pass by reference output for result
+*/
+__global__ void scalarPow(double2* in, double param, double2* out);
+
+/**
 * @brief        Conjugate of double2*.
 * @ingroup      gpu
 * @param        in Complex field to be conjugated

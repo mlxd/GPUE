@@ -39,6 +39,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
           Graphics-Processing Units Gross--Piteavskii Equation solver
 Options:
 
+-A              Set gauge field mode [beta]
 -a              Set flag to graph [deprecated]
 -D data         Set data directory / where to store data (here in data/)
 -d 0            Set device for GPU computing
@@ -57,6 +58,7 @@ Options:
 -o 0            Set omega_z, tightly-confined z-dimension
 -P 0            Set laser_power, strength of kicking [hbar * omega_perp]
 -p 100          Set printSteps, frequency of printing
+-R              Set ramping flag for imaginary time evolution
 -r              Set read_wfc to read wavefunction from file
 -S 0            Set sepMinEpsilon, kicking potential lattice spacing scaling
 -s              Set gpe, flag for using Gross-Pitaevskii Equation
@@ -65,6 +67,7 @@ Options:
 -U 0            Set x0_shift, x shift of kicking potential
 -u              Performs all unit tests
 -V 0            Set y0_shift, y shift of kicking potential
+-v              Set potential [beta]
 -W              Set write_it, flag to write to file
 -w 0            Set omega_z, rotation rate reltive to omega_perp
 -X 6.283        Set omega_x

@@ -99,11 +99,15 @@ double harmonic_gauge_V(Grid &par, int i , int j, int k){
 double rotation_Ax(Grid &par, int i, int j, int k){
     double *y = par.dsval("y");
     double *xp = par.dsval("xp");
-    return -y[j]*xp[i];
+    double omega = par.dval("omega");
+    double omegaX = par.dval("omegaX");
+    return -y[j]*xp[i] * omega * omegaX;
 }
 
 double rotation_Ay(Grid &par, int i, int j, int k){
     double *x = par.dsval("x");
     double *yp = par.dsval("yp");
-    return x[i]*yp[j];
+    double omega = par.dval("omega");
+    double omegaY = par.dval("omegaY");
+    return x[i]*yp[j] * omega * omegaY;
 }

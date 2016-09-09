@@ -35,7 +35,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdio.h>
 
 
-__constant__ double gDenConst = 6.6741e-40;//Evaluted in MATLAB: N*4*HBAR*HBAR*PI*(4.67e-9/mass)*sqrt(mass*(omegaZ)/(2*PI*HBAR))
+//Evaluted in MATLAB: N*4*HBAR*HBAR*PI*(4.67e-9/mass)*sqrt(mass*(omegaZ)/(2*PI*HBAR))
+__constant__ double gDenConst = 6.6741e-40;
 //inline __device__ unsigned int getGid3d3d(){
 
 inline __device__ unsigned int getGid3d3d(){
@@ -183,6 +184,17 @@ __global__ void scalarDiv_wfcNorm(double2* in, double dr, double2* pSum, double2
     double norm = sqrt((pSum[0].x + pSum[0].y)*dr);
     result.x = (in[gid].x/norm);
     result.y = (in[gid].y/norm);
+    out[gid] = result;
+}
+
+/**
+ * Raises in to the power of param
+ */
+__global__ void scalarPow(double2* in, double param, double2* out){
+    unsigned int gid = getGid3d3d();
+    double2 result;
+    result.x = pow(result.x, param);
+    result.y = pow(result.y, param);
     out[gid] = result;
 }
 

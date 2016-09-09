@@ -72,14 +72,15 @@ Grid parseArgs(int argc, char** argv){
     par.store("omegaX", 6.283);
     par.store("omegaY", 6.283);
     par.store("data_dir", "");
+    par.store("ramp", false);
+    par.Afn = "rotation";
     par.Kfn = "rotation_K";
     par.Vfn = "harmonic_V";
-    par.Afn = "rotation";
 
     optind = 1;
 
     while ((opt = getopt (argc, argv, 
-          "d:D:x:y:w:G:g:e:T:t:n:p:ro:L:lsi:P:X:Y:O:k:WU:V:S:ahz:H:u")) !=-1)
+           "d:D:x:y:w:G:g:e:T:t:n:p:ro:L:lsi:P:X:Y:O:k:WU:V:S:ahz:H:uA:R:v:")) !=-1)
     {
         switch (opt)
         {
@@ -159,6 +160,12 @@ Grid parseArgs(int argc, char** argv){
                 double atoms = atof(optarg);
                 printf("Argument for atoms is given as %E\n",atoms);
                 par.store("atoms",(int)atoms);
+                break;
+            }
+            case 'R':
+            {
+                printf("Ramping omega with imaginary time evolution");
+                par.store("ramp",true);
                 break;
             }
             case 'r':
@@ -294,11 +301,25 @@ Grid parseArgs(int argc, char** argv){
                 par.store("y0_shift",y0_shift);
                 break;
             }
+            case 'v':
+            {
+                std::string pot = optarg;
+                std::cout << "Chosen potential is: " << pot << '\n';
+                par.Vfn = pot;
+                break;
+            }
             case 'S':
             {
                 double sepMinEpsilon = atof(optarg);
                 printf("Argument for sepMinEpsilon is %lf\n",sepMinEpsilon);
                 par.store("sepMinEpsilon",sepMinEpsilon);
+                break;
+            }
+            case 'A':
+            {
+                std::string field = optarg;
+                std::cout << "Chosen gauge field is: " << field << '\n';
+                par.Afn = field;
                 break;
             }
             case 'a':

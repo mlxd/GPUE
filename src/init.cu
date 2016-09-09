@@ -76,6 +76,8 @@ int init_2d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     cufftDoubleComplex *wfc_backup;
     cufftDoubleComplex *GK;
     cufftDoubleComplex *GV;
+    cufftDoubleComplex *GAx;
+    cufftDoubleComplex *GAy;
     cufftDoubleComplex *EV;
     cufftDoubleComplex *EK;
     cufftDoubleComplex *EAy;
@@ -240,6 +242,8 @@ int init_2d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     V_opt = (double *) malloc(sizeof(double) * gSize);
     GK = (cufftDoubleComplex *) malloc(sizeof(cufftDoubleComplex) * gSize);
     GV = (cufftDoubleComplex *) malloc(sizeof(cufftDoubleComplex) * gSize);
+    GAx = (cufftDoubleComplex *) malloc(sizeof(cufftDoubleComplex) * gSize);
+    GAy = (cufftDoubleComplex *) malloc(sizeof(cufftDoubleComplex) * gSize);
     EK = (cufftDoubleComplex *) malloc(sizeof(cufftDoubleComplex) * gSize);
     EV = (cufftDoubleComplex *) malloc(sizeof(cufftDoubleComplex) * gSize);
     EV_opt = (cufftDoubleComplex *) malloc(sizeof(cufftDoubleComplex) * gSize);
@@ -303,6 +307,11 @@ int init_2d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
             Ay[(i*yDim + j)] = opr.Ay_fn(par.Afn)(par, i, j, 0);
             //Ax[(i*yDim + j)] = -y[j]*xp[i];
             Ax[(i*yDim + j)] = opr.Ax_fn(par.Afn)(par, i, j, 0);
+
+            GAx[(i*yDim + j)].x = exp(-Ax[(i*xDim + j)]*gdt);
+            GAx[(i*yDim + j)].y = 0;
+            GAy[(i*yDim + j)].x = exp(-Ay[(i*xDim + j)]*gdt);
+            GAy[(i*yDim + j)].y = 0;
             
             EV[(i*yDim + j)].x=cos( -V[(i*xDim + j)]*(dt/(2*HBAR)));
             EV[(i*yDim + j)].y=sin( -V[(i*xDim + j)]*(dt/(2*HBAR)));
@@ -425,6 +434,8 @@ int init_2d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     wave.store("wfc_backup", wfc_backup);
     opr.store("GK", GK);
     opr.store("GV", GV);
+    opr.store("GAx", GAx);
+    opr.store("GAy", GAy);
     opr.store("EV", EV);
     opr.store("EK", EK);
     opr.store("EAy", EAy);
@@ -492,6 +503,8 @@ int main(int argc, char **argv){
     cufftDoubleComplex *V_gpu = opr.cufftDoubleComplexval("V_gpu");
     cufftDoubleComplex *GK = opr.cufftDoubleComplexval("GK");
     cufftDoubleComplex *GV = opr.cufftDoubleComplexval("GV");
+    cufftDoubleComplex *GAx = opr.cufftDoubleComplexval("GAx");
+    cufftDoubleComplex *GAy = opr.cufftDoubleComplexval("GAy");
     cufftDoubleComplex *EV = opr.cufftDoubleComplexval("EV");
     cufftDoubleComplex *EK = opr.cufftDoubleComplexval("EK");
     cufftDoubleComplex *EAy = opr.cufftDoubleComplexval("EAy");
@@ -533,13 +546,13 @@ int main(int argc, char **argv){
         }
         FileIO::writeOut(buffer, data_dir + "GK1",GK,xDim*yDim,0);
         FileIO::writeOut(buffer, data_dir + "GV1",GV,xDim*yDim,0);
-        err=cudaMemcpy(Ay_gpu, Ay, sizeof(double)*xDim*yDim,
+        err=cudaMemcpy(Ay_gpu, GAy, sizeof(cufftDoubleComplex)*xDim*yDim,
                        cudaMemcpyHostToDevice);
         if(err!=cudaSuccess){
             std::cout << "ERROR: Could not copy Ay_gpu to device" << '\n';
             exit(1);
         }
-        err=cudaMemcpy(Ax_gpu, Ax, sizeof(double)*xDim*yDim,
+        err=cudaMemcpy(Ax_gpu, GAx, sizeof(cufftDoubleComplex)*xDim*yDim,
                        cudaMemcpyHostToDevice);
         if(err!=cudaSuccess){
             std::cout << "ERROR: Could not copy Ax_gpu to device" << '\n';
@@ -563,7 +576,7 @@ int main(int argc, char **argv){
         opr.store("Ax_gpu", Ax_gpu);
         
         evolve_2d(wave, opr, par_sum,
-               gsteps, cupar, 0, 0, par, buffer);
+               gsteps, cupar, 0, par, buffer);
         wfc = wave.cufftDoubleComplexval("wfc");
         wfc_gpu = wave.cufftDoubleComplexval("wfc_gpu");
         cudaMemcpy(wfc, wfc_gpu, sizeof(cufftDoubleComplex)*xDim*yDim, 
@@ -632,7 +645,7 @@ int main(int argc, char **argv){
 
         FileIO::writeOutDouble(buffer, data_dir + "V_opt",V_opt,xDim*yDim,0);
         evolve_2d(wave, opr, par_sum,
-               esteps, cupar, 1, 0, par, buffer);
+               esteps, cupar, 1, par, buffer);
     
         wfc = wave.cufftDoubleComplexval("wfc");
         wfc_gpu = wave.cufftDoubleComplexval("wfc_gpu");

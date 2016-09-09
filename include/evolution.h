@@ -88,7 +88,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 void evolve_2d(Wave &wave, Op &opr,
             cufftDoubleComplex *gpuParSum, int numSteps, Cuda &cupar,
-            unsigned int gstate, unsigned int ramp, Grid &par, 
+            unsigned int gstate, Grid &par, 
             std::string buffer);
 
 #endif
