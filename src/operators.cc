@@ -33,7 +33,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../include/operators.h"
 
 // Function for simple 2d rotation with i and j as the interators
-double rotation_K(Grid &par, int i, int j, int k){
+double rotation_K(Grid &par, Op &opr, int i, int j, int k){
     double *xp = par.dsval("xp");
     double *yp = par.dsval("yp");
     double mass = par.dval("mass");
@@ -41,7 +41,7 @@ double rotation_K(Grid &par, int i, int j, int k){
 }
 
 // Function for simple 2d rotation with i and j as the interators
-double rotation_gauge_K(Grid &par, int i, int j, int k){
+double rotation_gauge_K(Grid &par, Op &opr, int i, int j, int k){
     double *xp = par.dsval("xp");
     double *yp = par.dsval("yp");
     double *x = par.dsval("x");
@@ -58,7 +58,7 @@ double rotation_gauge_K(Grid &par, int i, int j, int k){
 }
 
 // Function for simple 2d harmonic V with i and j as the iterators
-double harmonic_V(Grid &par, int i , int j, int k){
+double harmonic_V(Grid &par, Op &opr, int i , int j, int k){
     double *x = par.dsval("x");
     double *y = par.dsval("y");
     double omegaX = par.dval("omegaX");
@@ -67,13 +67,15 @@ double harmonic_V(Grid &par, int i , int j, int k){
     double yOffset = 0.0;
     double xOffset = 0.0;
     double mass = par.dval("mass");
-    return 0.5*mass*( pow(omegaX*(x[i]+xOffset),2) + 
-           pow(gammaY*omegaY*(y[j]+yOffset),2) );
+    double V_x = omegaX*(x[i]+xOffset) - opr.Ax_fn(par.Afn)(par, opr, i, j, k);
+    double V_y = gammaY*omegaY*(y[j]+yOffset) - 
+                     opr.Ay_fn(par.Afn)(par, opr, i, j, k);
+    return 0.5*mass*( V_x * V_x + V_y * V_y);
 
 }
 
 // Function for simple 2d harmonic V with i and j as iterators, gauge
-double harmonic_gauge_V(Grid &par, int i , int j, int k){
+double harmonic_gauge_V(Grid &par, Op &opr, int i , int j, int k){
     double *x = par.dsval("x");
     double *y = par.dsval("y");
     double omega = par.dval("omega");
@@ -95,25 +97,33 @@ double harmonic_gauge_V(Grid &par, int i , int j, int k){
 
 }
 
-// Fuinctions for Ax, y, z for rotation along the z axis
-double rotation_Ax(Grid &par, int i, int j, int k){
-    double *y = par.dsval("y");
+// Functions for pAx, y, z for rotation along the z axis
+double rotation_pAx(Grid &par, Op &opr, int i, int j, int k){
     double *xp = par.dsval("xp");
+    return opr.Ax_fn(par.Afn)(par, opr, i, j, k) * xp[i];
+}
+
+double rotation_pAy(Grid &par, Op &opr, int i, int j, int k){
+    double *yp = par.dsval("yp");
+    return opr.Ay_fn(par.Afn)(par, opr, i, j, k) * yp[j];
+}
+
+double rotation_Ax(Grid &par, Op &opr, int i, int j, int k){
+    double *y = par.dsval("y");
     double omega = par.dval("omega");
     double omegaX = par.dval("omegaX");
-    return -y[j]*xp[i] * omega * omegaX;
+    return -y[j] * omega * omegaX;
 }
 
-double rotation_Ay(Grid &par, int i, int j, int k){
+double rotation_Ay(Grid &par, Op &opr, int i, int j, int k){
     double *x = par.dsval("x");
-    double *yp = par.dsval("yp");
     double omega = par.dval("omega");
     double omegaY = par.dval("omegaY");
-    return x[i]*yp[j] * omega * omegaY;
+    return x[i] * omega * omegaY;
 }
 
-// Fuinctions for Ax, y, z for rotation along the z axis
-double rotation_squared_Ax(Grid &par, int i, int j, int k){
+// Fuinctions for pAx, y, z for rotation along the z axis
+double rotation_squared_pAx(Grid &par, Op &opr, int i, int j, int k){
     double *y = par.dsval("y");
     double *xp = par.dsval("xp");
     double omega = par.dval("omega");
@@ -129,7 +139,7 @@ double rotation_squared_Ax(Grid &par, int i, int j, int k){
     }
 }
 
-double rotation_squared_Ay(Grid &par, int i, int j, int k){
+double rotation_squared_pAy(Grid &par, Op &opr, int i, int j, int k){
     double *x = par.dsval("x");
     double *yp = par.dsval("yp");
     double omega = par.dval("omega");

@@ -280,7 +280,43 @@ Op::functionPtr Op::V_fn(std::string id){
     return it->second;
 }
 
-// Map for function pointers for Ax, Ay, and Az
+// Map for function pointers for pAx, pAy, and pAz
+Op::functionPtr Op::pAx_fn(std::string id){
+    auto it = Op_pAx_fns.find(id);
+    if (it == Op_pAx_fns.end()){
+        std::cout << "ERROR: could not find string " << id 
+                  << " in Op::Op_pAx_fns. Did you mean: " << '\n';
+        for (auto item : Op_pAx_fns){
+            std::cout << item.first << '\n';
+        }
+    }
+    return it->second;
+}
+
+Op::functionPtr Op::pAy_fn(std::string id){
+    auto it = Op_pAy_fns.find(id);
+    if (it == Op_pAy_fns.end()){
+        std::cout << "ERROR: could not find string " << id 
+                  << " in Op::Op_pAy_fns. Did you mean: " << '\n';
+        for (auto item : Op_pAy_fns){
+            std::cout << item.first << '\n';
+        }
+    }
+    return it->second;
+}
+
+Op::functionPtr Op::pAz_fn(std::string id){
+    auto it = Op_pAz_fns.find(id);
+    if (it == Op_pAz_fns.end()){
+        std::cout << "ERROR: could not find string " << id 
+                  << " in Op::Op_pAz_fns. Did you mean: " << '\n';
+        for (auto item : Op_pAz_fns){
+            std::cout << item.first << '\n';
+        }
+    }
+    return it->second;
+}
+
 Op::functionPtr Op::Ax_fn(std::string id){
     auto it = Op_Ax_fns.find(id);
     if (it == Op_Ax_fns.end()){
@@ -316,7 +352,6 @@ Op::functionPtr Op::Az_fn(std::string id){
     }
     return it->second;
 }
-
 // Function to set functionPtrs for K and V
 // Unfortunately, these must be set one at a time.
 void Op::set_fns(){
@@ -325,10 +360,13 @@ void Op::set_fns(){
     Op_K_fns["rotation_gauge_K"] = rotation_gauge_K;
     Op_V_fns["harmonic_V"] = harmonic_V;
     Op_V_fns["harmonic_gauge_V"] = harmonic_gauge_V;
-    Op_Ay_fns["rotation"] = rotation_Ay;
+    Op_pAy_fns["rotation"] = rotation_pAy;
+    Op_pAx_fns["rotation"] = rotation_pAx;
     Op_Ax_fns["rotation"] = rotation_Ax;
-    Op_Ay_fns["rotation_squared"] = rotation_squared_Ay;
-    Op_Ax_fns["rotation_squared"] = rotation_squared_Ax;
+    Op_Ay_fns["rotation"] = rotation_Ay;
+    Op_pAy_fns["rotation_squared"] = rotation_squared_pAy;
+    Op_pAx_fns["rotation_squared"] = rotation_squared_pAx;
+    
 
     //Op_K_fns.emplace("rotation_K", rotation_K);
     //Op_V_fns.emplace("harmonic_V", harmonic_V);

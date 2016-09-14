@@ -62,7 +62,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * @param       location in x, y, z
  * @return	K at that location
  */
-double rotation_K(Grid &par, int i, int j, int k);
+double rotation_K(Grid &par, Op &opr, int i, int j, int k);
 
  /**
  * @brief       determines K for the standard rotational case
@@ -71,7 +71,7 @@ double rotation_K(Grid &par, int i, int j, int k);
  * @param       location in x, y, z
  * @return      K at that location
  */
-double rotation_gauge_K(Grid &par, int i, int j, int k);
+double rotation_gauge_K(Grid &par, Op &opr, int i, int j, int k);
 
  /**
  * @brief       determines V for the standard harmonic case
@@ -80,7 +80,7 @@ double rotation_gauge_K(Grid &par, int i, int j, int k);
  * @param       location in x, y, z
  * @return      V at that location
  */
-double harmonic_V(Grid &par, int i, int j, int k);
+double harmonic_V(Grid &par, Op &opr, int i, int j, int k);
 
  /**
  * @brief       determines V for the standard harmonic case
@@ -89,42 +89,61 @@ double harmonic_V(Grid &par, int i, int j, int k);
  * @param       location in x, y, z
  * @return      V at that location
  */
-double harmonic_gauge_V(Grid &par, int i, int j, int k);
+double harmonic_gauge_V(Grid &par, Op &opr, int i, int j, int k);
 
  /**
- * @brief       determines Ax for the standard rotational case
+ * @brief       determines pAx for the standard rotational case
  * @ingroup     data
  * @param       Grid simulation data
  * @param       location in x, y, z
  * @return      V at that location
  */
-double rotation_Ax(Grid &par, int i, int j, int k);
+double rotation_pAx(Grid &par, Op &opr, int i, int j, int k);
 
  /**
- * @brief       determines Ay for the standard rotational case
+ * @brief       determines pAy for the standard rotational case
  * @ingroup     data
  * @param       Grid simulation data
  * @param       location in x, y, z
  * @return      V at that location
  */
-double rotation_Ay(Grid &par, int i, int j, int k);
+double rotation_pAy(Grid &par, Op &opr, int i, int j, int k);
 
  /**
- * @brief       determines Ax for the standard rotational case
+ * @brief       determines pAx for the standard rotational case
  * @ingroup     data
  * @param       Grid simulation data
  * @param       location in x, y, z
  * @return      V at that location
  */
-double rotation_squared_Ax(Grid &par, int i, int j, int k);
+double rotation_Ax(Grid &par, Op &opr, int i, int j, int k);
 
  /**
- * @brief       determines Ay for the standard rotational case
+ * @brief       determines pAy for the standard rotational case
  * @ingroup     data
  * @param       Grid simulation data
  * @param       location in x, y, z
  * @return      V at that location
  */
-double rotation_squared_Ay(Grid &par, int i, int j, int k);
+double rotation_Ay(Grid &par, Op &opr, int i, int j, int k);
+
+
+ /**
+ * @brief       determines pAx for the standard rotational case
+ * @ingroup     data
+ * @param       Grid simulation data
+ * @param       location in x, y, z
+ * @return      V at that location
+ */
+double rotation_squared_pAx(Grid &par, Op &opr, int i, int j, int k);
+
+ /**
+ * @brief       determines pAy for the standard rotational case
+ * @ingroup     data
+ * @param       Grid simulation data
+ * @param       location in x, y, z
+ * @return      V at that location
+ */
+double rotation_squared_pAy(Grid &par, Op &opr, int i, int j, int k);
 
 #endif

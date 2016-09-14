@@ -176,7 +176,7 @@ typedef class Cuda Cuda;
  */
 class Op{
     private:
-        typedef double (*functionPtr)(Grid&, int i, int j , int k);
+        typedef double (*functionPtr)(Grid&, Op&, int i, int j , int k);
         std::unordered_map<std::string, double*> Op_dstar;
         std::unordered_map<std::string, cufftDoubleComplex*> Op_cdc;
         std::unordered_map<std::string, functionPtr> Op_K_fns;
@@ -184,6 +184,9 @@ class Op{
         std::unordered_map<std::string, functionPtr> Op_Ax_fns;
         std::unordered_map<std::string, functionPtr> Op_Ay_fns;
         std::unordered_map<std::string, functionPtr> Op_Az_fns;
+        std::unordered_map<std::string, functionPtr> Op_pAx_fns;
+        std::unordered_map<std::string, functionPtr> Op_pAy_fns;
+        std::unordered_map<std::string, functionPtr> Op_pAz_fns;
         //K_fns.emplace("rotation_K", rotation_K);
         //V_fns["harmonic_V"] = harmonic_V;
         // double *V, *V_opt, *K, *xPy, *yPx, *xPy_gpu, *yPx_gpu;
@@ -202,6 +205,9 @@ class Op{
         // Map for function pointers and keys K and V
         functionPtr K_fn(std::string id);
         functionPtr V_fn(std::string id);
+        functionPtr pAx_fn(std::string id);
+        functionPtr pAy_fn(std::string id);
+        functionPtr pAz_fn(std::string id);
         functionPtr Ax_fn(std::string id);
         functionPtr Ay_fn(std::string id);
         functionPtr Az_fn(std::string id);

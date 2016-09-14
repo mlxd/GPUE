@@ -289,10 +289,10 @@ void evolve_2d_test(){
     double *x = par.dsval("x");
     double *y = par.dsval("y");
     double *V_opt = opr.dsval("V_opt");
-    double *Ay = opr.dsval("Ay");
-    double *Ax = opr.dsval("Ax");
-    double *Ay_gpu = opr.dsval("Ay_gpu");
-    double *Ax_gpu = opr.dsval("Ax_gpu");
+    double *pAy = opr.dsval("pAy");
+    double *pAx = opr.dsval("pAx");
+    double *pAy_gpu = opr.dsval("pAy_gpu");
+    double *pAx_gpu = opr.dsval("pAx_gpu");
     int xDim = par.ival("xDim");
     int yDim = par.ival("yDim");
     bool read_wfc = par.bval("read_wfc");
@@ -304,10 +304,10 @@ void evolve_2d_test(){
     cufftDoubleComplex *GV = opr.cufftDoubleComplexval("GV");
     cufftDoubleComplex *EV = opr.cufftDoubleComplexval("EV");
     cufftDoubleComplex *EK = opr.cufftDoubleComplexval("EK");
-    cufftDoubleComplex *EAy = opr.cufftDoubleComplexval("EAy");
-    cufftDoubleComplex *EAx = opr.cufftDoubleComplexval("EAx");
-    cufftDoubleComplex *GAx = opr.cufftDoubleComplexval("GAx");
-    cufftDoubleComplex *GAy = opr.cufftDoubleComplexval("GAy");
+    cufftDoubleComplex *EpAy = opr.cufftDoubleComplexval("EpAy");
+    cufftDoubleComplex *EpAx = opr.cufftDoubleComplexval("EpAx");
+    cufftDoubleComplex *GpAx = opr.cufftDoubleComplexval("GpAx");
+    cufftDoubleComplex *GpAy = opr.cufftDoubleComplexval("GpAy");
     cufftDoubleComplex *wfc_gpu = wave.cufftDoubleComplexval("wfc_gpu");
     cufftDoubleComplex *K_gpu = opr.cufftDoubleComplexval("K_gpu");
     cufftDoubleComplex *par_sum = wave.cufftDoubleComplexval("par_sum");
@@ -340,16 +340,16 @@ void evolve_2d_test(){
             std::cout << "ERROR: Could not copy V_gpu to device" << '\n';
             exit(1);
         }
-        err=cudaMemcpy(Ay_gpu, GAy, sizeof(cufftDoubleComplex)*xDim*yDim,
+        err=cudaMemcpy(pAy_gpu, GpAy, sizeof(cufftDoubleComplex)*xDim*yDim,
                        cudaMemcpyHostToDevice);
         if(err!=cudaSuccess){
-            std::cout << "ERROR: Could not copy Ay_gpu to device" << '\n';
+            std::cout << "ERROR: Could not copy pAy_gpu to device" << '\n';
             exit(1);
         }
-        err=cudaMemcpy(Ax_gpu, GAx, sizeof(cufftDoubleComplex)*xDim*yDim,
+        err=cudaMemcpy(pAx_gpu, GpAx, sizeof(cufftDoubleComplex)*xDim*yDim,
                        cudaMemcpyHostToDevice);
         if(err!=cudaSuccess){
-            std::cout << "ERROR: Could not copy Ax_gpu to device" << '\n';
+            std::cout << "ERROR: Could not copy pAx_gpu to device" << '\n';
             exit(1);
         }
         err=cudaMemcpy(wfc_gpu, wfc, sizeof(cufftDoubleComplex)*xDim*yDim,
@@ -368,9 +368,9 @@ void evolve_2d_test(){
     }
 
     std::cout << GV[0].x << '\t' << GK[0].x << '\t'
-              << Ay[0] << '\t' << Ax[0] << '\n';
+              << pAy[0] << '\t' << pAx[0] << '\n';
 
-    //free(GV); free(GK); free(Ay); free(Ax);
+    //free(GV); free(GK); free(pAy); free(pAx);
 
     // Re-initializing wfc after evolution
     wfc = wave.cufftDoubleComplexval("wfc");
@@ -385,16 +385,16 @@ void evolve_2d_test(){
     */
     //************************************************************//
     if(esteps > 0){
-        err=cudaMemcpy(Ay_gpu, EAy, sizeof(cufftDoubleComplex)*xDim*yDim,
+        err=cudaMemcpy(pAy_gpu, EpAy, sizeof(cufftDoubleComplex)*xDim*yDim,
                        cudaMemcpyHostToDevice);
         if(err!=cudaSuccess){
-            std::cout << "ERROR: Could not copy Ay_gpu to device" << '\n';
+            std::cout << "ERROR: Could not copy pAy_gpu to device" << '\n';
             exit(1);
         }
-        err=cudaMemcpy(Ax_gpu, EAx, sizeof(cufftDoubleComplex)*xDim*yDim,
+        err=cudaMemcpy(pAx_gpu, EpAx, sizeof(cufftDoubleComplex)*xDim*yDim,
                        cudaMemcpyHostToDevice);
         if(err!=cudaSuccess){
-            std::cout << "ERROR: Could not copy Ax_gpu to device" << '\n';
+            std::cout << "ERROR: Could not copy pAx_gpu to device" << '\n';
             exit(1);
         }
         err=cudaMemcpy(K_gpu, EK, sizeof(cufftDoubleComplex)*xDim*yDim,
@@ -519,10 +519,10 @@ void evolve_2d_test(){
 
     //std::cout << wfc_gpu[0].x << '\t' << wfc_gpu[0].y << '\n';
 
-    free(EV); free(EK); free(EAy); free(EAx);
+    free(EV); free(EK); free(EpAy); free(EpAx);
     free(x);free(y);
-    cudaFree(wfc_gpu); cudaFree(K_gpu); cudaFree(V_gpu); cudaFree(Ax_gpu);
-    cudaFree(Ay_gpu); cudaFree(par_sum);
+    cudaFree(wfc_gpu); cudaFree(K_gpu); cudaFree(V_gpu); cudaFree(pAx_gpu);
+    cudaFree(pAy_gpu); cudaFree(par_sum);
 
     std::cout << "Evolution test complete." << '\n';
     std::cout << "EVOLUTION TEST UNFINISHED!" << '\n';

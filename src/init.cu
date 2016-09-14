@@ -65,10 +65,10 @@ int init_2d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     double *Phi;
     double *Phi_gpu;
     double *K;
-    double *Ay;
-    double *Ax;
-    double *Ay_gpu;
-    double *Ax_gpu;
+    double *pAy;
+    double *pAx;
+    double *pAy_gpu;
+    double *pAx_gpu;
     double *Energy_gpu;
     cufftDoubleComplex *wfc;
     cufftDoubleComplex *V_gpu;
@@ -76,12 +76,12 @@ int init_2d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     cufftDoubleComplex *wfc_backup;
     cufftDoubleComplex *GK;
     cufftDoubleComplex *GV;
-    cufftDoubleComplex *GAx;
-    cufftDoubleComplex *GAy;
+    cufftDoubleComplex *GpAx;
+    cufftDoubleComplex *GpAy;
     cufftDoubleComplex *EV;
     cufftDoubleComplex *EK;
-    cufftDoubleComplex *EAy;
-    cufftDoubleComplex *EAx;
+    cufftDoubleComplex *EpAy;
+    cufftDoubleComplex *EpAx;
     cufftDoubleComplex *EappliedField; 
     cufftDoubleComplex *wfc_gpu;
     cufftDoubleComplex *K_gpu;
@@ -242,15 +242,15 @@ int init_2d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     V_opt = (double *) malloc(sizeof(double) * gSize);
     GK = (cufftDoubleComplex *) malloc(sizeof(cufftDoubleComplex) * gSize);
     GV = (cufftDoubleComplex *) malloc(sizeof(cufftDoubleComplex) * gSize);
-    GAx = (cufftDoubleComplex *) malloc(sizeof(cufftDoubleComplex) * gSize);
-    GAy = (cufftDoubleComplex *) malloc(sizeof(cufftDoubleComplex) * gSize);
+    GpAx = (cufftDoubleComplex *) malloc(sizeof(cufftDoubleComplex) * gSize);
+    GpAy = (cufftDoubleComplex *) malloc(sizeof(cufftDoubleComplex) * gSize);
     EK = (cufftDoubleComplex *) malloc(sizeof(cufftDoubleComplex) * gSize);
     EV = (cufftDoubleComplex *) malloc(sizeof(cufftDoubleComplex) * gSize);
     EV_opt = (cufftDoubleComplex *) malloc(sizeof(cufftDoubleComplex) * gSize);
-    Ay = (double *) malloc(sizeof(double) * gSize);
-    Ax = (double *) malloc(sizeof(double) * gSize);
-    EAy = (cufftDoubleComplex *) malloc(sizeof(cufftDoubleComplex) * gSize);
-    EAx = (cufftDoubleComplex *) malloc(sizeof(cufftDoubleComplex) * gSize);
+    pAy = (double *) malloc(sizeof(double) * gSize);
+    pAx = (double *) malloc(sizeof(double) * gSize);
+    EpAy = (cufftDoubleComplex *) malloc(sizeof(cufftDoubleComplex) * gSize);
+    EpAx = (cufftDoubleComplex *) malloc(sizeof(cufftDoubleComplex) * gSize);
     EappliedField = (cufftDoubleComplex *) malloc(sizeof(cufftDoubleComplex) * 
                                                          gSize);
     
@@ -260,8 +260,8 @@ int init_2d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     cudaMalloc((void**) &Phi_gpu, sizeof(double) * gSize);
     cudaMalloc((void**) &K_gpu, sizeof(cufftDoubleComplex) * gSize);
     cudaMalloc((void**) &V_gpu, sizeof(cufftDoubleComplex) * gSize);
-    cudaMalloc((void**) &Ay_gpu, sizeof(cufftDoubleComplex) * gSize);
-    cudaMalloc((void**) &Ax_gpu, sizeof(cufftDoubleComplex) * gSize);
+    cudaMalloc((void**) &pAy_gpu, sizeof(cufftDoubleComplex) * gSize);
+    cudaMalloc((void**) &pAx_gpu, sizeof(cufftDoubleComplex) * gSize);
     cudaMalloc((void**) &par_sum, sizeof(cufftDoubleComplex) * (gSize/threads));
     //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%//
 
@@ -295,33 +295,33 @@ int init_2d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
                                           sin(Phi[(i*xDim + j)]);
             }
                 
-            V[(i*yDim + j)] = opr.V_fn(par.Vfn)(par, i, j, 0);
-            K[(i*yDim + j)] = opr.K_fn(par.Kfn)(par, i, j, 0);
+            V[(i*yDim + j)] = opr.V_fn(par.Vfn)(par, opr, i, j, 0);
+            K[(i*yDim + j)] = opr.K_fn(par.Kfn)(par, opr, i, j, 0);
 
             GV[(i*yDim + j)].x = exp( -V[(i*xDim + j)]*(gdt/(2*HBAR)));
             GK[(i*yDim + j)].x = exp( -K[(i*xDim + j)]*(gdt/HBAR));
             GV[(i*yDim + j)].y = 0.0;
             GK[(i*yDim + j)].y = 0.0;
             
-            //Ay[(i*yDim + j)] = x[i]*yp[j];
-            Ay[(i*yDim + j)] = opr.Ay_fn(par.Afn)(par, i, j, 0);
-            //Ax[(i*yDim + j)] = -y[j]*xp[i];
-            Ax[(i*yDim + j)] = opr.Ax_fn(par.Afn)(par, i, j, 0);
+            //pAy[(i*yDim + j)] = x[i]*yp[j];
+            pAy[(i*yDim + j)] = opr.pAy_fn(par.Afn)(par, opr, i, j, 0);
+            //pAx[(i*yDim + j)] = -y[j]*xp[i];
+            pAx[(i*yDim + j)] = opr.pAx_fn(par.Afn)(par, opr, i, j, 0);
 
-            GAx[(i*yDim + j)].x = exp(-Ax[(i*xDim + j)]*gdt);
-            GAx[(i*yDim + j)].y = 0;
-            GAy[(i*yDim + j)].x = exp(-Ay[(i*xDim + j)]*gdt);
-            GAy[(i*yDim + j)].y = 0;
+            GpAx[(i*yDim + j)].x = exp(-pAx[(i*xDim + j)]*gdt);
+            GpAx[(i*yDim + j)].y = 0;
+            GpAy[(i*yDim + j)].x = exp(-pAy[(i*xDim + j)]*gdt);
+            GpAy[(i*yDim + j)].y = 0;
             
             EV[(i*yDim + j)].x=cos( -V[(i*xDim + j)]*(dt/(2*HBAR)));
             EV[(i*yDim + j)].y=sin( -V[(i*xDim + j)]*(dt/(2*HBAR)));
             EK[(i*yDim + j)].x=cos( -K[(i*xDim + j)]*(dt/HBAR));
             EK[(i*yDim + j)].y=sin( -K[(i*xDim + j)]*(dt/HBAR));
             
-            EAy[(i*yDim + j)].x=cos(-omega*omegaX*Ay[(i*xDim + j)]*dt);
-            EAy[(i*yDim + j)].y=sin(-omega*omegaX*Ay[(i*xDim + j)]*dt);
-            EAx[(i*yDim + j)].x=cos(-omega*omegaX*Ax[(i*xDim + j)]*dt);
-            EAx[(i*yDim + j)].y=sin(-omega*omegaX*Ax[(i*xDim + j)]*dt);
+            EpAy[(i*yDim + j)].x=cos(-omega*omegaX*pAy[(i*xDim + j)]*dt);
+            EpAy[(i*yDim + j)].y=sin(-omega*omegaX*pAy[(i*xDim + j)]*dt);
+            EpAx[(i*yDim + j)].x=cos(-omega*omegaX*pAx[(i*xDim + j)]*dt);
+            EpAx[(i*yDim + j)].y=sin(-omega*omegaX*pAx[(i*xDim + j)]*dt);
     
             sum+=sqrt(wfc[(i*xDim + j)].x*wfc[(i*xDim + j)].x + 
                       wfc[(i*xDim + j)].y*wfc[(i*xDim + j)].y);
@@ -335,11 +335,11 @@ int init_2d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     //FileIO::writeOutDouble(buffer, data_dir + "V_opt",V_opt,xDim*yDim,0);
     FileIO::writeOutDouble(buffer, data_dir + "V",V,xDim*yDim,0);
     FileIO::writeOutDouble(buffer, data_dir + "K",K,xDim*yDim,0);
-    FileIO::writeOutDouble(buffer, data_dir + "Ay",Ay,xDim*yDim,0);
-    FileIO::writeOutDouble(buffer, data_dir + "Ax",Ax,xDim*yDim,0);
+    FileIO::writeOutDouble(buffer, data_dir + "pAy",pAy,xDim*yDim,0);
+    FileIO::writeOutDouble(buffer, data_dir + "pAx",pAx,xDim*yDim,0);
     FileIO::writeOut(buffer, data_dir + "WFC",wfc,xDim*yDim,0);
-    FileIO::writeOut(buffer, data_dir + "EAy",EAy,xDim*yDim,0);
-    FileIO::writeOut(buffer, data_dir + "EAx",EAx,xDim*yDim,0);
+    FileIO::writeOut(buffer, data_dir + "EpAy",EpAy,xDim*yDim,0);
+    FileIO::writeOut(buffer, data_dir + "EpAx",EpAx,xDim*yDim,0);
     FileIO::writeOutDouble(buffer, data_dir + "Phi",Phi,xDim*yDim,0);
     FileIO::writeOutDouble(buffer, data_dir + "r",r,xDim*yDim,0);
     FileIO::writeOutDouble(buffer, data_dir + "x",x,xDim,0);
@@ -348,8 +348,8 @@ int init_2d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     FileIO::writeOutDouble(buffer, data_dir + "py",yp,yDim,0);
     FileIO::writeOut(buffer, data_dir + "GK",GK,xDim*yDim,0);
     FileIO::writeOut(buffer, data_dir + "GV",GV,xDim*yDim,0);
-    FileIO::writeOut(buffer, data_dir + "GAx",GAx,xDim*yDim,0);
-    FileIO::writeOut(buffer, data_dir + "GAy",GAy,xDim*yDim,0);
+    FileIO::writeOut(buffer, data_dir + "GpAx",GpAx,xDim*yDim,0);
+    FileIO::writeOut(buffer, data_dir + "GpAy",GpAy,xDim*yDim,0);
 
     //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%//
 
@@ -394,7 +394,7 @@ int init_2d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%//
 
     std::cout << GV[0].x << '\t' << GK[0].x << '\t' 
-              << Ay[0] << '\t' << Ax[0] << '\n';
+              << pAy[0] << '\t' << pAx[0] << '\n';
 
     std::cout << "storing variables..." << '\n';
 
@@ -423,8 +423,8 @@ int init_2d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     wave.store("Phi", Phi);
     wave.store("Phi_gpu", Phi_gpu);
     opr.store("K", K);
-    opr.store("Ay", Ay);
-    opr.store("Ax", Ax);
+    opr.store("pAy", pAy);
+    opr.store("pAx", pAx);
     opr.store("Energy_gpu", Energy_gpu);
     par.store("atoms", N);
     par.store("xDim", xDim);
@@ -436,17 +436,17 @@ int init_2d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     wave.store("wfc_backup", wfc_backup);
     opr.store("GK", GK);
     opr.store("GV", GV);
-    opr.store("GAx", GAx);
-    opr.store("GAy", GAy);
+    opr.store("GpAx", GpAx);
+    opr.store("GpAy", GpAy);
     opr.store("EV", EV);
     opr.store("EK", EK);
-    opr.store("EAy", EAy);
-    opr.store("EAx", EAx);
+    opr.store("EpAy", EpAy);
+    opr.store("EpAx", EpAx);
     opr.store("EappliedField", EappliedField);
     wave.store("wfc_gpu", wfc_gpu);
     opr.store("K_gpu", K_gpu);
-    opr.store("Ay_gpu", Ay_gpu);
-    opr.store("Ax_gpu", Ax_gpu);
+    opr.store("pAy_gpu", pAy_gpu);
+    opr.store("pAx_gpu", pAx_gpu);
     wave.store("par_sum", par_sum);
 
     cupar.store("result", result);
@@ -492,10 +492,10 @@ int main(int argc, char **argv){
     double *x = par.dsval("x");
     double *y = par.dsval("y");
     double *V_opt = opr.dsval("V_opt");
-    double *Ay = opr.dsval("Ay");
-    double *Ax = opr.dsval("Ax");
-    double *Ay_gpu = opr.dsval("Ay_gpu");
-    double *Ax_gpu = opr.dsval("Ax_gpu");
+    double *pAy = opr.dsval("pAy");
+    double *pAx = opr.dsval("pAx");
+    double *pAy_gpu = opr.dsval("pAy_gpu");
+    double *pAx_gpu = opr.dsval("pAx_gpu");
     int xDim = par.ival("xDim");
     int yDim = par.ival("yDim");
     bool read_wfc = par.bval("read_wfc");
@@ -505,12 +505,12 @@ int main(int argc, char **argv){
     cufftDoubleComplex *V_gpu = opr.cufftDoubleComplexval("V_gpu");
     cufftDoubleComplex *GK = opr.cufftDoubleComplexval("GK");
     cufftDoubleComplex *GV = opr.cufftDoubleComplexval("GV");
-    cufftDoubleComplex *GAx = opr.cufftDoubleComplexval("GAx");
-    cufftDoubleComplex *GAy = opr.cufftDoubleComplexval("GAy");
+    cufftDoubleComplex *GpAx = opr.cufftDoubleComplexval("GpAx");
+    cufftDoubleComplex *GpAy = opr.cufftDoubleComplexval("GpAy");
     cufftDoubleComplex *EV = opr.cufftDoubleComplexval("EV");
     cufftDoubleComplex *EK = opr.cufftDoubleComplexval("EK");
-    cufftDoubleComplex *EAy = opr.cufftDoubleComplexval("EAy");
-    cufftDoubleComplex *EAx = opr.cufftDoubleComplexval("EAx");
+    cufftDoubleComplex *EpAy = opr.cufftDoubleComplexval("EpAy");
+    cufftDoubleComplex *EpAx = opr.cufftDoubleComplexval("EpAx");
     cufftDoubleComplex *wfc_gpu = wave.cufftDoubleComplexval("wfc_gpu");
     cufftDoubleComplex *K_gpu = opr.cufftDoubleComplexval("K_gpu");
     cufftDoubleComplex *par_sum = wave.cufftDoubleComplexval("par_sum");
@@ -548,16 +548,16 @@ int main(int argc, char **argv){
         }
         FileIO::writeOut(buffer, data_dir + "GK1",GK,xDim*yDim,0);
         FileIO::writeOut(buffer, data_dir + "GV1",GV,xDim*yDim,0);
-        err=cudaMemcpy(Ay_gpu, GAy, sizeof(cufftDoubleComplex)*xDim*yDim,
+        err=cudaMemcpy(pAy_gpu, GpAy, sizeof(cufftDoubleComplex)*xDim*yDim,
                        cudaMemcpyHostToDevice);
         if(err!=cudaSuccess){
-            std::cout << "ERROR: Could not copy Ay_gpu to device" << '\n';
+            std::cout << "ERROR: Could not copy pAy_gpu to device" << '\n';
             exit(1);
         }
-        err=cudaMemcpy(Ax_gpu, GAx, sizeof(cufftDoubleComplex)*xDim*yDim,
+        err=cudaMemcpy(pAx_gpu, GpAx, sizeof(cufftDoubleComplex)*xDim*yDim,
                        cudaMemcpyHostToDevice);
         if(err!=cudaSuccess){
-            std::cout << "ERROR: Could not copy Ax_gpu to device" << '\n';
+            std::cout << "ERROR: Could not copy pAx_gpu to device" << '\n';
             exit(1);
         }
         err=cudaMemcpy(wfc_gpu, wfc, sizeof(cufftDoubleComplex)*xDim*yDim,
@@ -566,16 +566,16 @@ int main(int argc, char **argv){
             std::cout << "ERROR: Could not copy wfc_gpu to device" << '\n';
             exit(1);
         } 
-        opr.store("Ax", Ax);
-        opr.store("Ay", Ay);
+        opr.store("pAx", pAx);
+        opr.store("pAy", pAy);
         opr.store("GK", GK);
         opr.store("GV", GV);
         wave.store("wfc", wfc);
         opr.store("K_gpu", K_gpu);
         opr.store("V_gpu", V_gpu);
         wave.store("wfc_gpu", wfc_gpu);
-        opr.store("Ay_gpu", Ay_gpu);
-        opr.store("Ax_gpu", Ax_gpu);
+        opr.store("pAy_gpu", pAy_gpu);
+        opr.store("pAx_gpu", pAx_gpu);
         
         evolve_2d(wave, opr, par_sum,
                gsteps, cupar, 0, par, buffer);
@@ -586,9 +586,9 @@ int main(int argc, char **argv){
     }
 
     std::cout << GV[0].x << '\t' << GK[0].x << '\t' 
-              << Ay[0] << '\t' << Ax[0] << '\n';
+              << pAy[0] << '\t' << pAx[0] << '\n';
 
-    //free(GV); free(GK); free(Ay); free(Ax);
+    //free(GV); free(GK); free(pAy); free(pAx);
 
     // Re-initializing wfc after evolution
     //wfc = wave.cufftDoubleComplexval("wfc");
@@ -603,16 +603,16 @@ int main(int argc, char **argv){
     */
     //************************************************************//
     if(esteps > 0){
-        err=cudaMemcpy(Ay_gpu, EAy, sizeof(cufftDoubleComplex)*xDim*yDim,
+        err=cudaMemcpy(pAy_gpu, EpAy, sizeof(cufftDoubleComplex)*xDim*yDim,
                        cudaMemcpyHostToDevice);
         if(err!=cudaSuccess){
-            std::cout << "ERROR: Could not copy Ay_gpu to device" << '\n';
+            std::cout << "ERROR: Could not copy pAy_gpu to device" << '\n';
             exit(1);
         }
-        err=cudaMemcpy(Ax_gpu, EAx, sizeof(cufftDoubleComplex)*xDim*yDim,
+        err=cudaMemcpy(pAx_gpu, EpAx, sizeof(cufftDoubleComplex)*xDim*yDim,
                        cudaMemcpyHostToDevice);
         if(err!=cudaSuccess){
-            std::cout << "ERROR: Could not copy Ax_gpu to device" << '\n';
+            std::cout << "ERROR: Could not copy pAx_gpu to device" << '\n';
             exit(1);
         }
         err=cudaMemcpy(K_gpu, EK, sizeof(cufftDoubleComplex)*xDim*yDim,
@@ -634,16 +634,16 @@ int main(int argc, char **argv){
             exit(1);
         }
 
-        opr.store("Ax", Ax);
-        opr.store("Ay", Ay);
+        opr.store("pAx", pAx);
+        opr.store("pAy", pAy);
         opr.store("EK", EK);
         opr.store("EV", EV);
         wave.store("wfc", wfc);
         opr.store("K_gpu", K_gpu);
         opr.store("V_gpu", V_gpu);
         wave.store("wfc_gpu", wfc_gpu);
-        opr.store("Ay_gpu", Ay_gpu);
-        opr.store("Ax_gpu", Ax_gpu);
+        opr.store("pAy_gpu", pAy_gpu);
+        opr.store("pAx_gpu", pAx_gpu);
 
         FileIO::writeOutDouble(buffer, data_dir + "V_opt",V_opt,xDim*yDim,0);
         evolve_2d(wave, opr, par_sum,
@@ -654,10 +654,10 @@ int main(int argc, char **argv){
     }
 
     std::cout << "done evolving" << '\n';
-    free(EV); free(EK); free(EAy); free(EAx);
+    free(EV); free(EK); free(EpAy); free(EpAx);
     free(x);free(y);
-    cudaFree(wfc_gpu); cudaFree(K_gpu); cudaFree(V_gpu); cudaFree(Ax_gpu); 
-    cudaFree(Ay_gpu); cudaFree(par_sum);
+    cudaFree(wfc_gpu); cudaFree(K_gpu); cudaFree(V_gpu); cudaFree(pAx_gpu); 
+    cudaFree(pAy_gpu); cudaFree(par_sum);
 
     time(&fin);
     printf("Finish: %s\n", ctime(&fin));
