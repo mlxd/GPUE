@@ -111,3 +111,36 @@ double rotation_Ay(Grid &par, int i, int j, int k){
     double omegaY = par.dval("omegaY");
     return x[i]*yp[j] * omega * omegaY;
 }
+
+// Fuinctions for Ax, y, z for rotation along the z axis
+double rotation_squared_Ax(Grid &par, int i, int j, int k){
+    double *y = par.dsval("y");
+    double *xp = par.dsval("xp");
+    double omega = par.dval("omega");
+    double omegaX = par.dval("omegaX");
+    //double yMax = par.dval("yMax");
+    double val = -y[j]*y[j]*y[j]*xp[i]*xp[i]*xp[i] * omega * omegaX;
+    //double val = 1/(y[j]*xp[i]) * omega * omegaX;
+    if (abs(val) > 10){
+        return 10;
+    }
+    else{
+        return val;
+    }
+}
+
+double rotation_squared_Ay(Grid &par, int i, int j, int k){
+    double *x = par.dsval("x");
+    double *yp = par.dsval("yp");
+    double omega = par.dval("omega");
+    double omegaY = par.dval("omegaY");
+    //double xMax = par.dval("xMax");
+    double val = x[i]*x[i]*x[i]*yp[j]*yp[j]*yp[j] * omega * omegaY;
+    //double val = 1/(yp[j]*x[i]) * omega * omegaY;
+    if (abs(val) > 10){
+        return 10;
+    }
+    else{
+        return val;
+    }
+}

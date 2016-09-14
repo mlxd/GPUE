@@ -109,6 +109,22 @@ double rotation_Ax(Grid &par, int i, int j, int k);
  */
 double rotation_Ay(Grid &par, int i, int j, int k);
 
+ /**
+ * @brief       determines Ax for the standard rotational case
+ * @ingroup     data
+ * @param       Grid simulation data
+ * @param       location in x, y, z
+ * @return      V at that location
+ */
+double rotation_squared_Ax(Grid &par, int i, int j, int k);
 
+ /**
+ * @brief       determines Ay for the standard rotational case
+ * @ingroup     data
+ * @param       Grid simulation data
+ * @param       location in x, y, z
+ * @return      V at that location
+ */
+double rotation_squared_Ay(Grid &par, int i, int j, int k);
 
 #endif

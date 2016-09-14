@@ -327,6 +327,9 @@ void Op::set_fns(){
     Op_V_fns["harmonic_gauge_V"] = harmonic_gauge_V;
     Op_Ay_fns["rotation"] = rotation_Ay;
     Op_Ax_fns["rotation"] = rotation_Ax;
+    Op_Ay_fns["rotation_squared"] = rotation_squared_Ay;
+    Op_Ax_fns["rotation_squared"] = rotation_squared_Ax;
+
     //Op_K_fns.emplace("rotation_K", rotation_K);
     //Op_V_fns.emplace("harmonic_V", harmonic_V);
     

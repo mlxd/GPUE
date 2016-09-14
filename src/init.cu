@@ -348,6 +348,8 @@ int init_2d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     FileIO::writeOutDouble(buffer, data_dir + "py",yp,yDim,0);
     FileIO::writeOut(buffer, data_dir + "GK",GK,xDim*yDim,0);
     FileIO::writeOut(buffer, data_dir + "GV",GV,xDim*yDim,0);
+    FileIO::writeOut(buffer, data_dir + "GAx",GAx,xDim*yDim,0);
+    FileIO::writeOut(buffer, data_dir + "GAy",GAy,xDim*yDim,0);
 
     //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%//
 
