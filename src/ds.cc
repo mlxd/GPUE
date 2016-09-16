@@ -60,7 +60,29 @@ void Grid::store(std::string id, bool bparam){
 
 // Function to store string into data_dir
 void Grid::store(std::string id, std::string sparam){
-    data_dir = sparam;
+    param_string[id] = sparam;
+}
+
+// Two boolean functions to check whether a string exists in 
+// param_double or param_dstar
+bool Grid::is_double(std::string id){
+    auto it = param_double.find(id);
+    if (it != param_double.end()){
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+bool Grid::is_dstar(std::string id){
+    auto it = param_dstar.find(id);
+    if (it != param_dstar.end()){
+        return true;
+    }
+    else {
+        return false;
+    }
 }
 
 // Function to retrieve integer from Grid->param_int
@@ -105,7 +127,13 @@ bool Grid::bval(std::string id){
 // Note: There is only one string value in the Grid struct... 
 //       We must add an unordered map for strings if further strings are desired
 std::string Grid::sval(std::string id){
-    return data_dir;
+    auto it = param_string.find(id);
+    if (it == param_string.end()){
+        std::cout << "ERROR: could not find string " << id 
+                  << " in Grid::param_string." << '\n';
+        assert(it != param_string.end());
+    }
+    return it->second;
 }
 
 // Function for file writing (to replace fileIO::writeOutParam)
@@ -124,6 +152,16 @@ void Grid::write(std::string filename){
     }
 
     output.close();
+}
+
+// Function to print all available variables
+void Grid::print_map(){
+    for (auto item : param_double){
+        std::cout << item.first << '\n';
+    }
+    for (auto item : param_dstar){
+       std::cout << item.first << '\n';
+    }
 }
 
 /*----------------------------------------------------------------------------//
@@ -364,8 +402,12 @@ void Op::set_fns(){
     Op_pAx_fns["rotation"] = rotation_pAx;
     Op_Ax_fns["rotation"] = rotation_Ax;
     Op_Ay_fns["rotation"] = rotation_Ay;
-    Op_pAy_fns["rotation_squared"] = rotation_squared_pAy;
-    Op_pAx_fns["rotation_squared"] = rotation_squared_pAx;
+    Op_Ax_fns["dynamic"] = dynamic_Ax;
+    Op_Ay_fns["dynamic"] = dynamic_Ay;
+    Op_pAx_fns["rotation_squared"] = rotation_Ax;
+    Op_pAy_fns["rotation_squared"] = rotation_Ay;
+    Op_Ay_fns["rotation_squared"] = rotation_squared_Ay;
+    Op_Ax_fns["rotation_squared"] = rotation_squared_Ax;
     
 
     //Op_K_fns.emplace("rotation_K", rotation_K);

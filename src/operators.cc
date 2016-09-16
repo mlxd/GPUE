@@ -123,34 +123,205 @@ double rotation_Ay(Grid &par, Op &opr, int i, int j, int k){
 }
 
 // Fuinctions for pAx, y, z for rotation along the z axis
-double rotation_squared_pAx(Grid &par, Op &opr, int i, int j, int k){
+double rotation_squared_Ax(Grid &par, Op &opr, int i, int j, int k){
     double *y = par.dsval("y");
-    double *xp = par.dsval("xp");
     double omega = par.dval("omega");
     double omegaX = par.dval("omegaX");
     //double yMax = par.dval("yMax");
-    double val = -y[j]*y[j]*y[j]*xp[i]*xp[i]*xp[i] * omega * omegaX;
-    //double val = 1/(y[j]*xp[i]) * omega * omegaX;
-    if (abs(val) > 10){
-        return 10;
-    }
-    else{
-        return val;
-    }
+    double val = -y[j]*y[j] * omega * omegaX;
+    return val;
 }
 
-double rotation_squared_pAy(Grid &par, Op &opr, int i, int j, int k){
+double rotation_squared_Ay(Grid &par, Op &opr, int i, int j, int k){
     double *x = par.dsval("x");
-    double *yp = par.dsval("yp");
     double omega = par.dval("omega");
     double omegaY = par.dval("omegaY");
     //double xMax = par.dval("xMax");
-    double val = x[i]*x[i]*x[i]*yp[j]*yp[j]*yp[j] * omega * omegaY;
-    //double val = 1/(yp[j]*x[i]) * omega * omegaY;
-    if (abs(val) > 10){
-        return 10;
+    double val = x[i]*x[i] * omega * omegaY;
+    return val;
+}
+
+double dynamic_Ax(Grid &par, Op &opr, int i, int j, int k){
+    double val = 0;
+    std::string equation = par.sval("Axstring");
+    parse_equation(par, equation, val, i, j, k);
+    // For debugging
+    //exit(0);
+    return val;
+}
+
+double dynamic_Ay(Grid &par, Op &opr, int i, int j, int k){
+    double val = 0;
+    std::string equation = par.sval("Aystring");
+    parse_equation(par, equation, val, i, j, k);
+    // For debugging
+    //exit(0);
+    return val;
+}
+
+double dynamic_Az(Grid &par, Op &opr, int i, int j, int k){
+    double val = 0;
+    std::string equation = par.sval("Aystring");
+    parse_equation(par, equation, val, i, j, k);
+    return val;
+}
+
+// This function will be used with the dynamic gauge fields for AX,y,z (above)
+void parse_equation(Grid par, std::string &equation, double &val, 
+                    int i, int j, int k){
+
+    // boolean value iff first minus
+    bool minus = false;
+
+    // Because this will be called recursively, we need to return if the string
+    // length is 0
+    if (equation.length() == 0){
+        std::cout << "There's nothing here!" << '\n';
+        //return;
     }
-    else{
-        return val;
+
+    // vector of all possibe mathematical operators (not including functions)
+    std::vector<std::string> moperators(4);
+    moperators = {
+        "-", "/", "*", "+"
+    };
+
+    // And another vector for brackets of various types which indicate recursive
+    // parsing of the equation
+    std::vector<std::string> mbrackets;
+    mbrackets = {
+        "(", "[", "]", ")"
+    };
+
+    // vector of all possible mathematical functions... more to come
+    std::vector<std::string> mfunctions(5);
+    mfunctions = {
+        "sin", "cos", "exp", "tan", "erf"
+    };
+
+    // We also need a specific map for the functions above
+    typedef double (*functionPtr)(double);
+    std::unordered_map<std::string, functionPtr> mfunctions_map;
+    mfunctions_map["sin"] = sin;
+    mfunctions_map["cos"] = cos;
+    mfunctions_map["tan"] = tan;
+    mfunctions_map["exp"] = exp;
+    mfunctions_map["erf"] = erf;
+
+    // We will have values and operators, but some operators will need to 
+    // recursively call this function (think exp(), sin(), cos())...
+    // We now need to do some silly sorting to figure out which operator 
+    // comes first and where it is
+    size_t index = equation.length();
+    std::string currmop = "";
+    size_t moppos;
+    for (auto &mop : moperators){
+        moppos = equation.find(mop);
+        if (moppos < equation.length()){
+            if (moppos < index && moppos > 0){
+                currmop = mop;
+                index = moppos;
+            }
+            else if(moppos == 0){
+                minus = true;
+                equation = equation.substr(1,equation.size());
+            }
+            else{
+                currmop = equation.length();
+            }
+        }
+    }
+
+    //std::cout << currmop << '\t' << index << '\n';
+
+    // Now we do a similar thing for the mbrackets
+    // Sharing moppos from above
+    for (auto &mbra : mbrackets){
+        moppos = equation.find(mbra);
+        if (moppos < equation.length()){
+            if (moppos < index){
+                currmop = mbra;
+                index = moppos;
+            }
+            else{
+                currmop = equation.length();
+            }
+        }
+    }
+
+    // Now we need to get the string we are working with...
+    std::string item = equation.substr(0,index);
+
+    // now we need to find the string in either mfunctions or par
+    // First, we'll check mfunctions
+
+    // Now we need to check to see if the string is in mfunctions
+    auto it = mfunctions_map.find(item);
+    if (it != mfunctions_map.end()){
+        int openbracket, closebracket;
+        openbracket = index;
+        closebracket = equation.find(equation[openbracket]);
+        std::string ineqn = equation.substr(openbracket + 1, 
+                                            closebracket - 1);
+        double inval = 0;
+        parse_equation(par, ineqn, inval, i, j, k);
+        val = mfunctions_map[item](inval);
+    }
+
+    // Now we need to do a similar thing for all the maps in par.
+    if (par.is_double(item)){
+        val = par.dval(item);
+    }
+    else if (par.is_dstar(item)){
+        if (item == "x" || item == "px"){
+            val = par.dsval(item)[i];
+        }
+        if (item == "y" || item == "py"){
+            val = par.dsval(item)[j];
+        }
+        if (item == "z" || item == "pz"){
+            val = par.dsval(item)[k];
+        }
+    }
+    else if (item.size() > 0){
+        std::cout << "could not find string " << item << "! please use one of "
+                  << "the following variables:" << '\n';
+        par.print_map();
+    }
+
+    if (minus){
+        val *= -1;
+    }
+
+    //std::cout << item << '\t' << currmop << '\n';
+
+    // Now to deal with the operator at the end
+    if (currmop == "+"){
+        double inval = 0;
+        std::string new_eqn = equation.substr(index+1,equation.size());
+        //std::cout << new_eqn << '\n';
+        parse_equation(par, new_eqn, inval, i, j, k);
+        val += inval;
+    }
+    if (currmop == "-"){
+        double inval = 0;
+        std::string new_eqn = equation.substr(index+1,equation.size());
+        //std::cout << new_eqn << '\n';
+        parse_equation(par, new_eqn, inval, i, j, k);
+        val -= inval;
+    }
+    if (currmop == "*"){
+        double inval = 0;
+        std::string new_eqn = equation.substr(index+1,equation.size());
+        //std::cout << new_eqn << '\n';
+        parse_equation(par, new_eqn, inval, i, j, k);
+        val *= inval;
+    }
+    if (currmop == "/"){
+        double inval = 0;
+        std::string new_eqn = equation.substr(index+1,equation.size());
+        //std::cout << new_eqn << '\n';
+        parse_equation(par, new_eqn, inval, i, j, k);
+        val /= inval;
     }
 }

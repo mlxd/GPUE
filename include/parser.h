@@ -54,6 +54,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <fstream>
+#include <sys/stat.h>
+#include <algorithm>
 #include "../include/ds.h"
 #include "../include/unit_test.h"
 

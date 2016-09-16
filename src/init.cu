@@ -67,6 +67,8 @@ int init_2d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     double *K;
     double *pAy;
     double *pAx;
+    double *Ax;
+    double *Ay;
     double *pAy_gpu;
     double *pAx_gpu;
     double *Energy_gpu;
@@ -249,6 +251,8 @@ int init_2d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     EV_opt = (cufftDoubleComplex *) malloc(sizeof(cufftDoubleComplex) * gSize);
     pAy = (double *) malloc(sizeof(double) * gSize);
     pAx = (double *) malloc(sizeof(double) * gSize);
+    Ax = (double *) malloc(sizeof(double) * gSize);
+    Ay = (double *) malloc(sizeof(double) * gSize);
     EpAy = (cufftDoubleComplex *) malloc(sizeof(cufftDoubleComplex) * gSize);
     EpAx = (cufftDoubleComplex *) malloc(sizeof(cufftDoubleComplex) * gSize);
     EappliedField = (cufftDoubleComplex *) malloc(sizeof(cufftDoubleComplex) * 
@@ -302,11 +306,16 @@ int init_2d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
             GK[(i*yDim + j)].x = exp( -K[(i*xDim + j)]*(gdt/HBAR));
             GV[(i*yDim + j)].y = 0.0;
             GK[(i*yDim + j)].y = 0.0;
+
+            // Ax and Ay will be calculated here but are used only for
+            // debugging. They may be needed later for magnetic field calc
+            Ax[(i*yDim + j)] = opr.Ax_fn(par.Afn)(par, opr, i, j, 0);
+            Ay[(i*yDim + j)] = opr.Ay_fn(par.Afn)(par, opr, i, j, 0);
             
             //pAy[(i*yDim + j)] = x[i]*yp[j];
-            pAy[(i*yDim + j)] = opr.pAy_fn(par.Afn)(par, opr, i, j, 0);
+            pAy[(i*yDim + j)] = opr.pAy_fn("rotation")(par, opr, i, j, 0);
             //pAx[(i*yDim + j)] = -y[j]*xp[i];
-            pAx[(i*yDim + j)] = opr.pAx_fn(par.Afn)(par, opr, i, j, 0);
+            pAx[(i*yDim + j)] = opr.pAx_fn("rotation")(par, opr, i, j, 0);
 
             GpAx[(i*yDim + j)].x = exp(-pAx[(i*xDim + j)]*gdt);
             GpAx[(i*yDim + j)].y = 0;
@@ -337,6 +346,8 @@ int init_2d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     FileIO::writeOutDouble(buffer, data_dir + "K",K,xDim*yDim,0);
     FileIO::writeOutDouble(buffer, data_dir + "pAy",pAy,xDim*yDim,0);
     FileIO::writeOutDouble(buffer, data_dir + "pAx",pAx,xDim*yDim,0);
+    FileIO::writeOutDouble(buffer, data_dir + "Ax",Ax,xDim*yDim,0);
+    FileIO::writeOutDouble(buffer, data_dir + "Ay",Ay,xDim*yDim,0);
     FileIO::writeOut(buffer, data_dir + "WFC",wfc,xDim*yDim,0);
     FileIO::writeOut(buffer, data_dir + "EpAy",EpAy,xDim*yDim,0);
     FileIO::writeOut(buffer, data_dir + "EpAx",EpAx,xDim*yDim,0);

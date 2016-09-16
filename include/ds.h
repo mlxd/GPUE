@@ -84,6 +84,7 @@ class Grid{
         std::unordered_map<std::string, double> param_double;
         std::unordered_map<std::string, double*> param_dstar;
         std::unordered_map<std::string, bool> param_bool;
+        std::unordered_map<std::string, std::string> param_string;
         std::string data_dir;
 
         // List of all strings for parsing into the appropriate param map
@@ -128,6 +129,14 @@ class Grid{
 
         // Function for file writing
         void write(std::string filename);
+
+        // Two boolean functions to check whether a string exists in 
+        // param_double or param_dstar
+        bool is_double(std::string id);
+        bool is_dstar(std::string id);
+
+        // Function to print all available variables
+        void print_map();
 
         // Key values for operators
         // Note that Vector potential only have a single string for x, y, z
@@ -176,7 +185,7 @@ typedef class Cuda Cuda;
  */
 class Op{
     private:
-        typedef double (*functionPtr)(Grid&, Op&, int i, int j , int k);
+        typedef double (*functionPtr)(Grid&, Op&, int, int, int);
         std::unordered_map<std::string, double*> Op_dstar;
         std::unordered_map<std::string, cufftDoubleComplex*> Op_cdc;
         std::unordered_map<std::string, functionPtr> Op_K_fns;

@@ -315,11 +315,91 @@ Grid parseArgs(int argc, char** argv){
                 par.store("sepMinEpsilon",sepMinEpsilon);
                 break;
             }
+
+            // this case is special and may require reading input from a file
+            // or from cin
             case 'A':
             {
                 std::string field = optarg;
                 std::cout << "Chosen gauge field is: " << field << '\n';
+                // If the dynamic gauge field is chosen, we need to read it in
+                // from a file and if there is no file, read it from cin
+                if (strcmp(optarg, "dynamic") == 0){
+                    std::string filename = "src/gauge.cfg";
+                    std::string Axstring, Aystring, Azstring, line;
+
+                    // checking if src/gauge.cfg exists
+                    struct stat buffer;
+                    if (stat(filename.c_str(), &buffer) ==0){
+                        std::cout << "dynamic gauge fields have been chosen, " 
+                                  << "attempting to read from gauge.cfg..."
+                                  << '\n';
+                        std::ifstream infile(filename);
+                        int count = 0;
+                        while (std::getline(infile, line)){
+                            if (count == 0){
+                                Axstring = line;
+                                std::cout << Axstring << '\n';
+    
+                                // Now we need to strip the start of the string
+                                // before the "="
+                                int eqpos = Axstring.find("=") + 1;
+                                Axstring = Axstring.substr(eqpos);
+                            }
+                            if (count == 1){
+                                Aystring = line;
+                                std::cout << Aystring << '\n';
+    
+                                // Now we need to strip the start of the string
+                                // before the "="
+                                int eqpos = Aystring.find("=") + 1;
+                                Aystring = Aystring.substr(eqpos);
+                            }
+                            if (count == 2){
+                                Azstring = line;
+                                std::cout << Azstring << '\n';
+    
+                                // Now we need to strip the start of the string
+                                // before the "="
+                                int eqpos = Azstring.find("=") + 1;
+                                Azstring = Azstring.substr(eqpos);
+                            }
+                            count++;
+                        }
+                    }
+                    else {
+                        std::cout << "Could not find src/gauge.cfg, please "
+                                  << "enter gauge fields manually. If you do "
+                                  << "not intend to use Az, please set it to 0"
+                                  << '\n';
+                        std::cout << "Ax = ";
+                        std::cin >> Axstring;
+                        std::cout << "Ay = ";
+                        std::cin >> Aystring;
+                        std::cout << "Az = ";
+                        std::cin >> Azstring;
+                    }
+
+                    // Now we hav Ax,y,zstring, we just need to store them
+                    Axstring.erase(remove_if(Axstring.begin(), Axstring.end(),
+                                             isspace),
+                                   Axstring.end());
+                    Aystring.erase(remove_if(Aystring.begin(), Aystring.end(),
+                                             isspace),
+                                   Aystring.end());
+                    Azstring.erase(remove_if(Azstring.begin(), Azstring.end(),
+                                             isspace),
+                                   Azstring.end());
+
+                    std::cout << Axstring << '\n' << Aystring << '\n' 
+                              << Azstring << '\n';
+                    par.store("Axstring",Axstring);
+                    par.store("Aystring",Aystring);
+                    par.store("Azstring",Azstring);
+                    
+                }
                 par.Afn = field;
+                //exit(0);
                 break;
             }
             case 'a':

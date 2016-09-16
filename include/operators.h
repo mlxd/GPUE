@@ -135,7 +135,7 @@ double rotation_Ay(Grid &par, Op &opr, int i, int j, int k);
  * @param       location in x, y, z
  * @return      V at that location
  */
-double rotation_squared_pAx(Grid &par, Op &opr, int i, int j, int k);
+double rotation_squared_Ax(Grid &par, Op &opr, int i, int j, int k);
 
  /**
  * @brief       determines pAy for the standard rotational case
@@ -144,6 +144,43 @@ double rotation_squared_pAx(Grid &par, Op &opr, int i, int j, int k);
  * @param       location in x, y, z
  * @return      V at that location
  */
-double rotation_squared_pAy(Grid &par, Op &opr, int i, int j, int k);
+double rotation_squared_Ay(Grid &par, Op &opr, int i, int j, int k);
+
+ /**
+ * @brief       determines pAy for the standard rotational case
+ * @ingroup     data
+ * @param       Grid simulation data
+ * @param       location in x, y, z
+ * @return      V at that location
+ */
+double dynamic_Ax(Grid &par, Op &opr, int i, int j, int k);
+
+ /**
+ * @brief       determines pAy for the standard rotational case
+ * @ingroup     data
+ * @param       Grid simulation data
+ * @param       location in x, y, z
+ * @return      V at that location
+ */
+double dynamic_Ay(Grid &par, Op &opr, int i, int j, int k);
+
+ /**
+ * @brief       determines pAy for the standard rotational case
+ * @ingroup     data
+ * @param       Grid simulation data
+ * @param       location in x, y, z
+ * @return      V at that location
+ */
+double dynamic_Az(Grid &par, Op &opr, int i, int j, int k);
+
+ /**
+ * @brief       determines pAy for the standard rotational case
+ * @ingroup     data
+ * @param       Grid simulation data
+ * @param       location in x, y, z
+ * @return      V at that location
+ */
+void parse_equation(Grid par, std::string &equation, double &val, 
+                    int i, int j, int k);
 
 #endif
