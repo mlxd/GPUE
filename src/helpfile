@@ -81,4 +81,7 @@ Notes:
   linear Schrodinger equation and may need to be modified to match your
   specific problem.
 
+- You may generate a simple vortex lattice in 2d with the following command:
+  ./gpue -x 512 -y 512 -g 50000 -e 1 -p 5000 -W -w 0.5 -n 1e5 -s -l -o 10
+
 - Thanks for using GPUE!

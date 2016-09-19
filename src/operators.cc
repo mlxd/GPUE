@@ -196,7 +196,7 @@ void parse_equation(Grid par, std::string &equation, double &val,
     // vector of all possible mathematical functions... more to come
     std::vector<std::string> mfunctions(5);
     mfunctions = {
-        "sin", "cos", "exp", "tan", "erf"
+        "sin", "cos", "exp", "tan", "erf", "sqrt"
     };
 
     // We also need a specific map for the functions above
@@ -207,6 +207,7 @@ void parse_equation(Grid par, std::string &equation, double &val,
     mfunctions_map["tan"] = tan;
     mfunctions_map["exp"] = exp;
     mfunctions_map["erf"] = erf;
+    mfunctions_map["sqrt"] = sqrt;
 
     // We will have values and operators, but some operators will need to 
     // recursively call this function (think exp(), sin(), cos())...

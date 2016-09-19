@@ -54,12 +54,12 @@ Grid parseArgs(int argc, char** argv){
     par.store("device", 0);
     par.store("atoms", 1);
     par.store("read_wfc", false);
-    par.store("printSteps" ,100);
+    par.store("printSteps", 100);
     par.store("winding", 0.0);
     par.store("corotating", false);
     par.store("gpe", false);
     par.store("omegaZ", 0.0);
-    par.store("int_scaling",0.0);
+    par.store("interaction",0.0);
     par.store("laser_power",0.0);
     par.store("angle_sweep",0.0);
     par.store("kick_it", 0);
@@ -71,7 +71,7 @@ Grid parseArgs(int argc, char** argv){
     par.store("unit_test",false);
     par.store("omegaX", 6.283);
     par.store("omegaY", 6.283);
-    par.store("data_dir", "");
+    par.store("data_dir", (std::string)"data/");
     par.store("ramp", false);
     par.Afn = "rotation";
     par.Kfn = "rotation_K";
