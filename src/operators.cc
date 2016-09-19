@@ -216,15 +216,14 @@ void parse_equation(Grid par, std::string &equation, double &val,
         //std::cout << equation.substr(0,1) << '\n';
         if (equation.substr(0,1) == mbra){
             if (mbra == ")" || mbra == "]"){
-                std::cout << "could not find matching " << mbra << "!\n";
+                //std::cout << "could not find matching " << mbra << "!\n";
                 exit(0);
             }
             else if (mbra == "("){
                 int brapos = equation.find(")");
                 std::string new_eqn = equation.substr(1,brapos-1);
-                std::cout << new_eqn << '\n';
                 parse_equation(par, new_eqn, val, i, j, k);
-                equation = equation.substr(brapos, equation.size());
+                equation = equation.substr(brapos+1, equation.size());
             }
             else if (mbra == "["){
                 int brapos = equation.find("]");
@@ -270,9 +269,6 @@ void parse_equation(Grid par, std::string &equation, double &val,
                 currmop = mbra;
                 index = moppos;
             }
-            else{
-                currmop = equation.length();
-            }
         }
     }
 
@@ -296,7 +292,7 @@ void parse_equation(Grid par, std::string &equation, double &val,
     }
 
     // Now we need to do a similar thing for all the maps in par.
-    if (par.is_double(item)){
+    else if (par.is_double(item)){
         val = par.dval(item);
     }
     else if (par.is_dstar(item)){
