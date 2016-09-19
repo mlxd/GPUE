@@ -33,6 +33,13 @@ def plot_var(xDim, yDim, data_dir, pltval):
     data = "../" + data_dir + "/" + pltval
     lines = np.loadtxt(data)
     val = np.reshape(lines, (xDim,yDim))
+    '''
+    val = -np.log(val) * 1E4 * 1.0545718E-34
+    data_V = "../data/K_0"
+    lines_V = np.loadtxt(data_V)
+    V_val = np.reshape(lines_V, (xDim, yDim))
+    final_val = V_val - val
+    '''
     plt.imshow(val, extent=(1,xDim,1,yDim), interpolation='nearest',
                    cmap = cm.jet)
     plt.colorbar()
@@ -41,8 +48,16 @@ def plot_var(xDim, yDim, data_dir, pltval):
 # Function to plot wfc with pltvar as a variable to modify the type of plot
 def plot_wfc(xDim, yDim, data_dir, pltval, start, end, incr):
     for i in range(start,end,incr):
+        print(i)
         data_real = "../" + data_dir + "/wfc_0_const_%s" % i
         data_im = "../" + data_dir + "/wfc_0_consti_%s" % i
+        #data_real = "../" + data_dir + "/wfc_ev_%s" % i
+        #data_im = "../" + data_dir + "/wfc_evi_%s" % i
+        #data_x = "../" + data_dir + "x_0" % i
+        #data_y = "../" + data_dir + "y_0" % i
+        
+
+        #print(i)
     
         lines_real = np.loadtxt(data_real)
         lines_im = np.loadtxt(data_im)
@@ -55,8 +70,8 @@ def plot_wfc(xDim, yDim, data_dir, pltval, start, end, incr):
         #wfc_k = np.fft.fft2(wfc) 
         #wfc_k_plot = np.abs(np.fft.fftshift(wfc_k))
         #wfc_k_plot = wfc_k_plot**2
-        
-        plt.imshow(wfc, extent=(1,xDim,1,yDim), interpolation='nearest',
+
+        plt.imshow(wfc, extent=(-6.9804018707623236e-04,6.9804018707623236e-04,-6.9804018707623236e-04,6.9804018707623236e-04), interpolation='nearest',
                    cmap = cm.jet)
         plt.colorbar()
         plt.show()
@@ -87,8 +102,11 @@ def plot_complex(xDim, yDim, data_dir, pltval, start, end, incr):
 # Function to plot wfc with pltvar as a variable to modify the type of plot
 def plot_wfc_k(xDim, yDim, data_dir, pltval, start, end, incr):
     for i in range(start,end,incr):
+        print(i)
         data_real = "../" + data_dir + "/wfc_0_const_%s" % i
         data_im = "../" + data_dir + "/wfc_0_consti_%s" % i
+        #data_real = "../" + data_dir + "/wfc_ev_%s" % i
+        #data_im = "../" + data_dir + "/wfc_0_evi_%s" % i
 
         lines_real = np.loadtxt(data_real)
         lines_im = np.loadtxt(data_im)
@@ -111,8 +129,11 @@ def plot_wfc_k(xDim, yDim, data_dir, pltval, start, end, incr):
 # Function to plot wfc with pltvar as a variable to modify the type of plot
 def plot_wfc_phase(xDim, yDim, data_dir, pltval, start, end, incr):
     for i in range(start,end,incr):
+        print(i)
         data_real = "../" + data_dir + "/wfc_0_const_%s" % i
         data_im = "../" + data_dir + "/wfc_0_consti_%s" % i
+        #data_real = "../" + data_dir + "/wfc_ev_%s" % i
+        #data_im = "../" + data_dir + "/wfc_evi_%s" % i
 
         lines_real = np.loadtxt(data_real)
         lines_im = np.loadtxt(data_im)
@@ -147,8 +168,8 @@ def parse_args(string_list):
             i += 2
         # -r for "range"
         elif (string_list[i] == "r"):
-            par.first = int(string_list[i+1])
-            par.end = int(string_list[i+2])
+            par.start = int(string_list[i+1])
+            par.end = int(string_list[i+2]) + 1
             par.incr = int(string_list[i+3])
             i+= 4
         # -g for "grid"
