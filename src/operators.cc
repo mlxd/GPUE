@@ -146,7 +146,7 @@ double dynamic_Ax(Grid &par, Op &opr, int i, int j, int k){
     std::string equation = par.sval("Axstring");
     parse_equation(par, equation, val, i, j, k);
     // For debugging
-    //exit(0);
+    // exit(0);
     return val;
 }
 
@@ -172,6 +172,8 @@ void parse_equation(Grid par, std::string &equation, double &val,
 
     // boolean value iff first minus
     bool minus = false;
+
+    //std::cout << equation << '\n';
 
     // Because this will be called recursively, we need to return if the string
     // length is 0
@@ -209,6 +211,31 @@ void parse_equation(Grid par, std::string &equation, double &val,
     mfunctions_map["erf"] = erf;
     mfunctions_map["sqrt"] = sqrt;
 
+    // Check for parentheses
+    for (auto &mbra : mbrackets){
+        //std::cout << equation.substr(0,1) << '\n';
+        if (equation.substr(0,1) == mbra){
+            if (mbra == ")" || mbra == "]"){
+                std::cout << "could not find matching " << mbra << "!\n";
+                exit(0);
+            }
+            else if (mbra == "("){
+                int brapos = equation.find(")");
+                std::string new_eqn = equation.substr(1,brapos-1);
+                std::cout << new_eqn << '\n';
+                parse_equation(par, new_eqn, val, i, j, k);
+                equation = equation.substr(brapos, equation.size());
+            }
+            else if (mbra == "["){
+                int brapos = equation.find("]");
+                std::string new_eqn = equation.substr(1,brapos-1);
+                parse_equation(par, new_eqn, val, i, j, k);
+                equation = equation.substr(brapos, equation.size());
+            }
+        }
+    }
+
+
     // We will have values and operators, but some operators will need to 
     // recursively call this function (think exp(), sin(), cos())...
     // We now need to do some silly sorting to figure out which operator 
@@ -219,17 +246,16 @@ void parse_equation(Grid par, std::string &equation, double &val,
     for (auto &mop : moperators){
         moppos = equation.find(mop);
         if (moppos < equation.length()){
-            if (moppos < index && moppos > 0){
+            if (moppos < index){ // && moppos > 0){
                 currmop = mop;
                 index = moppos;
             }
-            else if(moppos == 0){
+/*
+            else if(moppos == 0 && mop == "-"){
                 minus = true;
                 equation = equation.substr(1,equation.size());
             }
-            else{
-                currmop = equation.length();
-            }
+*/
         }
     }
 
@@ -264,7 +290,7 @@ void parse_equation(Grid par, std::string &equation, double &val,
         closebracket = equation.find(equation[openbracket]);
         std::string ineqn = equation.substr(openbracket + 1, 
                                             closebracket - 1);
-        double inval = 0;
+        double inval = 1;
         parse_equation(par, ineqn, inval, i, j, k);
         val = mfunctions_map[item](inval);
     }
@@ -284,6 +310,11 @@ void parse_equation(Grid par, std::string &equation, double &val,
             val = par.dsval(item)[k];
         }
     }
+    else if (item.find_first_not_of("0123456789.") > item.size() &&
+             item.size() > 0){
+        //std::cout << item << '\n';
+        val = std::stod(item);
+    }
     else if (item.size() > 0){
         std::cout << "could not find string " << item << "! please use one of "
                   << "the following variables:" << '\n';
@@ -298,28 +329,28 @@ void parse_equation(Grid par, std::string &equation, double &val,
 
     // Now to deal with the operator at the end
     if (currmop == "+"){
-        double inval = 0;
+        double inval = 1;
         std::string new_eqn = equation.substr(index+1,equation.size());
         //std::cout << new_eqn << '\n';
         parse_equation(par, new_eqn, inval, i, j, k);
         val += inval;
     }
     if (currmop == "-"){
-        double inval = 0;
+        double inval = 1;
         std::string new_eqn = equation.substr(index+1,equation.size());
         //std::cout << new_eqn << '\n';
         parse_equation(par, new_eqn, inval, i, j, k);
         val -= inval;
     }
     if (currmop == "*"){
-        double inval = 0;
+        double inval = 1;
         std::string new_eqn = equation.substr(index+1,equation.size());
         //std::cout << new_eqn << '\n';
         parse_equation(par, new_eqn, inval, i, j, k);
         val *= inval;
     }
     if (currmop == "/"){
-        double inval = 0;
+        double inval = 1;
         std::string new_eqn = equation.substr(index+1,equation.size());
         //std::cout << new_eqn << '\n';
         parse_equation(par, new_eqn, inval, i, j, k);
