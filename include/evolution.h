@@ -91,4 +91,17 @@ void evolve_2d(Wave &wave, Op &opr,
             unsigned int gstate, Grid &par, 
             std::string buffer);
 
+// UPDATE LIST LATER
+ /**
+ * @brief       performs real or imaginary time evolution
+ * @ingroup     data
+ * @param       result Function result code of CUDA operation
+ * @param       c Descriptor of CUDA operation
+ * @return      0 for success. See CUDA failure codes in cuda.h for other values
+ */
+void evolve_3d(Wave &wave, Op &opr,
+            cufftDoubleComplex *gpuParSum, int numSteps, Cuda &cupar,
+            unsigned int gstate, Grid &par, 
+            std::string buffer);
+
 #endif

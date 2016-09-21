@@ -66,6 +66,7 @@ Grid parseArgs(int argc, char** argv){
     par.store("write_it", false);
     par.store("x0_shift",0.0);
     par.store("y0_shift",0.0);
+    par.store("z0_shift",0.0);
     par.store("sepMinEpsilon",0.0);
     par.store("graph", false);
     par.store("unit_test",false);
@@ -73,6 +74,7 @@ Grid parseArgs(int argc, char** argv){
     par.store("omegaY", 6.283);
     par.store("data_dir", (std::string)"data/");
     par.store("ramp", false);
+    par.store("dimnum", 2);
     par.Afn = "rotation";
     par.Kfn = "rotation_K";
     par.Vfn = "harmonic_V";
@@ -80,7 +82,7 @@ Grid parseArgs(int argc, char** argv){
     optind = 1;
 
     while ((opt = getopt (argc, argv, 
-           "d:D:x:y:w:G:g:e:T:t:n:p:ro:L:lsi:P:X:Y:O:k:WU:V:S:ahz:H:uA:R:v:")) !=-1)
+           "d:D:x:y:w:G:g:e:T:t:n:p:ro:L:lsi:P:X:Y:O:k:WU:V:S:ahz:H:uA:R:v:Z:c:")) !=-1)
     {
         switch (opt)
         {
@@ -313,6 +315,20 @@ Grid parseArgs(int argc, char** argv){
                 double sepMinEpsilon = atof(optarg);
                 printf("Argument for sepMinEpsilon is %lf\n",sepMinEpsilon);
                 par.store("sepMinEpsilon",sepMinEpsilon);
+                break;
+            }
+            case 'Z':
+            {
+                double z0_shift = atof(optarg);
+                printf("Argument for z0_shift is %lf\n",z0_shift);
+                par.store("z0_shift",z0_shift);
+                break;
+            }
+            case 'c':
+            {
+                int dimnum = atoi(optarg);
+                printf("Argument for number of coordinates is %d\n",dimnum);
+                par.store("dimnum",(int)dimnum);
                 break;
             }
 

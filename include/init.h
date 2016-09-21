@@ -86,4 +86,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 int init_2d(Op &opr, Cuda &cupar, Grid &par, Wave &wave);
 
+ /**
+ * @brief       Initializes data structures
+ * @ingroup     data
+ * @param       Operator class
+ * @param       Cuda class
+ * @param       Grid class
+ * @param       Wave class
+ */
+int init_3d(Op &opr, Cuda &cupar, Grid &par, Wave &wave);
+
 #endif

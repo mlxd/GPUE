@@ -74,6 +74,9 @@ Options:
 -x 256          Set xDim, dimension in X (power of 2, please!)
 -Y 6.283        Set omega_y
 -y 256          Set yDim, dimension in Y (power of 2, please!)
+-Z              Set z0_shift, z shift of kicking potential (bad flag, I know)
+-z 256          Set zDim, dimension in Z (power of 2, please!)
+
 
 Notes:
 
