@@ -118,28 +118,6 @@ void evolve_2d(Wave &wave, Op &opr,
     begin = clock();
     double omega_0=omega*omegaX;
 
-    #if 0 
-    // Determines the initial average density at the condensate central 
-    // position and calculates a value for the healing length from this. Used 
-    // thereafter as the lower limit for distances between vortices.
-
-    int gridSum = 1<<6;
-
-    double *densitySubset = (double*) malloc(sizeof(double)*gridSum);
-
-    #pragma omp parallel for private(k)
-    for (int j=0; j<gridSum; ++j){
-        for (int k=0; k<gridSum; ++k){
-            densitySubset[j*gridSum + k] = Minions::psi2(wfc[ ( (yDim/2) - 
-                (gridSum/2) + j )*yDim  + ( (xDim/2)  - (gridSum/2) + k )]);
-        }
-    }
-
-    // defined central condensate density
-    xi = 1/sqrt(8*PI*a_s*Minions::sumAvg(densitySubset,gridSum)/(dx*dy));
-    printf("Avg healing length at centre=%E\n",xi);
-    #endif
-
     // ** ############################################################## ** //
     // **         HERE BE DRAGONS OF THE MOST DANGEROUS KIND!            ** //
     // ** ############################################################## ** //
@@ -585,6 +563,7 @@ void evolve_2d(Wave &wave, Op &opr,
     wave.store("wfc", wfc);
     wave.store("wfc_gpu", gpuWfc);
 
+/*
     par.store("omega", omega);
     par.store("angle_sweep", angle_sweep);
     par.store("gdt", gdt);
@@ -615,11 +594,14 @@ void evolve_2d(Wave &wave, Op &opr,
     cupar.store("plan_1d", plan_1d);
     cupar.store("plan_2d", plan_2d);
     cupar.store("grid", grid);
+*/
 
 }
 
 /*----------------------------------------------------------------------------//
 * 3D
+* Notes: In this case, we need to think about how to do the vortex tracking
+*        Kicking will also be hard to do... Though not impossible, I suppose.
 *-----------------------------------------------------------------------------*/
 
 void evolve_3d(Wave &wave, Op &opr,
@@ -652,7 +634,6 @@ void evolve_3d(Wave &wave, Op &opr,
     double *gpu1dpAy = opr.dsval("pAy_gpu");
     double *gpu1dpAz = opr.dsval("pAz_gpu");
     double *Phi_gpu = wave.dsval("Phi_gpu");
-    int kick_it = par.ival("kick_it");
     bool write_it = par.bval("write_it");
     bool graph = par.bval("graph");
     int N = par.ival("atoms");
@@ -713,56 +694,9 @@ void evolve_3d(Wave &wave, Op &opr,
     begin = clock();
     double omega_0=omega*omegaX;
 
-    #if 0 
-    // Determines the initial average density at the condensate central 
-    // position and calculates a value for the healing length from this. Used 
-    // thereafter as the lower limit for distances between vortices.
-    int gridSum = 1<<6;
-    double *densitySubset = (double*) malloc(sizeof(double)*gridSum);
-    #pragma omp parallel for private(k)
-    for (int j=0; j<gridSum; ++j){
-        for (int k=0; k<gridSum; ++k){
-            densitySubset[j*gridSum + k] = Minions::psi2(wfc[ ( (yDim/2) - 
-                (gridSum/2) + j )*yDim  + ( (xDim/2)  - (gridSum/2) + k )]);
-        }
-    }
-    // defined central condensate density
-    xi = 1/sqrt(8*PI*a_s*Minions::sumAvg(densitySubset,gridSum)/(dx*dy));
-    printf("Avg healing length at centre=%E\n",xi);
-    #endif
-
     // ** ############################################################## ** //
     // **         HERE BE DRAGONS OF THE MOST DANGEROUS KIND!            ** //
     // ** ############################################################## ** //
-
-    // Double buffering and will attempt to thread free and calloc operations to
-    // hide time penalty. Or may not bother.
-    int num_vortices[2] = {0,0};
-
-    // binary matrix of size xDim*yDim, 
-    // 1 for vortex at specified index, 0 otherwise
-    int* vortexLocation;
-    int* olMaxLocation = (int*) calloc(xDim*yDim,sizeof(int));
-
-    struct Vtx::Vortex central_vortex; //vortex closest to the central position
-
-    // Angle of vortex lattice. Add to optical lattice for alignment.
-    double vort_angle;
-
-    // array of vortex coordinates from vortexLocation 1's
-    struct Vtx::Vortex *vortCoords = NULL;
-
-    //Previous array of vortex coordinates from vortexLocation 1's
-    struct Vtx::Vortex *vortCoordsP = NULL;
-
-    LatticeGraph::Lattice lattice; //Vortex lattice graph.
-    double* adjMat;
-    
-    double vortOLSigma=0.0;
-    double sepAvg = 0.0;
-    
-    int num_kick = 0;
-    double t_kick = (2*PI/omega_0)/(6*Dt);
 
     //std::cout << "numSteps is: " << numSteps << '\n';
     // Iterating through all of the steps in either g or esteps.
@@ -797,134 +731,13 @@ void evolve_3d(Wave &wave, Op &opr,
                     fileName = "wfc_0_ramp";
                     break;
                 case 2: //Real-time evolution, constant Omega value.
+                    // Note: In the case of 3d, we need to think about
+                    //       vortex tracking in a new way.
+                    //       It may be as simple as splitting the problem into
+                    //       2D elements and working from there, but let's 
+                    //       look into it when we need it in the future.
                     std::cout << "we are in case 2" << '\n';
                     fileName = "wfc_ev";
-                    vortexLocation = (int *) calloc(xDim * yDim, sizeof(int));
-                    num_vortices[0] = Tracker::findVortex(vortexLocation, wfc,
-                                                         1e-4, xDim, x, i);
-
-                    // If initial step, locate vortices, least-squares to find
-                    // exact centre, calculate lattice angle, generate optical 
-                    // lattice.
-                    if (i == 0) {
-                        vortCoords = (struct Vtx::Vortex *) malloc(
-                                sizeof(struct Vtx::Vortex) * 
-                                (2 * num_vortices[0]));
-                        vortCoordsP = (struct Vtx::Vortex *) malloc(
-                                sizeof(struct Vtx::Vortex) * 
-                                (2 * num_vortices[0]));
-                        Tracker::vortPos(vortexLocation, vortCoords, xDim, wfc);
-                        Tracker::lsFit(vortCoords, wfc, num_vortices[0], xDim);
-                        central_vortex = Tracker::vortCentre(vortCoords, 
-                                                             num_vortices[0], 
-                                                             xDim);
-                        vort_angle = Tracker::vortAngle(vortCoords, 
-                                                        central_vortex, 
-                                                        num_vortices[0]);
-                        par.store("Vort_angle", vort_angle);
-                        optLatSetup(central_vortex, V, vortCoords, 
-                                    num_vortices[0], 
-                                    vort_angle + PI * angle_sweep / 180.0,
-                                    laser_power * HBAR * sqrt(omegaX * omegaY),
-                                    V_opt, x, y, par, opr);
-                        //V = opr.dsval("V");
-                        //V_opt = opr.dsval("V_opt");
-                        //EV_opt = opr.cufftDoubleComplexval("EV_opt");
-                        sepAvg = Tracker::vortSepAvg(vortCoords, central_vortex,
-                                                     num_vortices[0]);
-                        if (kick_it == 2) {
-                            printf("Kicked it 1\n");
-                            cudaMemcpy(V_gpu, EV_opt, 
-                                       sizeof(cufftDoubleComplex) * xDim * yDim,
-                                       cudaMemcpyHostToDevice);
-                        }
-                        FileIO::writeOutDouble(buffer, data_dir + "V_opt_1",
-                                               V_opt, xDim * yDim, 0);
-                        FileIO::writeOut(buffer, data_dir + "EV_opt_1", EV_opt, 
-                                         xDim * yDim, 0);
-                        par.store("Central_vort_x", 
-                                  (double) central_vortex.coords.x);
-                        par.store("Central_vort_y", 
-                                  (double) central_vortex.coords.y);
-                        par.store("Central_vort_winding", 
-                                  (double) central_vortex.wind);
-                        par.store("Num_vort", (double) num_vortices[0]);
-                        //std::cout << "writing to file in conditional" << '\n';
-                        FileIO::writeOutParam(buffer, par, 
-                                              data_dir + "Params.dat");
-                    }
-                    else if (num_vortices[0] > num_vortices[1]) {
-                        printf("Number of vortices increased from %d to %d\n", 
-                               num_vortices[1], num_vortices[0]);
-                        Tracker::vortPos(vortexLocation, vortCoords, xDim, wfc);
-                        Tracker::lsFit(vortCoords, wfc, num_vortices[0], xDim);
-                    }
-                    // if num_vortices[1] < num_vortices[0] ... Fewer vortices
-                    else {
-                        Tracker::vortPos(vortexLocation, vortCoords, xDim, wfc);
-                        Tracker::lsFit(vortCoords, wfc, num_vortices[0], xDim);
-                        Tracker::vortArrange(vortCoords, vortCoordsP, 
-                                             num_vortices[0]);
-                    }
-
-                    // The following will be modified and moved into a new 
-                    // library that works closely with GPUE
-                    if (graph) {
-
-                        for (int ii = 0; ii < num_vortices[0]; ++ii) {
-                            std::shared_ptr<LatticeGraph::Node> 
-                                n(new LatticeGraph::Node(vortCoords[ii]));
-                            lattice.addVortex(std::move(n));
-                        }
-                        unsigned int *uids = (unsigned int *) malloc(
-                                sizeof(unsigned int) *
-                                lattice.getVortices().size());
-                        for (size_t a=0; a < lattice.getVortices().size(); ++a){
-                            uids[a] = lattice.getVortexIdx(a)->getUid();
-                        }
-                        if(i==0) {
-                            //Lambda for vortex annihilation/creation.
-                            auto killIt=[&](int idx) {
-                                WFC::phaseWinding(Phi, 1, x, y, dx, dy,
-                                                  lattice.getVortexUid(idx)->
-                                                      getData().coordsD.x,
-                                                  lattice.getVortexUid(idx)->
-                                                      getData().coordsD.y,xDim);
-                                cudaMemcpy(Phi_gpu, Phi, 
-                                           sizeof(double) * xDim * yDim, 
-                                           cudaMemcpyHostToDevice);
-                                cMultPhi <<<grid, threads>>> (gpuWfc, Phi_gpu, 
-                                                              gpuWfc);
-                            };
-                            //killIt(44); //Kills vortex with UID 44
-
-
-                        }
-                        lattice.createEdges(1.5 * 2e-5 / dx);
-                        adjMat = (double *)calloc(lattice.getVortices().size() *
-                                                  lattice.getVortices().size(),
-                                                   sizeof(double));
-                        lattice.genAdjMat(adjMat);
-                        FileIO::writeOutAdjMat(buffer, data_dir + "graph", 
-                                               adjMat, uids, 
-                                               lattice.getVortices().size(), i);
-                        free(adjMat);
-                        free(uids);
-                        lattice.getVortices().clear();
-                        lattice.getEdges().clear();
-                        //exit(0);
-                    }
-
-                    FileIO::writeOutVortex(buffer, data_dir + "vort_arr",
-                                           vortCoords, num_vortices[0], i);
-                    printf("Located %d vortices\n", num_vortices[0]);
-                    printf("Sigma=%e\n", vortOLSigma);
-                    free(vortexLocation);
-                    num_vortices[1] = num_vortices[0];
-                    memcpy(vortCoordsP, vortCoords, 
-                           sizeof(int2) * num_vortices[0]);
-                    //exit(1);
-                    //std::cout << "finished case 2" << '\n';
                     break;
 
                 case 3:
@@ -948,14 +761,6 @@ void evolve_3d(Wave &wave, Op &opr,
 
         // ** ########################################################## ** //
         // **                     More F'n' Dragons!                     ** //
-        // ** ########################################################## ** //
-
-        // If not already kicked at this time step more than 6 times... kick it!
-        if(i%((int)t_kick+1) == 0 && num_kick<=6 && gstate==1 && kick_it == 1 ){
-            cudaMemcpy(V_gpu, EV_opt, sizeof(cufftDoubleComplex)*xDim*yDim, 
-                       cudaMemcpyHostToDevice);
-            ++num_kick;
-        }
         // ** ########################################################## ** //
 
         // U_r(dt/2)*wfc
@@ -989,14 +794,6 @@ void evolve_3d(Wave &wave, Op &opr,
             cMult<<<grid,threads>>>(V_gpu,gpuWfc,gpuWfc);
         }
 
-        // If first timestep and kick_it >= 1, kick.
-        // Also kick if not kicked enough
-        if( (i % (int)(t_kick+1) == 0 && num_kick<=6 && gstate==1) || 
-            (kick_it >= 1 && i==0) ){
-            cudaMemcpy(V_gpu, EV, sizeof(cufftDoubleComplex)*xDim*yDim, 
-                       cudaMemcpyHostToDevice);
-            printf("Got here: Cuda memcpy EV into GPU\n");
-        }
         // Angular momentum pAy-pAx (if engaged)  //
         if(lz == 1){
             // Multiplying by ramping factor if necessary
@@ -1017,8 +814,6 @@ void evolve_3d(Wave &wave, Op &opr,
                     result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_FORWARD); 
                     scalarMult<<<grid,threads>>>(gpuWfc,
                                                  renorm_factor_1d,gpuWfc);
-                    //angularOp<<<grid,threads>>>(omega_0, Dt, gpuWfc, 
-                    //                            (double*) gpu1dpAy, gpuWfc);
                     cMult<<<grid,threads>>>(gpuWfc, 
                         (cufftDoubleComplex*) gpu1dpAy, gpuWfc);
                     result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_INVERSE);
@@ -1034,8 +829,6 @@ void evolve_3d(Wave &wave, Op &opr,
                     result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_INVERSE); 
                     scalarMult<<<grid,threads>>>(gpuWfc,
                                                  renorm_factor_1d,gpuWfc);
-                    //angularOp<<<grid,threads>>>(omega_0, Dt, gpuWfc, 
-                    //                            (double*) gpu1dpAx, gpuWfc);
                     cMult<<<grid,threads>>>(gpuWfc, 
                         (cufftDoubleComplex*) gpu1dpAx, gpuWfc);
     
@@ -1062,8 +855,6 @@ void evolve_3d(Wave &wave, Op &opr,
                     result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_INVERSE);
                     scalarMult<<<grid,threads>>>(gpuWfc,
                                                  renorm_factor_1d,gpuWfc);
-                    //angularOp<<<grid,threads>>>(omega_0, Dt, gpuWfc, 
-                    //                            (double*) gpu1dpAx, gpuWfc);
                     cMult<<<grid,threads>>>(gpuWfc, 
                         (cufftDoubleComplex*) gpu1dpAx, gpuWfc);
 
@@ -1081,8 +872,6 @@ void evolve_3d(Wave &wave, Op &opr,
                     result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_FORWARD); 
                     scalarMult<<<grid,threads>>>(gpuWfc,
                                                  renorm_factor_1d,gpuWfc);
-                    //angularOp<<<grid,threads>>>(omega_0, Dt, gpuWfc, 
-                    //                            (double*) gpu1dpAy, gpuWfc);
                     cMult<<<grid,threads>>>(gpuWfc, 
                         (cufftDoubleComplex*) gpu1dpAy, gpuWfc);
                     result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_INVERSE);
@@ -1175,6 +964,7 @@ void evolve_3d(Wave &wave, Op &opr,
     //std::cout << gpuWfc[0].x << '\t' << gpuWfc[0].y << '\n';
     wave.store("wfc", wfc);
     wave.store("wfc_gpu", gpuWfc);
+/*
 
     par.store("omega", omega);
     par.store("angle_sweep", angle_sweep);
@@ -1207,4 +997,5 @@ void evolve_3d(Wave &wave, Op &opr,
     cupar.store("plan_2d", plan_2d);
     cupar.store("grid", grid);
 
+*/
 }
