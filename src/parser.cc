@@ -75,6 +75,7 @@ Grid parseArgs(int argc, char** argv){
     par.store("data_dir", (std::string)"data/");
     par.store("ramp", false);
     par.store("dimnum", 2);
+    par.store("dimensionless", false);
     par.Afn = "rotation";
     par.Kfn = "rotation_K";
     par.Vfn = "harmonic_V";
@@ -82,7 +83,7 @@ Grid parseArgs(int argc, char** argv){
     optind = 1;
 
     while ((opt = getopt (argc, argv, 
-           "d:D:x:y:w:G:g:e:T:t:n:p:ro:L:lsi:P:X:Y:O:k:WU:V:S:ahz:H:uA:R:v:Z:c:")) !=-1)
+           "d:D:Cx:y:w:G:g:e:T:t:n:p:ro:L:lsi:P:X:Y:O:k:WU:V:S:ahz:H:uA:R:v:Z:c:")) !=-1)
     {
         switch (opt)
         {
@@ -229,6 +230,16 @@ Grid parseArgs(int argc, char** argv){
                 double interaction = atof(optarg);
                 printf("Argument for interaction scaling is %E\n",interaction);
                 par.store("interaction",interaction);
+                break;
+            }
+            case 'C':
+            {
+                std::cout << "Dimensionless units will be used." << '\n'; 
+                // updating the functions for dimensionless-ness, 
+                // if you know what I mean...
+                par.Vfn += "_dimensionless";
+                par.Kfn += "_dimensionless";
+                par.store("dimensionless", true);
                 break;
             }
             case 'P':

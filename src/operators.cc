@@ -32,6 +32,18 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "../include/operators.h"
 
+double sign(double x){
+    if (x < 0){
+        return -1.0;
+    }
+    else if (x == 0){
+        return 0.0;
+    }
+    else{
+        return 1.0;
+    }
+}
+
 // Function for simple 2d rotation with i and j as the interators
 double rotation_K(Grid &par, Op &opr, int i, int j, int k){
     double *xp = par.dsval("xp");
@@ -39,6 +51,14 @@ double rotation_K(Grid &par, Op &opr, int i, int j, int k){
     double mass = par.dval("mass");
     return (HBAR*HBAR/(2*mass))*(xp[i]*xp[i] + yp[j]*yp[j]);
 }
+
+// Function for simple 2d rotation with i and j as the interators dimensionless
+double rotation_K_dimensionless(Grid &par, Op &opr, int i, int j, int k){
+    double *xp = par.dsval("xp");
+    double *yp = par.dsval("yp");
+    return (xp[i]*xp[i] + yp[j]*yp[j])*0.5;
+}
+
 
 // Function for simple 2d rotation with i and j as the interators
 double rotation_gauge_K(Grid &par, Op &opr, int i, int j, int k){
@@ -67,12 +87,33 @@ double harmonic_V(Grid &par, Op &opr, int i , int j, int k){
     double yOffset = 0.0;
     double xOffset = 0.0;
     double mass = par.dval("mass");
-    double V_x = omegaX*(x[i]+xOffset) - opr.Ax_fn(par.Afn)(par, opr, i, j, k);
-    double V_y = gammaY*omegaY*(y[j]+yOffset) - 
-                     opr.Ay_fn(par.Afn)(par, opr, i, j, k);
-    return 0.5*mass*( V_x * V_x + V_y * V_y);
+    double V_x = omegaX*(x[i]+xOffset); 
+                     //- opr.Ax_fn(par.Afn)(par, opr, i, j, k);
+    double V_y = gammaY*omegaY*(y[j]+yOffset);
+                     //- opr.Ay_fn(par.Afn)(par, opr, i, j, k);
+    return 0.5*mass*( V_x * V_x + V_y * V_y) + 
+           0.5 * mass * pow(opr.Ax_fn(par.Afn)(par, opr, i, j, k),2) + 
+           0.5 * mass * pow(opr.Ay_fn(par.Afn)(par, opr, i, j, k),2);
 
 }
+
+// Function for simple 2d harmonic V with i and j as iterators, dimensionless
+double harmonic_V_dimensionless(Grid &par, Op &opr, int i , int j, int k){
+    double *x = par.dsval("x");
+    double *y = par.dsval("y");
+    double omegaX = par.dval("omegaX");
+    double omegaY = par.dval("omegaY");
+    double gammaY = par.dval("gammaY");
+    double yOffset = 0.0;
+    double xOffset = 0.0;
+    double V_x = omegaX*(x[i]+xOffset); 
+    double V_y = gammaY*omegaY*(y[j]+yOffset);
+    return 0.5*( V_x * V_x + V_y * V_y) + 
+           0.5 * pow(opr.Ax_fn(par.Afn)(par, opr, i, j, k),2) + 
+           0.5 * pow(opr.Ay_fn(par.Afn)(par, opr, i, j, k),2);
+
+}
+
 
 // Function for simple 2d harmonic V with i and j as iterators, gauge
 double harmonic_gauge_V(Grid &par, Op &opr, int i , int j, int k){
@@ -198,7 +239,7 @@ void parse_equation(Grid par, std::string &equation, double &val,
     // vector of all possible mathematical functions... more to come
     std::vector<std::string> mfunctions(5);
     mfunctions = {
-        "sin", "cos", "exp", "tan", "erf", "sqrt"
+        "sin", "cos", "exp", "tan", "erf", "sqrt", "sign"
     };
 
     // We also need a specific map for the functions above
@@ -210,6 +251,8 @@ void parse_equation(Grid par, std::string &equation, double &val,
     mfunctions_map["exp"] = exp;
     mfunctions_map["erf"] = erf;
     mfunctions_map["sqrt"] = sqrt;
+    mfunctions_map["sign"] = sign;
+    
 
     // Check for parentheses
     for (auto &mbra : mbrackets){
@@ -289,6 +332,10 @@ void parse_equation(Grid par, std::string &equation, double &val,
         double inval = 1;
         parse_equation(par, ineqn, inval, i, j, k);
         val = mfunctions_map[item](inval);
+
+        // now we need to parse the rest of the string...
+        ineqn = equation.substr(closebracket, equation.size());
+        parse_equation(par, ineqn, val, i, j, k);
     }
 
     // Now we need to do a similar thing for all the maps in par.

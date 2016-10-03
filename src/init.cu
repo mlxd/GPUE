@@ -286,7 +286,7 @@ int init_2d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
         for( j=0; j < yDim; j++ ){
             Phi[(i*yDim + j)] = fmod(l*atan2(y[j], x[i]),2*PI);
             
-            if (par.bval("unit_test")){
+            if (par.bval("unit_test") || par.bval("dimensionless")){
                 wfc[(i*yDim + j)].x =  (1/sqrt(2))*pow(1/PI,0.5) 
                     * exp( -0.5*( x[i]*x[i] + y[j]*y[j] ) )*(1+2*x[i]/sqrt(2));
                 wfc[(i*yDim + j)].y = 0;

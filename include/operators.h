@@ -71,6 +71,15 @@ double rotation_K(Grid &par, Op &opr, int i, int j, int k);
  * @param       location in x, y, z
  * @return      K at that location
  */
+double rotation_K_dimensionless(Grid &par, Op &opr, int i, int j, int k);
+
+ /**
+ * @brief       determines K for the standard rotational case
+ * @ingroup     data
+ * @param       Grid simulation data
+ * @param       location in x, y, z
+ * @return      K at that location
+ */
 double rotation_gauge_K(Grid &par, Op &opr, int i, int j, int k);
 
  /**
@@ -81,6 +90,15 @@ double rotation_gauge_K(Grid &par, Op &opr, int i, int j, int k);
  * @return      V at that location
  */
 double harmonic_V(Grid &par, Op &opr, int i, int j, int k);
+
+ /**
+ * @brief       determines V for the standard harmonic case
+ * @ingroup     data
+ * @param       Grid simulation data
+ * @param       location in x, y, z
+ * @return      V at that location
+ */
+double harmonic_V_dimensionless(Grid &par, Op &opr, int i, int j, int k);
 
  /**
  * @brief       determines V for the standard harmonic case
