@@ -34,7 +34,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ///@endcond
 //##############################################################################
 /**
- *  @file    evolution.h
+ *  @file    operators.h
  *  @author  James Ryan Schloss (leios)
  *  @date    5/31/2016
  *  @version 0.1
@@ -53,6 +53,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "../include/ds.h"
 #include "../include/constants.h"
+#include <unordered_map>
+#include <boost/math/special_functions.hpp>
+
+// For bessel functions
 
 // UPDATE LIST LATER
  /**
@@ -163,6 +167,42 @@ double rotation_squared_Ax(Grid &par, Op &opr, int i, int j, int k);
  * @return      V at that location
  */
 double rotation_squared_Ay(Grid &par, Op &opr, int i, int j, int k);
+
+ /**
+ * @brief       determines pAy for the standard fiber2d case
+ * @ingroup     data
+ * @param       Grid simulation data
+ * @param       location in x, y, z
+ * @return      V at that location
+ */
+double fiber2d_Ay(Grid &par, Op &opr, int i, int j, int k);
+
+ /**
+ * @brief       determines pAy for the standard fiber2d case
+ * @ingroup     data
+ * @param       Grid simulation data
+ * @param       location in x, y, z
+ * @return      V at that location
+ */
+double fiber2d_Ax(Grid &par, Op &opr, int i, int j, int k);
+
+ /**
+ * @brief       determines electric field around the fiber
+ * @ingroup     data
+ * @param       Grid simulation data
+ * @param       location in x, y, z
+ * @return      V at that location
+ */
+double LP01_E_squared(Grid &par, Op &opr, int i, int j, int k);
+
+ /**
+ * @brief       determines pAy for the standard rotational case
+ * @ingroup     data
+ * @param       Grid simulation data
+ * @param       location in x, y, z
+ * @return      V at that location
+ */
+std::unordered_map<std::string, double> read_matlab_data(int index);
 
  /**
  * @brief       determines pAy for the standard rotational case

@@ -406,8 +406,8 @@ void Op::set_fns(){
     Op_Ay_fns["rotation"] = rotation_Ay;
     Op_Ax_fns["dynamic"] = dynamic_Ax;
     Op_Ay_fns["dynamic"] = dynamic_Ay;
-    Op_pAx_fns["rotation_squared"] = rotation_Ax;
-    Op_pAy_fns["rotation_squared"] = rotation_Ay;
+    Op_Ay_fns["fiber2d"] = fiber2d_Ay;
+    Op_Ax_fns["fiber2d"] = fiber2d_Ax;
     Op_Ay_fns["rotation_squared"] = rotation_squared_Ay;
     Op_Ax_fns["rotation_squared"] = rotation_squared_Ax;
     

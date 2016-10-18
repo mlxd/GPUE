@@ -139,6 +139,7 @@ double harmonic_gauge_V(Grid &par, Op &opr, int i , int j, int k){
 }
 
 // Functions for pAx, y, z for rotation along the z axis
+// note that pAx and pAy call upon the Ax and Ay functions
 double rotation_pAx(Grid &par, Op &opr, int i, int j, int k){
     double *xp = par.dsval("xp");
     return opr.Ax_fn(par.Afn)(par, opr, i, j, k) * xp[i];
@@ -163,7 +164,7 @@ double rotation_Ay(Grid &par, Op &opr, int i, int j, int k){
     return x[i] * omega * omegaY;
 }
 
-// Fuinctions for pAx, y, z for rotation along the z axis
+// Fuinctions for Ax, y, z for rotation along the z axis
 double rotation_squared_Ax(Grid &par, Op &opr, int i, int j, int k){
     double *y = par.dsval("y");
     double omega = par.dval("omega");
@@ -182,6 +183,134 @@ double rotation_squared_Ay(Grid &par, Op &opr, int i, int j, int k){
     return val;
 }
 
+// Functions for fiber -- BETA
+// Note: because of the fiber axis we are working with here, we will be using
+//       E_z and E_r and ignoring E_phi
+//       E_r -> E_x
+//       E_z -> E_y
+
+// This is a Function to return Az, because there is no A_r or A_phi
+double fiber2d_Ax(Grid &par, Op &opr, int i, int j, int k){
+    double val = 0;
+    std::unordered_map<std::string, double> 
+        matlab_map = read_matlab_data(14);
+
+    double r = par.dsval("x")[i];
+
+    double beta1 = matlab_map["beta1"];
+    double q = matlab_map["q"];
+    double h = matlab_map["h"];
+    double a = matlab_map["a"];
+    double n1 = matlab_map["n1"];
+    double n2 = matlab_map["n2"];
+    double spar = matlab_map["spar"];
+    double N1 = (beta1*beta1/(4*h*h))
+                *(pow((1-spar),2)*(pow(jn(0,h*a),2)+pow(jn(1,h*a),2))
+                  +pow(1+spar,2)
+                   *(pow(jn(2,h*a),2)-jn(1,h*a)*jn(3,h*a)))
+                +((0.5)*(((pow(jn(1,h*a),2))-(jn(0,h*a)*jn(2,h*a)))));
+
+
+    double N2=(0.5)*(jn(1,h*a)/pow(boost::math::cyl_bessel_k(1,q*a),2))
+               *(((beta1*beta1/(2*q*q))
+               *(pow(1-spar,2)*(pow(boost::math::cyl_bessel_k(1,q*a),2)
+                                -pow(boost::math::cyl_bessel_k(0,q*a),2))
+               -pow(1+spar,2)*(pow(boost::math::cyl_bessel_k(2,q*a),2)
+               -boost::math::cyl_bessel_k(1,q*a)
+               *boost::math::cyl_bessel_k(3,q*a))))
+               -pow(boost::math::cyl_bessel_k(1,q*a),2) 
+               +boost::math::cyl_bessel_k(0,q*a)
+                *boost::math::cyl_bessel_k(2,q*a));
+    
+
+    double AA = (beta1 / (2 * q)) * 
+                (jn(1,h*a)/boost::math::cyl_bessel_k(1,q*a))
+                / (2 * M_PI * a * a * (n1*n1*N1 + n2*n2*N2));
+    val = AA * (((1-spar)*boost::math::cyl_bessel_k(0,q*r))
+                +(1+spar)*jn(2,h*r));
+    val = -val * val;
+    return val;
+}
+
+double fiber2d_Ay(Grid &par, Op &opr, int i, int j, int k){
+    double val = 0;
+    std::unordered_map<std::string, double> 
+        matlab_map = read_matlab_data(14);
+
+    double r = par.dsval("y")[i];
+
+    double beta1 = matlab_map["beta1"];
+    double q = matlab_map["q"];
+    double h = matlab_map["h"];
+    double a = matlab_map["a"];
+    double n1 = matlab_map["n1"];
+    double n2 = matlab_map["n2"];
+    double spar = matlab_map["spar"];
+    double N1 = (beta1*beta1/(4*h*h))
+                *(pow((1-spar),2)*(pow(jn(0,h*a),2)+pow(jn(1,h*a),2))
+                  +pow(1+spar,2)
+                   *(pow(jn(2,h*a),2)-jn(1,h*a)*jn(3,h*a)))
+                +((0.5)*(((pow(jn(1,h*a),2))-(jn(0,h*a)*jn(2,h*a)))));
+
+
+    double N2=(0.5)*(jn(1,h*a)/pow(boost::math::cyl_bessel_k(1,q*a),2))
+               *(((beta1*beta1/(2*q*q))
+               *(pow(1-spar,2)*(pow(boost::math::cyl_bessel_k(1,q*a),2)
+                                -pow(boost::math::cyl_bessel_k(0,q*a),2))
+               -pow(1+spar,2)*(pow(boost::math::cyl_bessel_k(2,q*a),2)
+               -boost::math::cyl_bessel_k(1,q*a)
+	       *boost::math::cyl_bessel_k(3,q*a))))
+               -pow(boost::math::cyl_bessel_k(1,q*a),2) 
+               +boost::math::cyl_bessel_k(0,q*a)
+                *boost::math::cyl_bessel_k(2,q*a));
+    
+
+    double AA = (beta1 / (2 * q)) * 
+                (jn(1,h*a)/boost::math::cyl_bessel_k(1,q*a))
+                / (2 * M_PI * a * a * (n1*n1*N1 + n2*n2*N2));
+    val = 2 * AA * (q / beta1) * boost::math::cyl_bessel_k(1,q*r);
+    val = val*val;
+    return val;
+}
+
+// Functions to determine Electric field at a provided point
+// Note that we need to multiply this by the dipole moment, (d)^2
+double LP01_E_squared(Grid &par, Op &opr, int i, int j, int k){
+    double val = 0;
+    return val;
+}
+
+// Now we need a function to read in the data from matlab
+// Note that this has already been parsed into a bunch of different files
+//     in data/data... This may need to be changed...
+// Ideally, we would fix the parser so that it takes the fiber option into 
+//     account and reads in the appropriate index. 
+// For now (due to lack of dev time), we will simply read in ii = 14.
+// BETA
+std::unordered_map<std::string, double> read_matlab_data(int index){
+
+    std::cout << "doing stuff" << '\n';
+
+    // Note that we need a std::unordered_map for all the variables
+    std::unordered_map<std::string, double> matlab_variables;
+
+    // Now we need to read in the file 
+    std::string filename = "data/data" + std::to_string(index) + ".dat";
+    std::ifstream fileID(filename);
+    std::string item1, item2;
+
+    std::string line;
+    while (fileID >> line){
+        item1 = line.substr(0,line.find(","));
+        item2 = line.substr(line.find(",")+1,line.size());
+        matlab_variables[item1] = std::stod(item2);
+    }
+
+    return matlab_variables;
+}
+
+
+// Functions for dynamic fields read in by string
 double dynamic_Ax(Grid &par, Op &opr, int i, int j, int k){
     double val = 0;
     std::string equation = par.sval("Axstring");
