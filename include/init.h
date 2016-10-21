@@ -60,6 +60,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../include/parser.h"
 #include "../include/ds.h"
 #include "../include/unit_test.h"
+#include "../include/operators.h"
 
 #include "../include/lattice.h"
 #include "../include/node.h"

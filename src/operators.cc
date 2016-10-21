@@ -44,6 +44,31 @@ double sign(double x){
     }
 }
 
+// Function to take the curl of Ax and Ay in 2d
+// note: This is on the cpu, there should be a GPU version too.
+double *curl2d(Grid &par, double *Ax, double *Ay){
+    int xDim = par.ival("xDim");
+    int yDim = par.ival("yDim");
+
+    int size = sizeof(double) * xDim * yDim;
+    double *curl;
+    curl = (double *)malloc(size);
+
+    int index;
+
+    // Note: To take the curl, we need a change in x and y to create a dx or dy
+    //       For this reason, we have added yDim to y and 1 to x
+    for (int i = 0; i < xDim; i++){
+        for (int j = 0; j < yDim-1; j++){
+            index = j + yDim * i;
+            curl[index] = (Ay[index] - Ay[index+yDim]) 
+                          - (Ax[index] - Ax[index+1]);
+        }
+    }
+
+    return curl;
+}
+
 // Function for simple 2d rotation with i and j as the interators
 double rotation_K(Grid &par, Op &opr, int i, int j, int k){
     double *xp = par.dsval("xp");
@@ -165,21 +190,24 @@ double rotation_Ay(Grid &par, Op &opr, int i, int j, int k){
 }
 
 // Fuinctions for Ax, y, z for rotation along the z axis
-double rotation_squared_Ax(Grid &par, Op &opr, int i, int j, int k){
+double test_Ax(Grid &par, Op &opr, int i, int j, int k){
     double *y = par.dsval("y");
+    double *x = par.dsval("x");
     double omega = par.dval("omega");
     double omegaX = par.dval("omegaX");
     //double yMax = par.dval("yMax");
-    double val = -y[j]*y[j] * omega * omegaX;
+    //double val = -y[j]*y[j];
+    double val = sin(y[j] * 100000) * 0.0005;
     return val;
 }
 
-double rotation_squared_Ay(Grid &par, Op &opr, int i, int j, int k){
+double test_Ay(Grid &par, Op &opr, int i, int j, int k){
     double *x = par.dsval("x");
     double omega = par.dval("omega");
     double omegaY = par.dval("omegaY");
     //double xMax = par.dval("xMax");
-    double val = x[i]*x[i] * omega * omegaY;
+    //double val = x[i]*x[i];
+    double val = 0;
     return val;
 }
 
@@ -192,10 +220,26 @@ double rotation_squared_Ay(Grid &par, Op &opr, int i, int j, int k){
 // This is a Function to return Az, because there is no A_r or A_phi
 double fiber2d_Ax(Grid &par, Op &opr, int i, int j, int k){
     double val = 0;
-    std::unordered_map<std::string, double> 
-        matlab_map = read_matlab_data(14);
+    val = HBAR ; // Plus everything else. How to implement detuning?
+
+    return val;
+}
+
+double fiber2d_Ay(Grid &par, Op &opr, int i, int j, int k){
+    double val = 0;
+
+    return val;
+}
+
+// Functions to determine Electric field at a provided point
+// Note that we need to multiply this by the dipole moment, (d)^2
+double LP01_E_squared(Grid &par, Op &opr, int i, int j, int k){
+    double val = 0;
 
     double r = par.dsval("x")[i];
+
+    std::unordered_map<std::string, double>
+        matlab_map = read_matlab_data(14);
 
     double beta1 = matlab_map["beta1"];
     double q = matlab_map["q"];
@@ -226,57 +270,14 @@ double fiber2d_Ax(Grid &par, Op &opr, int i, int j, int k){
     double AA = (beta1 / (2 * q)) * 
                 (jn(1,h*a)/boost::math::cyl_bessel_k(1,q*a))
                 / (2 * M_PI * a * a * (n1*n1*N1 + n2*n2*N2));
-    val = AA * (((1-spar)*boost::math::cyl_bessel_k(0,q*r))
-                +(1+spar)*jn(2,h*r));
-    val = -val * val;
-    return val;
-}
 
-double fiber2d_Ay(Grid &par, Op &opr, int i, int j, int k){
-    double val = 0;
-    std::unordered_map<std::string, double> 
-        matlab_map = read_matlab_data(14);
+    val = 2 * AA * AA *((1-spar)*(1-spar)
+                        *pow(boost::math::cyl_bessel_k(0,q*r),2)
+                        + (1+spar)*(1+spar)
+                          *pow(boost::math::cyl_bessel_k(2,q*r),2)
+                        + (2*q*q / (beta1*beta1))
+                          *pow(boost::math::cyl_bessel_k(1,q*r),2));
 
-    double r = par.dsval("y")[i];
-
-    double beta1 = matlab_map["beta1"];
-    double q = matlab_map["q"];
-    double h = matlab_map["h"];
-    double a = matlab_map["a"];
-    double n1 = matlab_map["n1"];
-    double n2 = matlab_map["n2"];
-    double spar = matlab_map["spar"];
-    double N1 = (beta1*beta1/(4*h*h))
-                *(pow((1-spar),2)*(pow(jn(0,h*a),2)+pow(jn(1,h*a),2))
-                  +pow(1+spar,2)
-                   *(pow(jn(2,h*a),2)-jn(1,h*a)*jn(3,h*a)))
-                +((0.5)*(((pow(jn(1,h*a),2))-(jn(0,h*a)*jn(2,h*a)))));
-
-
-    double N2=(0.5)*(jn(1,h*a)/pow(boost::math::cyl_bessel_k(1,q*a),2))
-               *(((beta1*beta1/(2*q*q))
-               *(pow(1-spar,2)*(pow(boost::math::cyl_bessel_k(1,q*a),2)
-                                -pow(boost::math::cyl_bessel_k(0,q*a),2))
-               -pow(1+spar,2)*(pow(boost::math::cyl_bessel_k(2,q*a),2)
-               -boost::math::cyl_bessel_k(1,q*a)
-	       *boost::math::cyl_bessel_k(3,q*a))))
-               -pow(boost::math::cyl_bessel_k(1,q*a),2) 
-               +boost::math::cyl_bessel_k(0,q*a)
-                *boost::math::cyl_bessel_k(2,q*a));
-    
-
-    double AA = (beta1 / (2 * q)) * 
-                (jn(1,h*a)/boost::math::cyl_bessel_k(1,q*a))
-                / (2 * M_PI * a * a * (n1*n1*N1 + n2*n2*N2));
-    val = 2 * AA * (q / beta1) * boost::math::cyl_bessel_k(1,q*r);
-    val = val*val;
-    return val;
-}
-
-// Functions to determine Electric field at a provided point
-// Note that we need to multiply this by the dipole moment, (d)^2
-double LP01_E_squared(Grid &par, Op &opr, int i, int j, int k){
-    double val = 0;
     return val;
 }
 
@@ -337,6 +338,7 @@ double dynamic_Az(Grid &par, Op &opr, int i, int j, int k){
 }
 
 // This function will be used with the dynamic gauge fields for AX,y,z (above)
+// BETA, mfunctions_map does not seem to work!
 void parse_equation(Grid par, std::string &equation, double &val, 
                     int i, int j, int k){
 

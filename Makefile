@@ -11,7 +11,7 @@ CUDA_LIB	= $(CUDA_HOME)/lib64
 CUDA_HEADER	= $(CUDA_HOME)/include
 CC		= $(CUDA_HOME)/bin/nvcc --ptxas-options=-v --compiler-options -Wall #-save-temps
 CHOSTFLAGS	= #-fopenmp
-CFLAGS		= -g -std=c++11 -Xcompiler '-std=c++11' -Xcompiler '-fopenmp' #-malign-double
+CFLAGS		= -g -std=c++11 -Xcompiler '-std=c++11' -Xcompiler '-fopenmp' #-malign-double -lboost_math
 endif
 
 CLINKER		= $(CC) 

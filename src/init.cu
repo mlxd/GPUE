@@ -69,6 +69,7 @@ int init_2d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     double *pAx;
     double *Ax;
     double *Ay;
+    double *Bz;
     double *pAy_gpu;
     double *pAx_gpu;
     double *Energy_gpu;
@@ -254,6 +255,7 @@ int init_2d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     pAx = (double *) malloc(sizeof(double) * gSize);
     Ax = (double *) malloc(sizeof(double) * gSize);
     Ay = (double *) malloc(sizeof(double) * gSize);
+    Bz = (double *) malloc(sizeof(double) * gSize);
     EpAy = (cufftDoubleComplex *) malloc(sizeof(cufftDoubleComplex) * gSize);
     EpAx = (cufftDoubleComplex *) malloc(sizeof(cufftDoubleComplex) * gSize);
     EappliedField = (cufftDoubleComplex *) malloc(sizeof(cufftDoubleComplex) * 
@@ -346,6 +348,8 @@ int init_2d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
         }
     }
 
+    Bz = curl2d(par, Ax, Ay);
+
     std::cout << "writing initial variables to file..." << '\n';
     //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%//
     //hdfWriteDouble(xDim, V, 0, "V_0"); //HDF COMING SOON!
@@ -357,6 +361,7 @@ int init_2d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     FileIO::writeOutDouble(buffer, data_dir + "pAx",pAx,xDim*yDim,0);
     FileIO::writeOutDouble(buffer, data_dir + "Ax",Ax,xDim*yDim,0);
     FileIO::writeOutDouble(buffer, data_dir + "Ay",Ay,xDim*yDim,0);
+    FileIO::writeOutDouble(buffer, data_dir + "Bz",Bz,xDim*yDim,0);
     FileIO::writeOut(buffer, data_dir + "WFC",wfc,xDim*yDim,0);
     FileIO::writeOut(buffer, data_dir + "EpAy",EpAy,xDim*yDim,0);
     FileIO::writeOut(buffer, data_dir + "EpAx",EpAx,xDim*yDim,0);

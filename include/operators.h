@@ -56,7 +56,16 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <unordered_map>
 #include <boost/math/special_functions.hpp>
 
-// For bessel functions
+// function to find Bz, the curl of the gauge field
+ /**
+ * @brief       Finds Bz, the curl of the gauge field
+ * @ingroup     data
+ * @param       Grid simulation data
+ * @param       gauge field Ax
+ * @param       gauge field Ay
+ * @return      Bz, the curl of A
+ */
+double *curl2d(Grid &par, double *Ax, double *Ay);
 
 // UPDATE LIST LATER
  /**
@@ -157,7 +166,7 @@ double rotation_Ay(Grid &par, Op &opr, int i, int j, int k);
  * @param       location in x, y, z
  * @return      V at that location
  */
-double rotation_squared_Ax(Grid &par, Op &opr, int i, int j, int k);
+double test_Ax(Grid &par, Op &opr, int i, int j, int k);
 
  /**
  * @brief       determines pAy for the standard rotational case
@@ -166,7 +175,7 @@ double rotation_squared_Ax(Grid &par, Op &opr, int i, int j, int k);
  * @param       location in x, y, z
  * @return      V at that location
  */
-double rotation_squared_Ay(Grid &par, Op &opr, int i, int j, int k);
+double test_Ay(Grid &par, Op &opr, int i, int j, int k);
 
  /**
  * @brief       determines pAy for the standard fiber2d case
