@@ -248,7 +248,7 @@ double dynamic_Az(Grid &par, Op &opr, int i, int j, int k);
  * @param       location in x, y, z
  * @return      V at that location
  */
-double* file_A(Grid &par, std::string filename);
+void file_A(std::string filename, double *A);
 
 // Function to check whether a file exists
 std::string filecheck(std::string filename);

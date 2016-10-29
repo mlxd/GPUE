@@ -113,12 +113,21 @@ double harmonic_V(Grid &par, Op &opr, int i , int j, int k){
     double xOffset = 0.0;
     double mass = par.dval("mass");
     double V_x = omegaX*(x[i]+xOffset); 
-                     //- opr.Ax_fn(par.Afn)(par, opr, i, j, k);
     double V_y = gammaY*omegaY*(y[j]+yOffset);
-                     //- opr.Ay_fn(par.Afn)(par, opr, i, j, k);
-    return 0.5*mass*( V_x * V_x + V_y * V_y) + 
-           0.5 * mass * pow(opr.Ax_fn(par.Afn)(par, opr, i, j, k),2) + 
-           0.5 * mass * pow(opr.Ay_fn(par.Afn)(par, opr, i, j, k),2);
+    if (par.Afn != "file"){
+        return 0.5 * mass * ( V_x * V_x + V_y * V_y) + 
+               0.5 * mass * pow(opr.Ax_fn(par.Afn)(par, opr, i, j, k),2) + 
+               0.5 * mass * pow(opr.Ay_fn(par.Afn)(par, opr, i, j, k),2);
+    }
+    else{
+        double *Ax = opr.dsval("Ax");
+        double *Ay = opr.dsval("Ay");
+        int yDim = par.ival("yDim");
+        int count = i*yDim + j; 
+        return 0.5 * mass * ( V_x * V_x + V_y * V_y) + 
+               0.5 * mass * pow(Ax[count],2) + 
+               0.5 * mass * pow(Ay[count],2);
+    }
 
 }
 
@@ -167,12 +176,28 @@ double harmonic_gauge_V(Grid &par, Op &opr, int i , int j, int k){
 // note that pAx and pAy call upon the Ax and Ay functions
 double rotation_pAx(Grid &par, Op &opr, int i, int j, int k){
     double *xp = par.dsval("xp");
-    return opr.Ax_fn(par.Afn)(par, opr, i, j, k) * xp[i];
+    if (par.Afn != "file"){
+        return opr.Ax_fn(par.Afn)(par, opr, i, j, k) * xp[i];
+    }
+    else{
+        double *Ax = opr.dsval("Ax");
+        int yDim = par.ival("yDim");
+        int count = i*yDim + j; 
+        return Ax[count] * xp[i];
+    }
 }
 
 double rotation_pAy(Grid &par, Op &opr, int i, int j, int k){
     double *yp = par.dsval("yp");
-    return opr.Ay_fn(par.Afn)(par, opr, i, j, k) * yp[j];
+    if (par.Afn != "file"){
+        return opr.Ay_fn(par.Afn)(par, opr, i, j, k) * yp[j];
+    }
+    else{
+        double *Ay = opr.dsval("Ay");
+        int yDim = par.ival("yDim");
+        int count = i*yDim + j; 
+        return Ay[count] * yp[j];
+    }
 }
 
 double rotation_Ax(Grid &par, Op &opr, int i, int j, int k){
@@ -339,12 +364,7 @@ double dynamic_Az(Grid &par, Op &opr, int i, int j, int k){
 
 // Function to read Ax from file.
 // Note that this comes with a special method in init...
-double* file_A(Grid &par, std::string filename){
-    double *A;
-    int xDim = par.ival("xDim");
-    int yDim = par.ival("yDim");
-    A = (double *) malloc(sizeof(double) * xDim * yDim);
-
+void file_A(std::string filename, double *A){
     std::fstream infile(filename, std::ios_base::in);
 
     double inval;
@@ -353,7 +373,6 @@ double* file_A(Grid &par, std::string filename){
         A[count] = inval;
         count++;
     }
-    return A;
 }
 
 // Function to check whether a file exists

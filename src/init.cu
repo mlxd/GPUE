@@ -284,9 +284,13 @@ int init_2d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
 
     // Setting Ax, and Ay if from file
     if (par.Afn == "file"){
-        Ax = file_A(par, par.Axfile);
-        Ay = file_A(par, par.Ayfile);
+        file_A(par.Axfile, Ax);
+        opr.store("Ax",Ax);
+        file_A(par.Ayfile, Ay);
+        opr.store("Ay", Ay);
     }
+    std::cout << "finished reading Ax / Ay from file" << '\n';
+    std::cout << Ax[256] << '\t' << Ay[0] << '\n';
     #pragma omp parallel for private(j)
     #endif
     for( i=0; i < xDim; i++ ){
@@ -326,6 +330,7 @@ int init_2d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
             // Ax and Ay will be calculated here but are used only for
             // debugging. They may be needed later for magnetic field calc
             if (par.Afn != "file"){
+                std::cout << "Should not be in this loop..." << '\n';
                 Ax[(i*yDim + j)] = opr.Ax_fn(par.Afn)(par, opr, i, j, 0);
                 Ay[(i*yDim + j)] = opr.Ay_fn(par.Afn)(par, opr, i, j, 0);
             }

@@ -410,10 +410,8 @@ void Op::set_fns(){
     Op_Ax_fns["fiber2d"] = fiber2d_Ax;
     Op_Ay_fns["test"] = test_Ay;
     Op_Ax_fns["test"] = test_Ax;
-    
-
-    //Op_K_fns.emplace("rotation_K", rotation_K);
-    //Op_V_fns.emplace("harmonic_V", harmonic_V);
+    Op_Ay_fns["file"] = nullptr;
+    Op_Ax_fns["file"] = nullptr;
     
 }
 
