@@ -140,7 +140,7 @@ class Grid{
 
         // Key values for operators
         // Note that Vector potential only have a single string for x, y, z
-        std::string Kfn, Vfn, Afn;
+        std::string Kfn, Vfn, Afn, Axfile, Ayfile, Azfile;
 };
 typedef class Grid Grid;
 

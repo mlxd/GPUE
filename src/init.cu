@@ -281,7 +281,12 @@ int init_2d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     // Assuming dev system specifics (Xeon with HT -> cores detected / 2)
     par.store("Cores_Max",cores/2);
     omp_set_num_threads(cores/2);
-    //std::cout << "GAMMAY IS: " << gammaY << '\n';
+
+    // Setting Ax, and Ay if from file
+    if (par.Afn == "file"){
+        Ax = file_A(par, par.Axfile);
+        Ay = file_A(par, par.Ayfile);
+    }
     #pragma omp parallel for private(j)
     #endif
     for( i=0; i < xDim; i++ ){
@@ -320,8 +325,10 @@ int init_2d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
 
             // Ax and Ay will be calculated here but are used only for
             // debugging. They may be needed later for magnetic field calc
-            Ax[(i*yDim + j)] = opr.Ax_fn(par.Afn)(par, opr, i, j, 0);
-            Ay[(i*yDim + j)] = opr.Ay_fn(par.Afn)(par, opr, i, j, 0);
+            if (par.Afn != "file"){
+                Ax[(i*yDim + j)] = opr.Ax_fn(par.Afn)(par, opr, i, j, 0);
+                Ay[(i*yDim + j)] = opr.Ay_fn(par.Afn)(par, opr, i, j, 0);
+            }
             
             //pAy[(i*yDim + j)] = x[i]*yp[j];
             pAy[(i*yDim + j)] = opr.pAy_fn("rotation")(par, opr, i, j, 0);

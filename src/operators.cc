@@ -337,6 +337,39 @@ double dynamic_Az(Grid &par, Op &opr, int i, int j, int k){
     return val;
 }
 
+// Function to read Ax from file.
+// Note that this comes with a special method in init...
+double* file_A(Grid &par, std::string filename){
+    double *A;
+    int xDim = par.ival("xDim");
+    int yDim = par.ival("yDim");
+    A = (double *) malloc(sizeof(double) * xDim * yDim);
+
+    std::fstream infile(filename, std::ios_base::in);
+
+    double inval;
+    int count = 0;
+    while (infile >> inval){
+        A[count] = inval;
+        count++;
+    }
+    return A;
+}
+
+// Function to check whether a file exists
+std::string filecheck(std::string filename){
+
+    struct stat buffer = {0};
+    if (stat(filename.c_str(), &buffer) == -1){
+        std::cout << "File " << filename << " does not exist!" << '\n';
+        std::cout << "Please select a new file:" << '\n'; 
+        std::cin >> filename; 
+        filename = filecheck(filename);
+    } 
+
+    return filename;
+}
+
 // This function will be used with the dynamic gauge fields for AX,y,z (above)
 // BETA, mfunctions_map does not seem to work!
 void parse_equation(Grid par, std::string &equation, double &val, 

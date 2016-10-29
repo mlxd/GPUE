@@ -32,6 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #include "../include/parser.h"
 #include "../include/unit_test.h"
+#include "../include/operators.h"
 
 struct stat st = {0};
 
@@ -349,6 +350,18 @@ Grid parseArgs(int argc, char** argv){
             {
                 std::string field = optarg;
                 std::cout << "Chosen gauge field is: " << field << '\n';
+
+                // If the file gauge field is chosen, we need to make sure the
+                // the files exist
+                if (strcmp(optarg, "file") == 0){
+                    std::cout << "Finding file for Ax..." << '\n';
+                    par.Axfile = filecheck("src/Axgauge");
+                    std::cout << "Finding file for Ay..." << '\n';
+                    par.Ayfile = filecheck("src/Aygauge");
+                    std::cout << "Finding file for Az..." << '\n';
+                    par.Azfile = filecheck("src/Azgauge");
+                }
+
                 // If the dynamic gauge field is chosen, we need to read it in
                 // from a file and if there is no file, read it from cin
                 if (strcmp(optarg, "dynamic") == 0){

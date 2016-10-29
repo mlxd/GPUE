@@ -53,6 +53,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "../include/ds.h"
 #include "../include/constants.h"
+#include <sys/stat.h>
 #include <unordered_map>
 #include <boost/math/special_functions.hpp>
 
@@ -239,6 +240,18 @@ double dynamic_Ay(Grid &par, Op &opr, int i, int j, int k);
  * @return      V at that location
  */
 double dynamic_Az(Grid &par, Op &opr, int i, int j, int k);
+
+ /**
+ * @brief       determines pAy for the standard rotational case
+ * @ingroup     data
+ * @param       Grid simulation data
+ * @param       location in x, y, z
+ * @return      V at that location
+ */
+double* file_A(Grid &par, std::string filename);
+
+// Function to check whether a file exists
+std::string filecheck(std::string filename);
 
  /**
  * @brief       determines pAy for the standard rotational case
