@@ -96,6 +96,7 @@ int init_2d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     cufftResult result = cupar.cufftResultval("result");
     cufftHandle plan_1d = cupar.cufftHandleval("plan_1d");
     cufftHandle plan_2d = cupar.cufftHandleval("plan_2d");
+    cufftHandle plan_transpose2d = cupar.cufftHandleval("plan_transpose2d");
 
     dim3 grid = cupar.dim3val("grid");
 
@@ -330,7 +331,6 @@ int init_2d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
             // Ax and Ay will be calculated here but are used only for
             // debugging. They may be needed later for magnetic field calc
             if (par.Afn != "file"){
-                std::cout << "Should not be in this loop..." << '\n';
                 Ax[(i*yDim + j)] = opr.Ax_fn(par.Afn)(par, opr, i, j, 0);
                 Ay[(i*yDim + j)] = opr.Ay_fn(par.Afn)(par, opr, i, j, 0);
             }
@@ -420,6 +420,8 @@ int init_2d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
         return -1;
     }
 
+    plan_transpose2d = generate_plan_transpose2d(par); 
+
     result = cufftPlan1d(&plan_1d, xDim, CUFFT_Z2Z, yDim);
     if(result != CUFFT_SUCCESS){
         printf("Result:=%d\n",result);
@@ -489,6 +491,7 @@ int init_2d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     cupar.store("result", result);
     cupar.store("plan_1d", plan_1d);
     cupar.store("plan_2d", plan_2d);
+    cupar.store("plan_tranpose2d", plan_transpose2d);
 
     cupar.store("grid", grid);
 

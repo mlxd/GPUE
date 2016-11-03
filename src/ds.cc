@@ -35,6 +35,54 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../include/operators.h"
 
 /*----------------------------------------------------------------------------//
+* AUX
+*-----------------------------------------------------------------------------*/
+// I didn't know where to place these functions for now, so the'll be here
+cufftHandle generate_plan_transpose2d(Grid &par){
+    cufftHandle plan_transpose2d;
+
+    // We need a number of propertied for this fft / transform
+    int xDim = par.ival("xDim");
+    int yDim = par.ival("yDim");
+
+/*
+    int batch = xDim*yDim;
+    int rank = 2;
+    int n[2] = {xDim, yDim};
+    int idist = xDim * yDim;
+    int odist = xDim * yDim;
+    int inembed[] = {xDim, yDim};
+    int onembed[] = {xDim, yDim};
+    int istride = 1;
+    int ostride = 1;
+*/
+
+    int batch = yDim;
+    int rank = 1;
+    int n[1] = {xDim * yDim};
+    int idist = yDim;
+    int odist = yDim;
+    int inembed[] = {xDim*yDim};
+    int onembed[] = {xDim*yDim};
+    int istride = 1;
+    int ostride = 1;
+
+    cufftResult result;
+
+    result = cufftPlanMany(&plan_transpose2d, rank, n, onembed, ostride, odist,
+                           inembed, istride, idist, CUFFT_Z2Z, batch);
+
+    if(result != CUFFT_SUCCESS){
+        printf("Result:=%d\n",result);
+        printf("Error: Could not execute cufftPlantranspose(%s ,%d ,%d ).\n", 
+               "plan_1d", (unsigned int)xDim, (unsigned int)yDim);
+        return -1;
+    }
+    
+    return plan_transpose2d;
+}
+
+/*----------------------------------------------------------------------------//
 * GRID
 *-----------------------------------------------------------------------------*/
 
@@ -184,6 +232,9 @@ void Cuda::store(std::string id, cufftHandle planin){
     else if (id == "plan_2d"){
         plan_2d = planin;
     }
+    else if (id == "plan_transpose2d"){
+        plan_transpose2d = planin;
+    }
     else{
         std::cout << "Error: plan not found!" << '\n';
     }
@@ -228,6 +279,9 @@ cufftHandle Cuda::cufftHandleval(std::string id){
     }
     else if (id == "plan_2d"){
         return plan_2d;
+    }
+    else if (id == "plan_transpose2d"){
+        return plan_transpose2d;
     }
     else{
         std::cout << "Error: plan not found!" << '\n';

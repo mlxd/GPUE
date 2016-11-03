@@ -227,9 +227,9 @@ double test_Ax(Grid &par, Op &opr, int i, int j, int k){
 }
 
 double test_Ay(Grid &par, Op &opr, int i, int j, int k){
-    double *x = par.dsval("x");
-    double omega = par.dval("omega");
-    double omegaY = par.dval("omegaY");
+    //double *x = par.dsval("x");
+    //double omega = par.dval("omega");
+    //double omegaY = par.dval("omegaY");
     //double xMax = par.dval("xMax");
     //double val = x[i]*x[i];
     double val = 0;

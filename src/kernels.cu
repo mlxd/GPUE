@@ -37,19 +37,73 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 //Evaluted in MATLAB: N*4*HBAR*HBAR*PI*(4.67e-9/mass)*sqrt(mass*(omegaZ)/(2*PI*HBAR))
 __constant__ double gDenConst = 6.6741e-40;
-//inline __device__ unsigned int getGid3d3d(){
 
 inline __device__ unsigned int getGid3d3d(){
     return blockDim.x * ( ( blockDim.y * ( ( blockIdx.z * blockDim.z + threadIdx.z ) + blockIdx.y ) + threadIdx.y ) + blockIdx.x ) + threadIdx.x;
 }
 
-//inline __device__ unsigned int getBid3d3d(){
+// function to perform a transposition (2d) or permutation (3d)
+// Note: The 3 ints represent the final placement of that data direction
+//       after transposition
+inline __device__ unsigned int permuteGid(int d1, int d2, int d3){
+
+    // I cannot seem to think of any way to write this in a general case...
+
+    unsigned int x, y, z;
+
+    // If the three axes are in the original directions.
+    if (d1 == 0 && d2 == 1 && d3 == 2){
+        return getGid3d3d();
+    } 
+
+    else if (d1 == 1 && d2 == 2 && d3 == 0){
+        x = blockIdx.x * blockDim.x + threadIdx.x;
+        z = blockDim.z * (x + blockIdx.z) + threadIdx.z;
+        y = blockDim.y * (z + blockIdx.y) + threadIdx.y;
+        return y;
+    }
+
+    else if (d1 == 2 && d2 == 0 && d3 == 1){
+        y = blockIdx.y * blockDim.y + threadIdx.y;
+        x = blockDim.x * (y + blockIdx.x) + threadIdx.x;
+        z = blockDim.z * (x + blockIdx.z) + threadIdx.z;
+        return z;
+    }
+
+    else if (d1 == 0 && d2 == 2 && d3 == 1){
+        y = blockIdx.y * blockDim.y + threadIdx.y;
+        z = blockDim.z * (y + blockIdx.z) + threadIdx.z;
+        x = blockDim.x * (z + blockIdx.x) + threadIdx.x;
+        return x;
+    }
+
+    else if (d1 == 1 && d2 == 0 && d3 == 2){
+        z = blockIdx.z * blockDim.z + threadIdx.z;
+        //y = blockDim.y * (z + blockIdx.x) + threadIdx.y;
+        //x = blockDim.x * (y + blockIdx.y) + threadIdx.x;
+        x = blockDim.x * (z + blockIdx.x) + threadIdx.x;
+        y = blockDim.y * (x + blockIdx.y) + threadIdx.y;
+        return y;
+        //return x;
+    }
+
+    else if (d1 == 2 && d2 == 1 && d3 == 0){
+        x = blockIdx.x * blockDim.x + threadIdx.x;
+        y = blockDim.y * (x + blockIdx.y) + threadIdx.y;
+        z = blockDim.z * (y + blockIdx.z) + threadIdx.z;
+        return z;
+    }
+    else{
+        return 0;
+    }
+
+    
+}
+
 __device__ unsigned int getBid3d3d(){
     return blockIdx.x + gridDim.x*(blockIdx.y + gridDim.y * blockIdx.z);
 }
 
-
-//inline __device__ unsigned int getTid3d3d(){
 __device__ unsigned int getTid3d3d(){
     return blockDim.x * ( blockDim.y * ( blockDim.z + ( threadIdx.z * blockDim.y ) )  + threadIdx.y )  + threadIdx.x;
 }
@@ -268,6 +322,54 @@ __global__ void energyCalc(double2 *wfc, double2 *op, double dt, double2 *energy
     //printf("oplocal=%e    Resx=%e    Resy=%e\n",opLocal,result.x,result.y);
     energy[gid].x += result.x;
     energy[gid].y += result.y;
+}
+
+// Kernel for 2d transpose, note global for now...
+__global__ void transpose2d(double *indata, double *outdata){
+    unsigned int gid1 = getGid3d3d();
+
+    // Note that this should always be 102 for 2d transpose if we ignore z
+    unsigned int gid2 = permuteGid(1,0,2);
+
+    outdata[gid2] = indata[gid1];
+}
+
+// Kernel for 2d transpose, note global for now...
+__global__ void naivetranspose2d(int xDim, int yDim, 
+                            const double *indata, double *outdata){
+    const double* tmp = indata;
+    int index = 0;
+    int index2 = 0;
+    for (int i = 0; i < xDim; i++){
+        for (int j = 0; j < yDim; j++){
+            index = j + i*yDim;
+            index2 = i + j*xDim;
+            outdata[index] = tmp[index2];
+        }
+    }
+}
+
+__global__ void transpose2d2(double2 *indata, double2 *outdata){
+    unsigned int gid1 = getGid3d3d();
+
+    // Note that this should always be 102 for 2d transpose if we ignore z
+    unsigned int gid2 = permuteGid(1,0,2);
+
+    outdata[gid2] = indata[gid1];
+}
+
+__global__ void naivetranspose2d2(int xDim, int yDim, 
+                             const double2 *indata, double2 *outdata){
+    const double2 *tmp = indata;
+    int index = 0;
+    int index2 = 0;
+    for (int i = 0; i < xDim; i++){
+        for (int j = 0; j < yDim; j++){
+            index = j + i*yDim;
+            index2 = i + j*xDim;
+            outdata[index] = tmp[index2];
+        }
+    }
 }
 
 /*

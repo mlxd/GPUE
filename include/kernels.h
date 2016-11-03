@@ -248,6 +248,18 @@ __global__ void multipass(double2* input, double2* output, int pass);
 */
 __global__ void angularOp(double omega, double dt, double2* wfc, double* xpyypx, double2* out);
 
+// Kernel to perform 2d transposition
+__global__ void transpose2d(double *indata, double *outdata);
+
+__global__ void naivetranspose2d(int xDim, int yDim, 
+                            const double *indata, double *outdata);
+
+// Kernel to perform 2d transposition
+__global__ void transpose2d2(double2 *indata, double2 *outdata);
+
+__global__ void naivetranspose2d2(int xDim, int yDim, 
+                            const double2 *indata, double2 *outdata);
+
 //##############################################################################
 /**
  * Non-implemented functions.
