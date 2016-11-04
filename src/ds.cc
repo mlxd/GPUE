@@ -59,18 +59,19 @@ cufftHandle generate_plan_transpose2d(Grid &par){
 
     int batch = yDim;
     int rank = 1;
-    int n[1] = {xDim * yDim};
-    int idist = yDim;
-    int odist = yDim;
+    int n[] = {xDim, yDim};
+    int idist[] = {yDim, 1};
+    int odist[] = {yDim, 1};
     int inembed[] = {xDim*yDim};
     int onembed[] = {xDim*yDim};
-    int istride = 1;
-    int ostride = 1;
+    int istride[] = {1, yDim};
+    int ostride[] = {1, yDim};
 
     cufftResult result;
 
-    result = cufftPlanMany(&plan_transpose2d, rank, n, onembed, ostride, odist,
-                           inembed, istride, idist, CUFFT_Z2Z, batch);
+    result = cufftPlanMany(&plan_transpose2d, rank, n, onembed, ostride[1], 
+                           odist[1], inembed, istride[1], idist[1], 
+                           CUFFT_Z2Z, batch);
 
     if(result != CUFFT_SUCCESS){
         printf("Result:=%d\n",result);

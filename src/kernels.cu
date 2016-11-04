@@ -78,13 +78,17 @@ inline __device__ unsigned int permuteGid(int d1, int d2, int d3){
     }
 
     else if (d1 == 1 && d2 == 0 && d3 == 2){
-        z = blockIdx.z * blockDim.z + threadIdx.z;
+        //z = blockIdx.z * blockDim.z + threadIdx.z;
         //y = blockDim.y * (z + blockIdx.x) + threadIdx.y;
         //x = blockDim.x * (y + blockIdx.y) + threadIdx.x;
-        x = blockDim.x * (z + blockIdx.x) + threadIdx.x;
-        y = blockDim.y * (x + blockIdx.y) + threadIdx.y;
-        return y;
+        //x = blockDim.x * (z + blockIdx.x) + threadIdx.x;
+        //y = blockDim.y * (x + blockIdx.y) + threadIdx.y;
+        //return y;
         //return x;
+        z = blockIdx.z*blockDim.z + threadIdx.z;
+        x = blockIdx.x*blockDim.x + threadIdx.x;
+        y = blockIdx.y*blockDim.y + threadIdx.y;
+        return x + blockDim.x*y + blockDim.y*blockDim.x*z;
     }
 
     else if (d1 == 2 && d2 == 1 && d3 == 0){
@@ -349,13 +353,13 @@ __global__ void naivetranspose2d(int xDim, int yDim,
     }
 }
 
-__global__ void transpose2d2(double2 *indata, double2 *outdata){
+__global__ void transpose2d2(const double2 *indata, double2 *outdata){
     unsigned int gid1 = getGid3d3d();
 
     // Note that this should always be 102 for 2d transpose if we ignore z
-    unsigned int gid2 = permuteGid(1,0,2);
+    unsigned int gid2 = permuteGid(0,1,2);
 
-    outdata[gid2] = indata[gid1];
+    outdata[gid1] = indata[gid2];
 }
 
 __global__ void naivetranspose2d2(int xDim, int yDim, 

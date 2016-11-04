@@ -408,6 +408,44 @@ void evolve_2d(Wave &wave, Op &opr,
                     result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_INVERSE);
                     scalarMult<<<grid,threads>>>(gpuWfc,
                                                  renorm_factor_1d, gpuWfc);
+
+                    // Transposing for pAx mult
+                    transpose2d2<<<grid,threads>>>(gpuWfc, gpuWfc);
+                    transpose2d<<<grid,threads>>>(gpu1dpAx, gpu1dpAx);
+                    //transpose2d2<<<grid,threads>>>(
+                        //(cufftDoubleComplex*) gpu1dpAx, 
+                        //(cufftDoubleComplex*) gpu1dpAx);
+    
+                    // 1D FFT to wfc_pAx
+                    result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_FORWARD);
+                    scalarMult<<<grid,threads>>>(gpuWfc,
+                                                 renorm_factor_1d,gpuWfc);
+                    cMult<<<grid,threads>>>(gpuWfc, 
+                        (cufftDoubleComplex*) gpu1dpAx, gpuWfc);
+    
+                    // wfc_pAx
+                    result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_INVERSE);
+                    scalarMult<<<grid,threads>>>(gpuWfc,
+                                                 renorm_factor_1d, gpuWfc);
+
+                    // Transposing back from pAx mult
+                    transpose2d2<<<grid,threads>>>(gpuWfc, gpuWfc);
+                    transpose2d<<<grid,threads>>>(gpu1dpAx, gpu1dpAx);
+                    //transpose2d2<<<grid,threads>>>(
+                        //(cufftDoubleComplex*) gpu1dpAx, 
+                        //(cufftDoubleComplex*) gpu1dpAx);
+    
+                    break; 
+/*
+                    // wfc_pAy
+                    result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_FORWARD); 
+                    scalarMult<<<grid,threads>>>(gpuWfc,
+                                                 renorm_factor_1d,gpuWfc);
+                    cMult<<<grid,threads>>>(gpuWfc, 
+                        (cufftDoubleComplex*) gpu1dpAy, gpuWfc);
+                    result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_INVERSE);
+                    scalarMult<<<grid,threads>>>(gpuWfc,
+                                                 renorm_factor_1d, gpuWfc);
     
                     // 1D FFT to wfc_pAx
                     result = cufftExecZ2Z(plan_transpose2d,gpuWfc,gpuWfc,
@@ -426,47 +464,8 @@ void evolve_2d(Wave &wave, Op &opr,
                                                  renorm_factor_1d, gpuWfc);
     
                     break; 
-
-/*
-                    // wfc_pAy
-                    result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_FORWARD); 
-                    scalarMult<<<grid,threads>>>(gpuWfc,
-                                                 renorm_factor_1d,gpuWfc);
-                    cMult<<<grid,threads>>>(gpuWfc, 
-                        (cufftDoubleComplex*) gpu1dpAy, gpuWfc);
-                    result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_INVERSE);
-                    scalarMult<<<grid,threads>>>(gpuWfc,
-                                                 renorm_factor_1d, gpuWfc);
-    
-                    // Transposition of wfc and Ax
-                    naivetranspose2d2<<<grid,threads>>>(xDim, yDim, gpuWfc, gpuWfc);
-                    naivetranspose2d2<<<grid,threads>>>(xDim, yDim, (cufftDoubleComplex*) gpu1dpAx,(cufftDoubleComplex*) gpu1dpAx);
-                    //transpose2d2<<<grid,threads>>>(
-                        //(cufftDoubleComplex*) gpu1dpAx, 
-                        //(cufftDoubleComplex*) gpu1dpAx);
-
-                    // 1D FFT to wfc_pAx
-                    //result = cufftExecZ2Z(plan_transpose2d,gpuWfc,gpuWfc,CUFFT_FORWARD); 
-                    result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_FORWARD); 
-                    scalarMult<<<grid,threads>>>(gpuWfc,
-                                                 renorm_factor_1d,gpuWfc);
-                    cMult<<<grid,threads>>>(gpuWfc, 
-                        (cufftDoubleComplex*) gpu1dpAx, gpuWfc);
-    
-                    // wfc_pAx
-                    //result = cufftExecZ2Z(plan_transpose2d,gpuWfc,gpuWfc,CUFFT_INVERSE); 
-                    result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_INVERSE); 
-                    scalarMult<<<grid,threads>>>(gpuWfc,
-                                                 renorm_factor_1d, gpuWfc);
-    
-                    // Tranpose back
-                    naivetranspose2d2<<<grid,threads>>>(xDim, yDim, gpuWfc, gpuWfc);
-                    naivetranspose2d2<<<grid,threads>>>(xDim, yDim, (cufftDoubleComplex*) gpu1dpAx,(cufftDoubleComplex*) gpu1dpAx);
-                    //transpose2d2<<<grid,threads>>>(
-                        //(cufftDoubleComplex*) gpu1dpAx, 
-                        //(cufftDoubleComplex*) gpu1dpAx);
-                    break;
 */
+
 /*
                     //std::cout << "GS solve even." << '\n';
 
@@ -509,6 +508,44 @@ void evolve_2d(Wave &wave, Op &opr,
 */
                 
                 case 1:    //Groundstate solver, odd step
+                    // Transposing for pAx mult
+                    transpose2d2<<<grid,threads>>>(gpuWfc, gpuWfc);
+                    transpose2d<<<grid,threads>>>(gpu1dpAx, gpu1dpAx);
+                    //transpose2d2<<<grid,threads>>>(
+                        //(cufftDoubleComplex*) gpu1dpAx, 
+                        //(cufftDoubleComplex*) gpu1dpAx);
+    
+                    // 1D FFT to wfc_pAx
+                    result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_FORWARD);
+                    scalarMult<<<grid,threads>>>(gpuWfc,
+                                                 renorm_factor_1d,gpuWfc);
+                    cMult<<<grid,threads>>>(gpuWfc, 
+                        (cufftDoubleComplex*) gpu1dpAx, gpuWfc);
+    
+                    // wfc_pAx
+                    result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_INVERSE);
+                    scalarMult<<<grid,threads>>>(gpuWfc,
+                                                 renorm_factor_1d, gpuWfc);
+
+                    // Transposing back from pAx mult
+                    transpose2d2<<<grid,threads>>>(gpuWfc, gpuWfc);
+                    transpose2d<<<grid,threads>>>(gpu1dpAx, gpu1dpAx);
+                    //transpose2d2<<<grid,threads>>>(
+                        //(cufftDoubleComplex*) gpu1dpAx, 
+                        //(cufftDoubleComplex*) gpu1dpAx);
+
+                    // wfc_pAy
+                    result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_FORWARD); 
+                    scalarMult<<<grid,threads>>>(gpuWfc,
+                                                 renorm_factor_1d,gpuWfc);
+                    cMult<<<grid,threads>>>(gpuWfc, 
+                        (cufftDoubleComplex*) gpu1dpAy, gpuWfc);
+                    result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_INVERSE);
+                    scalarMult<<<grid,threads>>>(gpuWfc,
+                                                 renorm_factor_1d, gpuWfc);
+
+                    break; 
+/*
                     // 1D FFT to wfc_pAx
                     result = cufftExecZ2Z(plan_transpose2d,gpuWfc,gpuWfc,
                                           CUFFT_FORWARD); 
@@ -535,48 +572,6 @@ void evolve_2d(Wave &wave, Op &opr,
                     scalarMult<<<grid,threads>>>(gpuWfc,
                                                  renorm_factor_1d, gpuWfc);
     
-                    break;
-
-/*
-                    // wfc_pAx
-                    naivetranspose2d2<<<grid,threads>>>(xDim, yDim, gpuWfc, gpuWfc);
-                    naivetranspose2d2<<<grid,threads>>>(xDim, yDim, (cufftDoubleComplex*) gpu1dpAy,(cufftDoubleComplex*) gpu1dpAy);
-                    //result = cufftExecZ2Z(plan_transpose2d,gpuWfc,gpuWfc,CUFFT_FORWARD); 
-                    result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_FORWARD); 
-                    scalarMult<<<grid,threads>>>(gpuWfc,
-                                                 renorm_factor_1d,gpuWfc);
-                    cMult<<<grid,threads>>>(gpuWfc, 
-                        (cufftDoubleComplex*) gpu1dpAx, gpuWfc);
-                    //result = cufftExecZ2Z(plan_transpose2d,gpuWfc,gpuWfc,CUFFT_INVERSE);
-                    result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_INVERSE);
-                    scalarMult<<<grid,threads>>>(gpuWfc,
-                                                 renorm_factor_1d, gpuWfc);
-    
-                    // Transposition of wfc and Ay
-                    naivetranspose2d2<<<grid,threads>>>(xDim, yDim, gpuWfc, gpuWfc);
-                    naivetranspose2d2<<<grid,threads>>>(xDim, yDim, (cufftDoubleComplex*) gpu1dpAy,(cufftDoubleComplex*) gpu1dpAy);
-                    //transpose2d2<<<grid,threads>>>(
-                        //(cufftDoubleComplex*) gpu1dpAy, 
-                        //(cufftDoubleComplex*) gpu1dpAy);
-
-                    // 1D FFT to wfc_pAx
-                    result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_FORWARD); 
-                    scalarMult<<<grid,threads>>>(gpuWfc,
-                                                 renorm_factor_1d,gpuWfc);
-                    cMult<<<grid,threads>>>(gpuWfc, 
-                        (cufftDoubleComplex*) gpu1dpAy, gpuWfc);
-    
-                    // wfc_pAy
-                    result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_INVERSE); 
-                    scalarMult<<<grid,threads>>>(gpuWfc,
-                                                 renorm_factor_1d, gpuWfc);
-    
-                    // Tranpose back
-                    //naivetranspose2d2<<<grid,threads>>>(xDim, yDim, gpuWfc, gpuWfc);
-                    //naivetranspose2d2<<<grid,threads>>>(xDim, yDim, (cufftDoubleComplex*) gpu1dpAy,(cufftDoubleComplex*) gpu1dpAy);
-                    //transpose2d2<<<grid,threads>>>(
-                        //(cufftDoubleComplex*) gpu1dpAy, 
-                        //(cufftDoubleComplex*) gpu1dpAy);
                     break;
 */
 /*

@@ -255,7 +255,7 @@ __global__ void naivetranspose2d(int xDim, int yDim,
                             const double *indata, double *outdata);
 
 // Kernel to perform 2d transposition
-__global__ void transpose2d2(double2 *indata, double2 *outdata);
+__global__ void transpose2d2(const double2 *indata, double2 *outdata);
 
 __global__ void naivetranspose2d2(int xDim, int yDim, 
                             const double2 *indata, double2 *outdata);
