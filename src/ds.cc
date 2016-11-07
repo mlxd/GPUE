@@ -69,8 +69,8 @@ cufftHandle generate_plan_transpose2d(Grid &par){
 
     cufftResult result;
 
-    result = cufftPlanMany(&plan_transpose2d, rank, n, onembed, ostride[1], 
-                           odist[1], inembed, istride[1], idist[1], 
+    result = cufftPlanMany(&plan_transpose2d, rank, n, onembed, ostride[0], 
+                           odist[0], inembed, istride[0], idist[0], 
                            CUFFT_Z2Z, batch);
 
     if(result != CUFFT_SUCCESS){
