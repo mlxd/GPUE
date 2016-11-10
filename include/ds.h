@@ -154,7 +154,8 @@ class Cuda{
     private:
         cudaError_t err;
         cufftResult result;
-        cufftHandle plan_1d, plan_2d, plan_other2d;
+        //cufftHandle plan_1d, plan_2d, plan_other2d;
+        std::unordered_map<std::string, cufftHandle> plan_map;
         cudaStream_t streamA, streamB, streamC, streamD;
         dim3 grid;
         int threads;
@@ -254,5 +255,6 @@ typedef class Wave Wave;
 *-----------------------------------------------------------------------------*/
 // I didn't know where to place these functions for now, so the'll be here
 cufftHandle generate_plan_other2d(Grid &par);
+cufftHandle generate_plan_other3d(Grid &par, int axis);
 
 #endif

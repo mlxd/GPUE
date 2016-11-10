@@ -57,8 +57,8 @@ cufftHandle generate_plan_other2d(Grid &par){
 
     cufftResult result;
 
-    result = cufftPlanMany(&plan_fft1d, rank, n, onembed, ostride, 
-                           odist, inembed, istride, idist, 
+    result = cufftPlanMany(&plan_fft1d, rank, n, inembed, istride, 
+                           idist, onembed, ostride, odist, 
                            CUFFT_Z2Z, batch);
 
     if(result != CUFFT_SUCCESS){
@@ -70,7 +70,68 @@ cufftHandle generate_plan_other2d(Grid &par){
 
     return plan_fft1d;
 
+}
 
+// other plan for 3d case
+// Note that we have 3 cases to deal with here: x, y, and z
+cufftHandle generate_plan_other3d(Grid &par, int axis){
+    int xDim = par.ival("xDim");
+    int yDim = par.ival("yDim");
+    int zDim = par.ival("zDim");
+
+    cufftResult result;
+    cufftHandle plan_fft1d;
+
+    // Along first dimension (x)
+    if (axis == 0){
+        result = cufftPlan1d(&plan_fft1d, xDim, CUFFT_Z2Z, yDim*xDim);
+    }
+
+    // Along second dimension (y)
+    // This one is a bit complicated because of how the data is aligned
+    else if (axis == 1){
+        int batch = xDim*yDim;
+        int rank = 1;
+        int n[] = {xDim, yDim};
+        int idist = 1;
+        int odist = 1;
+        int inembed[] = {xDim, yDim};
+        int onembed[] = {xDim, yDim};
+        int istride = yDim;
+        int ostride = yDim;
+    
+        result = cufftPlanMany(&plan_fft1d, rank, n, inembed, istride, 
+                               idist, onembed, ostride, odist, 
+                               CUFFT_Z2Z, batch);
+        
+    }
+
+    // Along third dimension (z)
+    else if (axis == 2){
+
+        int batch = zDim;
+        int rank = 1;
+        int n[] = {xDim, yDim, zDim};
+        int idist = 1;
+        int odist = 1;
+        int inembed[] = {xDim, yDim, zDim};
+        int onembed[] = {xDim, yDim, zDim};
+        int istride = yDim;
+        int ostride = yDim;
+    
+        result = cufftPlanMany(&plan_fft1d, rank, n, inembed, istride, 
+                               idist, onembed, ostride, odist, 
+                               CUFFT_Z2Z, batch);
+    }
+
+    if(result != CUFFT_SUCCESS){
+        printf("Result:=%d\n",result);
+        printf("Error: Could not execute cufftPlan3d(%s ,%d ,%d ).\n", 
+               "plan_1d", (unsigned int)xDim, (unsigned int)yDim);
+        return -1;
+    }
+
+    return plan_fft1d;
 }
 
 
@@ -218,18 +279,7 @@ void Cuda::store(std::string id, cufftResult resultin){
 }
 
 void Cuda::store(std::string id, cufftHandle planin){
-    if (id == "plan_1d"){
-        plan_1d = planin;
-    }
-    else if (id == "plan_2d"){
-        plan_2d = planin;
-    }
-    else if (id == "plan_other2d"){
-        plan_other2d = planin;
-    }
-    else{
-        std::cout << "Error: plan not found!" << '\n';
-    }
+    plan_map[id] = planin;
 }
 
 void Cuda::store(std::string id, cudaStream_t streamin){
@@ -266,19 +316,13 @@ cufftResult Cuda::cufftResultval(std::string id){
 
 // Returns nothing if called incorrectly.
 cufftHandle Cuda::cufftHandleval(std::string id){
-    if (id == "plan_1d"){
-        return plan_1d;
+    auto it = plan_map.find(id);
+    if (it == plan_map.end()){
+        std::cout << "ERROR: could not find string " << id 
+                  << " in Cuda::plan_map." << '\n';
+        assert(it != plan_map.end());
     }
-    else if (id == "plan_2d"){
-        return plan_2d;
-    }
-    else if (id == "plan_other2d"){
-        return plan_other2d;
-    }
-    else{
-        std::cout << "Error: plan not found!" << '\n';
-        exit(1);
-    }
+    return it->second;
 }
 
 // Returns nothing if called incorrectly

@@ -94,9 +94,9 @@ int init_2d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     //std::cout << "xDim is: " << xDim << '\t' <<  "yDim is: " << yDim << '\n';
 
     cufftResult result = cupar.cufftResultval("result");
-    cufftHandle plan_1d = cupar.cufftHandleval("plan_1d");
-    cufftHandle plan_2d = cupar.cufftHandleval("plan_2d");
-    cufftHandle plan_other2d = cupar.cufftHandleval("plan_other2d");
+    cufftHandle plan_1d;
+    cufftHandle plan_2d;
+    cufftHandle plan_other2d;
 
     dim3 grid = cupar.dim3val("grid");
 
@@ -569,10 +569,9 @@ int init_3d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     //std::cout << "xDim is: " << xDim << '\t' <<  "yDim is: " << yDim << '\t'
     //          << "zDim is: " << zDim << '\n';
 
-    cufftResult result = cupar.cufftResultval("result");
-    cufftHandle plan_1d = cupar.cufftHandleval("plan_1d");
-    cufftHandle plan_2d = cupar.cufftHandleval("plan_2d");
-    cufftHandle plan_3d = cupar.cufftHandleval("plan_3d");
+    cufftResult result;
+    cufftHandle plan_1d;
+    cufftHandle plan_3d;
 
     dim3 grid = cupar.dim3val("grid");
 
@@ -906,11 +905,11 @@ int init_3d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     
     //std::cout << "xDim is: " << xDim << '\t' << "yDim is: " << yDim << '\n';
     //std::cout << "plan_2d is: " << plan_2d << '\n';
-    result = cufftPlan2d(&plan_2d, xDim, yDim, CUFFT_Z2Z);
+    result = cufftPlan3d(&plan_3d, xDim, yDim, zDim, CUFFT_Z2Z);
     //std::cout << "found result" << '\n';
     if(result != CUFFT_SUCCESS){
         printf("Result:=%d\n",result);
-        printf("Error: Could not execute cufftPlan2d(%s ,%d, %d).\n", "plan_2d",
+        printf("Error: Could not execute cufftPlan2d(%s ,%d, %d).\n", "plan_3d",
                 (unsigned int)xDim, (unsigned int)yDim);
         return -1;
     }
@@ -983,7 +982,6 @@ int init_3d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
 
     cupar.store("result", result);
     cupar.store("plan_1d", plan_1d);
-    cupar.store("plan_2d", plan_2d);
     cupar.store("plan_3d", plan_3d);
 
     cupar.store("grid", grid);
