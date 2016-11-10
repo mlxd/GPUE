@@ -88,7 +88,8 @@ void evolve_2d(Wave &wave, Op &opr,
     cufftResult result = cupar.cufftResultval("result");
     cufftHandle plan_1d = cupar.cufftHandleval("plan_1d");
     cufftHandle plan_2d = cupar.cufftHandleval("plan_2d");
-    cufftHandle plan_transpose2d = cupar.cufftHandleval("plan_transpose2d");
+    cufftHandle plan_other2d = cupar.cufftHandleval("plan_other2d");
+
     int threads = par.ival("threads");
     dim3 grid = cupar.dim3val("grid");
 
@@ -399,7 +400,8 @@ void evolve_2d(Wave &wave, Op &opr,
             }
             switch(i%2 | (gstate<<1)){
                 case 0: //Groundstate solver, even step
-                    // wfc_pAy
+
+                    // 1d forward / mult by Ay
                     result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_FORWARD); 
                     scalarMult<<<grid,threads>>>(gpuWfc,
                                                  renorm_factor_1d,gpuWfc);
@@ -409,134 +411,34 @@ void evolve_2d(Wave &wave, Op &opr,
                     scalarMult<<<grid,threads>>>(gpuWfc,
                                                  renorm_factor_1d, gpuWfc);
 
-                    // Transposing for pAx mult
-                    //transpose2d2<<<grid,threads>>>(gpuWfc, gpuWfc);
-                    //transpose2d<<<grid,threads>>>(gpu1dpAx, gpu1dpAx);
-                    //transpose2d2<<<grid,threads>>>(
-                        //(cufftDoubleComplex*) gpu1dpAx, 
-                        //(cufftDoubleComplex*) gpu1dpAx);
-    
+
                     // 1D FFT to wfc_pAx
-                    //result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_FORWARD);
-                    result = cufftExecZ2Z(plan_transpose2d,gpuWfc,gpuWfc,CUFFT_FORWARD);
+                    result = cufftExecZ2Z(plan_other2d,gpuWfc,gpuWfc,
+                                          CUFFT_FORWARD);
                     scalarMult<<<grid,threads>>>(gpuWfc,
                                                  renorm_factor_1d,gpuWfc);
                     cMult<<<grid,threads>>>(gpuWfc, 
                         (cufftDoubleComplex*) gpu1dpAx, gpuWfc);
     
-                    // wfc_pAx
-                    result = cufftExecZ2Z(plan_transpose2d,gpuWfc,gpuWfc,CUFFT_INVERSE);
-                    //result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_INVERSE);
+                    result = cufftExecZ2Z(plan_other2d,gpuWfc,gpuWfc,
+                                          CUFFT_INVERSE);
                     scalarMult<<<grid,threads>>>(gpuWfc,
                                                  renorm_factor_1d, gpuWfc);
-
-                    // Transposing back from pAx mult
-                    //transpose2d2<<<grid,threads>>>(gpuWfc, gpuWfc);
-                    //transpose2d<<<grid,threads>>>(gpu1dpAx, gpu1dpAx);
-                    //transpose2d2<<<grid,threads>>>(
-                        //(cufftDoubleComplex*) gpu1dpAx, 
-                        //(cufftDoubleComplex*) gpu1dpAx);
-    
                     break; 
-/*
-                    // wfc_pAy
-                    result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_FORWARD); 
-                    scalarMult<<<grid,threads>>>(gpuWfc,
-                                                 renorm_factor_1d,gpuWfc);
-                    cMult<<<grid,threads>>>(gpuWfc, 
-                        (cufftDoubleComplex*) gpu1dpAy, gpuWfc);
-                    result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_INVERSE);
-                    scalarMult<<<grid,threads>>>(gpuWfc,
-                                                 renorm_factor_1d, gpuWfc);
-    
-                    // 1D FFT to wfc_pAx
-                    result = cufftExecZ2Z(plan_transpose2d,gpuWfc,gpuWfc,
-                                          CUFFT_FORWARD); 
-                    //result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_FORWARD); 
-                    scalarMult<<<grid,threads>>>(gpuWfc,
-                                                 renorm_factor_1d,gpuWfc);
-                    cMult<<<grid,threads>>>(gpuWfc, 
-                        (cufftDoubleComplex*) gpu1dpAx, gpuWfc);
-    
-                    // wfc_pAx
-                    result = cufftExecZ2Z(plan_transpose2d,gpuWfc,gpuWfc,
-                                          CUFFT_INVERSE); 
-                    //result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_INVERSE); 
-                    scalarMult<<<grid,threads>>>(gpuWfc,
-                                                 renorm_factor_1d, gpuWfc);
-    
-                    break; 
-*/
-
-/*
-                    //std::cout << "GS solve even." << '\n';
-
-                    // wfc_pAy
-                    result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_FORWARD); 
-                    scalarMult<<<grid,threads>>>(gpuWfc,
-                                                 renorm_factor_1d,gpuWfc);
-                    //angularOp<<<grid,threads>>>(omega_0, Dt, gpuWfc, 
-                    //                            (double*) gpu1dpAy, gpuWfc);
-                    cMult<<<grid,threads>>>(gpuWfc, 
-                        (cufftDoubleComplex*) gpu1dpAy, gpuWfc);
-                    result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_INVERSE);
-                    scalarMult<<<grid,threads>>>(gpuWfc,
-                                                 renorm_factor_1d, gpuWfc);
-    
-                    // 2D forward
-                    result = cufftExecZ2Z(plan_2d,gpuWfc,gpuWfc,CUFFT_FORWARD); 
-                    scalarMult<<<grid,threads>>>(gpuWfc,
-                                                 renorm_factor_2d, gpuWfc);
-    
-                    // 1D inverse to wfc_pAx
-                    result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_INVERSE); 
-                    scalarMult<<<grid,threads>>>(gpuWfc,
-                                                 renorm_factor_1d,gpuWfc);
-                    //angularOp<<<grid,threads>>>(omega_0, Dt, gpuWfc, 
-                    //                            (double*) gpu1dpAx, gpuWfc);
-                    cMult<<<grid,threads>>>(gpuWfc, 
-                        (cufftDoubleComplex*) gpu1dpAx, gpuWfc);
-    
-                    // wfc_pAy
-                    result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_FORWARD); 
-                    scalarMult<<<grid,threads>>>(gpuWfc,
-                                                 renorm_factor_1d, gpuWfc);
-    
-                    // 2D Inverse
-                    result = cufftExecZ2Z(plan_2d,gpuWfc,gpuWfc,CUFFT_INVERSE);
-                    scalarMult<<<grid,threads>>>(gpuWfc,
-                                                 renorm_factor_2d, gpuWfc);
-                    break;
-*/
                 
                 case 1:    //Groundstate solver, odd step
-                    // Transposing for pAx mult
-                    //transpose2d2<<<grid,threads>>>(gpuWfc, gpuWfc);
-                    //transpose2d<<<grid,threads>>>(gpu1dpAx, gpu1dpAx);
-                    //transpose2d2<<<grid,threads>>>(
-                        //(cufftDoubleComplex*) gpu1dpAx, 
-                        //(cufftDoubleComplex*) gpu1dpAx);
-    
                     // 1D FFT to wfc_pAx
-                    //result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_FORWARD);
-                    result = cufftExecZ2Z(plan_transpose2d,gpuWfc,gpuWfc,CUFFT_FORWARD);
+                    result = cufftExecZ2Z(plan_other2d,gpuWfc,gpuWfc,
+                                          CUFFT_FORWARD);
                     scalarMult<<<grid,threads>>>(gpuWfc,
                                                  renorm_factor_1d,gpuWfc);
                     cMult<<<grid,threads>>>(gpuWfc, 
                         (cufftDoubleComplex*) gpu1dpAx, gpuWfc);
     
-                    // wfc_pAx
-                    //result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_INVERSE);
-                    result = cufftExecZ2Z(plan_transpose2d,gpuWfc,gpuWfc,CUFFT_INVERSE);
+                    result = cufftExecZ2Z(plan_other2d,gpuWfc,gpuWfc,
+                                          CUFFT_INVERSE);
                     scalarMult<<<grid,threads>>>(gpuWfc,
                                                  renorm_factor_1d, gpuWfc);
-
-                    // Transposing back from pAx mult
-                    //transpose2d2<<<grid,threads>>>(gpuWfc, gpuWfc);
-                    //transpose2d<<<grid,threads>>>(gpu1dpAx, gpu1dpAx);
-                    //transpose2d2<<<grid,threads>>>(
-                        //(cufftDoubleComplex*) gpu1dpAx, 
-                        //(cufftDoubleComplex*) gpu1dpAx);
 
                     // wfc_pAy
                     result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_FORWARD); 
@@ -547,77 +449,7 @@ void evolve_2d(Wave &wave, Op &opr,
                     result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_INVERSE);
                     scalarMult<<<grid,threads>>>(gpuWfc,
                                                  renorm_factor_1d, gpuWfc);
-
                     break; 
-/*
-                    // 1D FFT to wfc_pAx
-                    result = cufftExecZ2Z(plan_transpose2d,gpuWfc,gpuWfc,
-                                          CUFFT_FORWARD); 
-                    //result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_FORWARD);
-                    scalarMult<<<grid,threads>>>(gpuWfc,
-                                                 renorm_factor_1d,gpuWfc);
-                    cMult<<<grid,threads>>>(gpuWfc, 
-                        (cufftDoubleComplex*) gpu1dpAx, gpuWfc);
-    
-                    // wfc_pAx
-                    result = cufftExecZ2Z(plan_transpose2d,gpuWfc,gpuWfc,
-                                          CUFFT_INVERSE); 
-                    //result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_INVERSE);
-                    scalarMult<<<grid,threads>>>(gpuWfc,
-                                                 renorm_factor_1d, gpuWfc);
-
-                    // wfc_pAy
-                    result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_FORWARD); 
-                    scalarMult<<<grid,threads>>>(gpuWfc,
-                                                 renorm_factor_1d,gpuWfc);
-                    cMult<<<grid,threads>>>(gpuWfc, 
-                        (cufftDoubleComplex*) gpu1dpAy, gpuWfc);
-                    result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_INVERSE);
-                    scalarMult<<<grid,threads>>>(gpuWfc,
-                                                 renorm_factor_1d, gpuWfc);
-    
-                    break;
-*/
-/*
-                    //std::cout << "GS solver odd." << '\n';
-
-                    // 2D forward
-                    result = cufftExecZ2Z(plan_2d,gpuWfc,gpuWfc,CUFFT_FORWARD); 
-                    scalarMult<<<grid,threads>>>(gpuWfc,
-                                                 renorm_factor_2d,gpuWfc);
-
-                    // 1D inverse to wfc_pAx
-                    result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_INVERSE);
-                    scalarMult<<<grid,threads>>>(gpuWfc,
-                                                 renorm_factor_1d,gpuWfc);
-                    //angularOp<<<grid,threads>>>(omega_0, Dt, gpuWfc, 
-                    //                            (double*) gpu1dpAx, gpuWfc);
-                    cMult<<<grid,threads>>>(gpuWfc, 
-                        (cufftDoubleComplex*) gpu1dpAx, gpuWfc);
-
-                    // wfc_pAy
-                    result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_FORWARD); 
-                    scalarMult<<<grid,threads>>>(gpuWfc,
-                                                 renorm_factor_1d,gpuWfc);
-
-                    // 2D inverse
-                    result = cufftExecZ2Z(plan_2d,gpuWfc,gpuWfc,CUFFT_INVERSE); 
-                    scalarMult<<<grid,threads>>>(gpuWfc,
-                                                 renorm_factor_2d,gpuWfc);
-                    
-                    // wfc_pAy
-                    result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_FORWARD); 
-                    scalarMult<<<grid,threads>>>(gpuWfc,
-                                                 renorm_factor_1d,gpuWfc);
-                    //angularOp<<<grid,threads>>>(omega_0, Dt, gpuWfc, 
-                    //                            (double*) gpu1dpAy, gpuWfc);
-                    cMult<<<grid,threads>>>(gpuWfc, 
-                        (cufftDoubleComplex*) gpu1dpAy, gpuWfc);
-                    result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_INVERSE);
-                    scalarMult<<<grid,threads>>>(gpuWfc,
-                                                 renorm_factor_1d,gpuWfc);
-                    break;
-*/
                 
                 case 2: //Real time evolution, even step
                     //std::cout << "RT solver even." << '\n';
@@ -632,54 +464,39 @@ void evolve_2d(Wave &wave, Op &opr,
                     scalarMult<<<grid,threads>>>(gpuWfc,
                                                  renorm_factor_1d,gpuWfc);
                 
-                    //2D forward
-                    result = cufftExecZ2Z(plan_2d,gpuWfc,gpuWfc,CUFFT_FORWARD);
-                    scalarMult<<<grid,threads>>>(gpuWfc,
-                                                 renorm_factor_2d,gpuWfc);
-
-                    // 1D inverses to wfc_pAx
-                    result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_INVERSE);
+                    // 1D to wfc_pAx
+                    result = cufftExecZ2Z(plan_other2d,gpuWfc,gpuWfc,
+                                          CUFFT_FORWARD);
                     scalarMult<<<grid,threads>>>(gpuWfc,
                                                  renorm_factor_1d,gpuWfc);
                     cMult<<<grid,threads>>>(gpuWfc, 
                         (cufftDoubleComplex*) gpu1dpAx, gpuWfc);
 
                     // wfc_pAy
-                    result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_FORWARD); 
+                    result = cufftExecZ2Z(plan_other2d,gpuWfc,gpuWfc,
+                                          CUFFT_INVERSE); 
                     scalarMult<<<grid,threads>>>(gpuWfc,
                                                  renorm_factor_1d,gpuWfc);
 
-                    // 2D Inverse
-                    result = cufftExecZ2Z(plan_2d,gpuWfc,gpuWfc,CUFFT_INVERSE);
-                    scalarMult<<<grid,threads>>>(gpuWfc,
-                                                 renorm_factor_2d,gpuWfc);
                     break;
                 
                 case 3:    //Real time evolution, odd step
                     //std::cout << "RT solver odd." << '\n';
 
-                    // 2D forward
-                    result = cufftExecZ2Z(plan_2d,gpuWfc,gpuWfc,CUFFT_FORWARD); 
-                    scalarMult<<<grid,threads>>>(gpuWfc,
-                                                 renorm_factor_2d,gpuWfc);
-
                     // 1D inverse to wfc_pAx
-                    result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_INVERSE); 
+                    result = cufftExecZ2Z(plan_other2d,gpuWfc,gpuWfc,
+                                          CUFFT_FORWARD); 
                     scalarMult<<<grid,threads>>>(gpuWfc,
                                                  renorm_factor_1d,gpuWfc);
                     cMult<<<grid,threads>>>(gpuWfc, 
                         (cufftDoubleComplex*) gpu1dpAx, gpuWfc);
 
                     // wfc_pAy
-                    result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_FORWARD);
+                    result = cufftExecZ2Z(plan_other2d,gpuWfc,gpuWfc,
+                                          CUFFT_INVERSE);
                     scalarMult<<<grid,threads>>>(gpuWfc,
                                                  renorm_factor_1d,gpuWfc);
 
-                    // 2D inverse
-                    result = cufftExecZ2Z(plan_2d,gpuWfc,gpuWfc,CUFFT_INVERSE); 
-                    scalarMult<<<grid,threads>>>(gpuWfc,
-                                                 renorm_factor_2d,gpuWfc);
-                    
                     // wfc_pAy
                     result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_FORWARD); 
                     scalarMult<<<grid,threads>>>(gpuWfc,

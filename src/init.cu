@@ -96,7 +96,7 @@ int init_2d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     cufftResult result = cupar.cufftResultval("result");
     cufftHandle plan_1d = cupar.cufftHandleval("plan_1d");
     cufftHandle plan_2d = cupar.cufftHandleval("plan_2d");
-    cufftHandle plan_transpose2d = cupar.cufftHandleval("plan_transpose2d");
+    cufftHandle plan_other2d = cupar.cufftHandleval("plan_other2d");
 
     dim3 grid = cupar.dim3val("grid");
 
@@ -420,7 +420,7 @@ int init_2d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
         return -1;
     }
 
-    plan_transpose2d = generate_plan_transpose2d(par); 
+    plan_other2d = generate_plan_other2d(par); 
 
     result = cufftPlan1d(&plan_1d, xDim, CUFFT_Z2Z, yDim);
     if(result != CUFFT_SUCCESS){
@@ -491,7 +491,7 @@ int init_2d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     cupar.store("result", result);
     cupar.store("plan_1d", plan_1d);
     cupar.store("plan_2d", plan_2d);
-    cupar.store("plan_tranpose2d", plan_transpose2d);
+    cupar.store("plan_other2d", plan_other2d);
 
     cupar.store("grid", grid);
 

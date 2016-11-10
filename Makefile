@@ -1,4 +1,5 @@
 CUDA_HOME = /opt/cuda/
+#CUTT_DIR = cutt/lib
 GPU_ARCH	= sm_30
 OS:=	$(shell uname)
 ifeq ($(OS),Darwin)
@@ -11,7 +12,7 @@ CUDA_LIB	= $(CUDA_HOME)/lib64
 CUDA_HEADER	= $(CUDA_HOME)/include
 CC		= $(CUDA_HOME)/bin/nvcc --ptxas-options=-v --compiler-options -Wall #-save-temps
 CHOSTFLAGS	= #-fopenmp
-CFLAGS		= -g -std=c++11 -Xcompiler '-std=c++11' -Xcompiler '-fopenmp' #-malign-double -lboost_math
+CFLAGS		= -g -std=c++11 -Xcompiler '-std=c++11' -Xcompiler '-fopenmp' #-L$(CUTT_DIR) -l:libcutt.a
 endif
 
 CLINKER		= $(CC) 
@@ -52,7 +53,7 @@ unit_test.o: ./src/unit_test.cu ./include/unit_test.h
 	$(CC) -c ./src/unit_test.cu -o $@ $(INCFLAGS) $(CFLAGS) $(LDFLAGS) $(CHOSTFLAGS)
 
 evolution.o: ./src/evolution.cu ./include/evolution.h ./include/split_op.h ./include/constants.h ./include/kernels.h ./include/fileIO.h 
-	$(CC) -c ./src/evolution.cu -o $@ $(INCFLAGS) $(CFLAGS) $(LDFLAGS) -Xcompiler "-fopenmp" -arch=$(GPU_ARCH)
+	$(CC) -c ./src/evolution.cu -o $@ $(INCFLAGS) $(CFLAGS) $(LDFLAGS) -Xcompiler "-fopenmp" -arch=$(GPU_ARCH) 
 
 ds.o: ./src/ds.cc ./include/ds.h ./include/operators.h
 	$(CC) -c ./src/ds.cc -o $@ $(INCFLAGS) $(CFLAGS) $(LDFLAGS) $(CHOSTFLAGS)

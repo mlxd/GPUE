@@ -154,7 +154,7 @@ class Cuda{
     private:
         cudaError_t err;
         cufftResult result;
-        cufftHandle plan_1d, plan_2d, plan_transpose2d;
+        cufftHandle plan_1d, plan_2d, plan_other2d;
         cudaStream_t streamA, streamB, streamC, streamD;
         dim3 grid;
         int threads;
@@ -253,6 +253,6 @@ typedef class Wave Wave;
 * AUX
 *-----------------------------------------------------------------------------*/
 // I didn't know where to place these functions for now, so the'll be here
-cufftHandle generate_plan_transpose2d(Grid &par);
+cufftHandle generate_plan_other2d(Grid &par);
 
 #endif

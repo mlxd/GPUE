@@ -38,50 +38,41 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 * AUX
 *-----------------------------------------------------------------------------*/
 // I didn't know where to place these functions for now, so the'll be here
-cufftHandle generate_plan_transpose2d(Grid &par){
-    cufftHandle plan_transpose2d;
-
+cufftHandle generate_plan_other2d(Grid &par){
     // We need a number of propertied for this fft / transform
     int xDim = par.ival("xDim");
     int yDim = par.ival("yDim");
 
-/*
-    int batch = xDim*yDim;
-    int rank = 2;
-    int n[2] = {xDim, yDim};
-    int idist = xDim * yDim;
-    int odist = xDim * yDim;
-    int inembed[] = {xDim, yDim};
-    int onembed[] = {xDim, yDim};
-    int istride = 1;
-    int ostride = 1;
-*/
+    cufftHandle plan_fft1d;
 
     int batch = yDim;
     int rank = 1;
     int n[] = {xDim, yDim};
-    int idist[] = {yDim, 1};
-    int odist[] = {yDim, 1};
-    int inembed[] = {xDim*yDim};
-    int onembed[] = {xDim*yDim};
-    int istride[] = {1, yDim};
-    int ostride[] = {1, yDim};
+    int idist = 1;
+    int odist = 1;
+    int inembed[] = {xDim,yDim};
+    int onembed[] = {xDim,yDim};
+    int istride = yDim;
+    int ostride = yDim;
 
     cufftResult result;
 
-    result = cufftPlanMany(&plan_transpose2d, rank, n, onembed, ostride[0], 
-                           odist[0], inembed, istride[0], idist[0], 
+    result = cufftPlanMany(&plan_fft1d, rank, n, onembed, ostride, 
+                           odist, inembed, istride, idist, 
                            CUFFT_Z2Z, batch);
 
     if(result != CUFFT_SUCCESS){
         printf("Result:=%d\n",result);
-        printf("Error: Could not execute cufftPlantranspose(%s ,%d ,%d ).\n", 
+        printf("Error: Could not execute cufftPlanfft1d(%s ,%d ,%d ).\n", 
                "plan_1d", (unsigned int)xDim, (unsigned int)yDim);
         return -1;
     }
-    
-    return plan_transpose2d;
+
+    return plan_fft1d;
+
+
 }
+
 
 /*----------------------------------------------------------------------------//
 * GRID
@@ -233,8 +224,8 @@ void Cuda::store(std::string id, cufftHandle planin){
     else if (id == "plan_2d"){
         plan_2d = planin;
     }
-    else if (id == "plan_transpose2d"){
-        plan_transpose2d = planin;
+    else if (id == "plan_other2d"){
+        plan_other2d = planin;
     }
     else{
         std::cout << "Error: plan not found!" << '\n';
@@ -281,8 +272,8 @@ cufftHandle Cuda::cufftHandleval(std::string id){
     else if (id == "plan_2d"){
         return plan_2d;
     }
-    else if (id == "plan_transpose2d"){
-        return plan_transpose2d;
+    else if (id == "plan_other2d"){
+        return plan_other2d;
     }
     else{
         std::cout << "Error: plan not found!" << '\n';
