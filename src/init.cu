@@ -425,7 +425,7 @@ int init_2d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     result = cufftPlan1d(&plan_1d, xDim, CUFFT_Z2Z, yDim);
     if(result != CUFFT_SUCCESS){
         printf("Result:=%d\n",result);
-        printf("Error: Could not execute cufftPlan3d(%s ,%d ,%d ).\n", 
+        printf("Error: Could not execute cufftPlan1d(%s ,%d ,%d ).\n", 
                "plan_1d", (unsigned int)xDim, (unsigned int)yDim);
         return -1;
     }
@@ -768,6 +768,7 @@ int init_3d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     cudaMalloc((void**) &V_gpu, sizeof(cufftDoubleComplex) * gSize);
     cudaMalloc((void**) &pAy_gpu, sizeof(cufftDoubleComplex) * gSize);
     cudaMalloc((void**) &pAx_gpu, sizeof(cufftDoubleComplex) * gSize);
+    cudaMalloc((void**) &pAz_gpu, sizeof(cufftDoubleComplex) * gSize);
     cudaMalloc((void**) &par_sum, sizeof(cufftDoubleComplex) * (gSize/threads));
     //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%//
 
@@ -790,21 +791,14 @@ int init_3d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
                 index = i * yDim * zDim + j * zDim + k;
                 Phi[index] = fmod(l*atan2(y[j], x[i]),2*PI);
                 
-                if (par.bval("unit_test")){
-                    wfc[index].x =  (1/sqrt(2))*pow(1/PI,0.5) 
-                        * exp( -0.5*(x[i]*x[i] + y[j]*y[j] + z[k]*z[k]))
-                        * (1+2*x[i]/sqrt(2));
-                    wfc[index].y = 0;
-                }
-                else{
                     wfc[index].x = exp(-( pow((x[i])/(Rxy*a0x),2) + 
-                                                 pow((y[j])/(Rxy*a0y),2) ) ) *
+                                          pow((y[j])/(Rxy*a0y),2) +
+                                          pow((z[k])/(Rxy*a0z),2)) ) *
                                           cos(Phi[index]);
                     wfc[index].y = -exp(-( pow((x[i])/(Rxy*a0x),2) + 
                                            pow((y[j])/(Rxy*a0y),2) +
                                            pow((z[k])/(Rxy*a0z),2)) ) *
                                               sin(Phi[index]);
-                }
                     
                 V[index] = opr.V_fn(par.Vfn)(par, opr, i, j, k);
                 K[index] = opr.K_fn(par.Kfn)(par, opr, i, j, k);
@@ -909,16 +903,21 @@ int init_3d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     //std::cout << "found result" << '\n';
     if(result != CUFFT_SUCCESS){
         printf("Result:=%d\n",result);
-        printf("Error: Could not execute cufftPlan2d(%s ,%d, %d).\n", "plan_3d",
-                (unsigned int)xDim, (unsigned int)yDim);
+        printf("Error: Could not execute cufftPlan3d(%s ,%d, %d, %d).\n", 
+                "plan_3d",
+                (unsigned int)xDim, (unsigned int)yDim, (unsigned int) zDim);
         return -1;
     }
+
+    cufftHandle plan_dim2 = generate_plan_other3d(par, 2);
+    cufftHandle plan_dim3 = generate_plan_other3d(par, 3);
 
     result = cufftPlan1d(&plan_1d, xDim, CUFFT_Z2Z, yDim);
     if(result != CUFFT_SUCCESS){
         printf("Result:=%d\n",result);
-        printf("Error: Could not execute cufftPlan3d(%s ,%d ,%d ).\n", 
-               "plan_1d", (unsigned int)xDim, (unsigned int)yDim);
+        printf("Error: Could not execute cufftPlan1d(%s ,%d ,%d , %d).\n", 
+               "plan_1d", (unsigned int)xDim, (unsigned int)yDim,
+                          (unsigned int)zDim);
         return -1;
     }
     
@@ -945,8 +944,10 @@ int init_3d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     par.store("winding", l);
     par.store("x", x);
     par.store("y", y);
+    par.store("z", z);
     par.store("xp", xp);
     par.store("yp", yp);
+    par.store("zp", zp);
     wave.store("Energy", Energy);
     wave.store("r", r);
     opr.store("V", V);
@@ -956,10 +957,9 @@ int init_3d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     opr.store("K", K);
     opr.store("pAy", pAy);
     opr.store("pAx", pAx);
+    opr.store("pAz", pAz);
     opr.store("Energy_gpu", Energy_gpu);
     par.store("atoms", N);
-    par.store("xDim", xDim);
-    par.store("yDim", yDim);
     par.store("threads", threads);
     wave.store("wfc", wfc);
     opr.store("V_gpu", V_gpu);
@@ -969,20 +969,25 @@ int init_3d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     opr.store("GV", GV);
     opr.store("GpAx", GpAx);
     opr.store("GpAy", GpAy);
+    opr.store("GpAz", GpAz);
     opr.store("EV", EV);
     opr.store("EK", EK);
     opr.store("EpAy", EpAy);
     opr.store("EpAx", EpAx);
+    opr.store("EpAz", EpAz);
     opr.store("EappliedField", EappliedField);
     wave.store("wfc_gpu", wfc_gpu);
     opr.store("K_gpu", K_gpu);
     opr.store("pAy_gpu", pAy_gpu);
     opr.store("pAx_gpu", pAx_gpu);
+    opr.store("pAz_gpu", pAz_gpu);
     wave.store("par_sum", par_sum);
 
     cupar.store("result", result);
     cupar.store("plan_1d", plan_1d);
     cupar.store("plan_3d", plan_3d);
+    cupar.store("plan_dim2", plan_dim2);
+    cupar.store("plan_dim3", plan_dim3);
 
     cupar.store("grid", grid);
 
@@ -999,6 +1004,7 @@ int main(int argc, char **argv){
     Cuda cupar;
 
     int device = par.ival("device");
+    int dimnum = par.ival("dimnum");
     cudaSetDevice(device);
 
     std::string buffer;
@@ -1012,11 +1018,19 @@ int main(int argc, char **argv){
     */
     //************************************************************//
 
-    init_2d(opr, cupar, par, wave);
+    // Initialization split between 2d and 3d
+    if (dimnum == 2){
+        init_2d(opr, cupar, par, wave);
+    }
+    else if (dimnum == 3){
+        init_3d(opr, cupar, par, wave);
+    }
 
     //std::cout << "initialized" << '\n';
 
     // Re-establishing variables from parsed Grid class
+    // Note that 3d variables are set to nullptr's unless needed 
+    //      This might need to be fixed later
     std::string data_dir = par.sval("data_dir");
     double dx = par.dval("dx");
     double dy = par.dval("dy");
@@ -1027,6 +1041,7 @@ int main(int argc, char **argv){
     double *pAx = opr.dsval("pAx");
     double *pAy_gpu = opr.dsval("pAy_gpu");
     double *pAx_gpu = opr.dsval("pAx_gpu");
+    double *pAz_gpu = nullptr;
     int xDim = par.ival("xDim");
     int yDim = par.ival("yDim");
     bool read_wfc = par.bval("read_wfc");
@@ -1038,14 +1053,29 @@ int main(int argc, char **argv){
     cufftDoubleComplex *GV = opr.cufftDoubleComplexval("GV");
     cufftDoubleComplex *GpAx = opr.cufftDoubleComplexval("GpAx");
     cufftDoubleComplex *GpAy = opr.cufftDoubleComplexval("GpAy");
+    cufftDoubleComplex *GpAz = nullptr;
     cufftDoubleComplex *EV = opr.cufftDoubleComplexval("EV");
     cufftDoubleComplex *EK = opr.cufftDoubleComplexval("EK");
     cufftDoubleComplex *EpAy = opr.cufftDoubleComplexval("EpAy");
     cufftDoubleComplex *EpAx = opr.cufftDoubleComplexval("EpAx");
+    cufftDoubleComplex *EpAz = nullptr;
     cufftDoubleComplex *wfc_gpu = wave.cufftDoubleComplexval("wfc_gpu");
     cufftDoubleComplex *K_gpu = opr.cufftDoubleComplexval("K_gpu");
     cufftDoubleComplex *par_sum = wave.cufftDoubleComplexval("par_sum");
     cudaError_t err = cupar.cudaError_tval("err");
+    int gsize = xDim * yDim;
+
+    // Special variables for the 3d case
+    if (dimnum == 3){
+        double dz = par.dval("dz");
+        double *z = par.dsval("z");
+        double *pAz = opr.dsval("pAz");
+        double *pAz_gpu = opr.dsval("pAz_gpu");
+        int zDim = par.ival("zDim");
+        cufftDoubleComplex *GpAz = opr.cufftDoubleComplexval("GpAz");
+        cufftDoubleComplex *EpAz = opr.cufftDoubleComplexval("EpAz");
+        gsize = xDim*yDim*zDim;
+    }
 
     std::cout << "variables re-established" << '\n';
     //std::cout << read_wfc << '\n';
@@ -1056,6 +1086,8 @@ int main(int argc, char **argv){
     */
     //************************************************************//
     FileIO::writeOutParam(buffer, par, data_dir + "Params.dat");
+
+    // Note: This only works in 2d case
     if(read_wfc){
         printf("Loading wavefunction...");
         wfc=FileIO::readIn("wfc_load","wfci_load",xDim, yDim);
@@ -1065,33 +1097,33 @@ int main(int argc, char **argv){
     //std::cout << "gsteps: " << gsteps << '\n';
     
     if(gsteps > 0){
-        err=cudaMemcpy(K_gpu, GK, sizeof(cufftDoubleComplex)*xDim*yDim,
+        err=cudaMemcpy(K_gpu, GK, sizeof(cufftDoubleComplex)*gsize,
                        cudaMemcpyHostToDevice);
         if(err!=cudaSuccess){
             std::cout << "ERROR: Could not copy K_gpu to device" << '\n';
             exit(1);
         }
-        err=cudaMemcpy(V_gpu, GV, sizeof(cufftDoubleComplex)*xDim*yDim,
+        err=cudaMemcpy(V_gpu, GV, sizeof(cufftDoubleComplex)*gsize,
                        cudaMemcpyHostToDevice);
         if(err!=cudaSuccess){
             std::cout << "ERROR: Could not copy V_gpu to device" << '\n';
             exit(1);
         }
-        FileIO::writeOut(buffer, data_dir + "GK1",GK,xDim*yDim,0);
-        FileIO::writeOut(buffer, data_dir + "GV1",GV,xDim*yDim,0);
-        err=cudaMemcpy(pAy_gpu, GpAy, sizeof(cufftDoubleComplex)*xDim*yDim,
+        FileIO::writeOut(buffer, data_dir + "GK1",GK,gsize,0);
+        FileIO::writeOut(buffer, data_dir + "GV1",GV,gsize,0);
+        err=cudaMemcpy(pAy_gpu, GpAy, sizeof(cufftDoubleComplex)*gsize,
                        cudaMemcpyHostToDevice);
         if(err!=cudaSuccess){
             std::cout << "ERROR: Could not copy pAy_gpu to device" << '\n';
             exit(1);
         }
-        err=cudaMemcpy(pAx_gpu, GpAx, sizeof(cufftDoubleComplex)*xDim*yDim,
+        err=cudaMemcpy(pAx_gpu, GpAx, sizeof(cufftDoubleComplex)*gsize,
                        cudaMemcpyHostToDevice);
         if(err!=cudaSuccess){
             std::cout << "ERROR: Could not copy pAx_gpu to device" << '\n';
             exit(1);
         }
-        err=cudaMemcpy(wfc_gpu, wfc, sizeof(cufftDoubleComplex)*xDim*yDim,
+        err=cudaMemcpy(wfc_gpu, wfc, sizeof(cufftDoubleComplex)*gsize,
                        cudaMemcpyHostToDevice);
         if(err!=cudaSuccess){
             std::cout << "ERROR: Could not copy wfc_gpu to device" << '\n';
@@ -1107,12 +1139,24 @@ int main(int argc, char **argv){
         wave.store("wfc_gpu", wfc_gpu);
         opr.store("pAy_gpu", pAy_gpu);
         opr.store("pAx_gpu", pAx_gpu);
+
+        // Special cases for 3d
+        if (dimnum == 3){
+
+            err=cudaMemcpy(pAz_gpu, GpAz, sizeof(cufftDoubleComplex)*gsize,
+                           cudaMemcpyHostToDevice);
+            opr.store("pAz_gpu", pAz_gpu);
         
-        evolve_2d(wave, opr, par_sum,
-               gsteps, cupar, 0, par, buffer);
+            evolve_3d(wave, opr, par_sum,
+                      gsteps, cupar, 0, par, buffer);
+        }
+        if (dimnum == 2){
+            evolve_2d(wave, opr, par_sum,
+                      gsteps, cupar, 0, par, buffer);
+        }
         wfc = wave.cufftDoubleComplexval("wfc");
         wfc_gpu = wave.cufftDoubleComplexval("wfc_gpu");
-        cudaMemcpy(wfc, wfc_gpu, sizeof(cufftDoubleComplex)*xDim*yDim, 
+        cudaMemcpy(wfc, wfc_gpu, sizeof(cufftDoubleComplex)*gsize, 
                    cudaMemcpyDeviceToHost);
     }
 
@@ -1134,31 +1178,31 @@ int main(int argc, char **argv){
     */
     //************************************************************//
     if(esteps > 0){
-        err=cudaMemcpy(pAy_gpu, EpAy, sizeof(cufftDoubleComplex)*xDim*yDim,
+        err=cudaMemcpy(pAy_gpu, EpAy, sizeof(cufftDoubleComplex)*gsize,
                        cudaMemcpyHostToDevice);
         if(err!=cudaSuccess){
             std::cout << "ERROR: Could not copy pAy_gpu to device" << '\n';
             exit(1);
         }
-        err=cudaMemcpy(pAx_gpu, EpAx, sizeof(cufftDoubleComplex)*xDim*yDim,
+        err=cudaMemcpy(pAx_gpu, EpAx, sizeof(cufftDoubleComplex)*gsize,
                        cudaMemcpyHostToDevice);
         if(err!=cudaSuccess){
             std::cout << "ERROR: Could not copy pAx_gpu to device" << '\n';
             exit(1);
         }
-        err=cudaMemcpy(K_gpu, EK, sizeof(cufftDoubleComplex)*xDim*yDim,
+        err=cudaMemcpy(K_gpu, EK, sizeof(cufftDoubleComplex)*gsize,
                        cudaMemcpyHostToDevice);
         if(err!=cudaSuccess){
             std::cout << "ERROR: Could not copy K_gpu to device" << '\n';
             exit(1);
         }
-        err=cudaMemcpy(V_gpu, EV, sizeof(cufftDoubleComplex)*xDim*yDim,
+        err=cudaMemcpy(V_gpu, EV, sizeof(cufftDoubleComplex)*gsize,
                        cudaMemcpyHostToDevice);
         if(err!=cudaSuccess){
             std::cout << "ERROR: Could not copy V_gpu to device" << '\n';
             exit(1);
         }
-        err=cudaMemcpy(wfc_gpu, wfc, sizeof(cufftDoubleComplex)*xDim*yDim,
+        err=cudaMemcpy(wfc_gpu, wfc, sizeof(cufftDoubleComplex)*gsize,
                        cudaMemcpyHostToDevice);
         if(err!=cudaSuccess){
             std::cout << "ERROR: Could not copy wfc_gpu to device" << '\n';
@@ -1176,9 +1220,20 @@ int main(int argc, char **argv){
         opr.store("pAy_gpu", pAy_gpu);
         opr.store("pAx_gpu", pAx_gpu);
 
-        FileIO::writeOutDouble(buffer, data_dir + "V_opt",V_opt,xDim*yDim,0);
-        evolve_2d(wave, opr, par_sum,
-               esteps, cupar, 1, par, buffer);
+        FileIO::writeOutDouble(buffer, data_dir + "V_opt",V_opt,gsize,0);
+
+        // Special variables / instructions for 3d case
+        if (dimnum == 3){
+            err=cudaMemcpy(pAz_gpu, EpAz, sizeof(cufftDoubleComplex)*gsize,
+                           cudaMemcpyHostToDevice);
+            opr.store("pAz_gpu", pAz_gpu);
+            evolve_3d(wave, opr, par_sum,
+                      esteps, cupar, 1, par, buffer);
+        }
+        if (dimnum == 2){
+            evolve_2d(wave, opr, par_sum,
+                      esteps, cupar, 1, par, buffer);
+        }
     
         wfc = wave.cufftDoubleComplexval("wfc");
         wfc_gpu = wave.cufftDoubleComplexval("wfc_gpu");

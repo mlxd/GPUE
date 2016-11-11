@@ -41,6 +41,7 @@ Options:
 
 -A              Set gauge field mode [beta]
 -a              Set flag to graph [deprecated]
+-c              Set coords (1, 2, 3 dimensions)
 -D data         Set data directory / where to store data (here in data/)
 -d 0            Set device for GPU computing
 -e 1000         Set esteps, number of real-time evolution steps

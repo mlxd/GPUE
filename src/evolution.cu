@@ -622,6 +622,8 @@ void evolve_3d(Wave &wave, Op &opr,
     cufftResult result = cupar.cufftResultval("result");
     cufftHandle plan_1d = cupar.cufftHandleval("plan_1d");
     cufftHandle plan_3d = cupar.cufftHandleval("plan_3d");
+    cufftHandle plan_dim2 = cupar.cufftHandleval("plan_dim2");
+    cufftHandle plan_dim3 = cupar.cufftHandleval("plan_dim3");
     int threads = par.ival("threads");
     dim3 grid = cupar.dim3val("grid");
 
@@ -708,7 +710,7 @@ void evolve_3d(Wave &wave, Op &opr,
             //std::cout << "writing" << '\n';
             if (write_it) {
                 FileIO::writeOut(buffer, data_dir + fileName, 
-                                 wfc, xDim * yDim, i);
+                                 wfc, xDim*yDim*zDim, i);
             }
             //std::cout << "written" << '\n';
             //printf("Energy[t@%d]=%E\n",i,energy_angmom(V_gpu, 
@@ -763,20 +765,105 @@ void evolve_3d(Wave &wave, Op &opr,
                 scalarPow<<<grid,threads>>>((cufftDoubleComplex*) gpu1dpAx, 
                                             omega_0/(omega * omegaX),
                                             (cufftDoubleComplex*) gpu1dpAx);
+                scalarPow<<<grid,threads>>>((cufftDoubleComplex*) gpu1dpAz, 
+                                            omega_0/(omega * omegaZ),
+                                            (cufftDoubleComplex*) gpu1dpAz);
             }
-            switch(i%2 | (gstate<<1)){
+            switch((gstate<<1)){
                 case 0: //Groundstate solver, even step
-                    break;
-                
-                case 1:    //Groundstate solver, odd step
-                    break;
+
+                    // 1d forward / mult by Az
+                    result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_FORWARD); 
+                    scalarMult<<<grid,threads>>>(gpuWfc,
+                                                 renorm_factor_1d,gpuWfc);
+                    cMult<<<grid,threads>>>(gpuWfc, 
+                        (cufftDoubleComplex*) gpu1dpAz, gpuWfc);
+                    result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_INVERSE);
+                    scalarMult<<<grid,threads>>>(gpuWfc,
+                                                 renorm_factor_1d, gpuWfc);
+
+                    // loop to multiply by Ay
+                    for (int i = 0; i < yDim; i++){
+                        result = cufftExecZ2Z(plan_dim2,
+                                 &gpuWfc[i*xDim*zDim],
+                                 &gpuWfc[i*xDim*zDim],CUFFT_FORWARD);
+                    }
+
+                    scalarMult<<<grid,threads>>>(gpuWfc,
+                                                 renorm_factor_1d,gpuWfc);
+                    cMult<<<grid,threads>>>(gpuWfc, 
+                        (cufftDoubleComplex*) gpu1dpAy, gpuWfc);
+
+                    for (int i = 0; i < yDim; i++){
+                        result = cufftExecZ2Z(plan_dim2,
+                                 &gpuWfc[i*xDim*zDim],
+                                 &gpuWfc[i*xDim*zDim],CUFFT_FORWARD);
+                    }
+                    scalarMult<<<grid,threads>>>(gpuWfc,
+                                                 renorm_factor_1d,gpuWfc);
+
+
+                    // 1D FFT to wfc_pAx
+                    result = cufftExecZ2Z(plan_dim3,gpuWfc,gpuWfc,
+                                          CUFFT_FORWARD);
+                    scalarMult<<<grid,threads>>>(gpuWfc,
+                                                 renorm_factor_1d,gpuWfc);
+                    cMult<<<grid,threads>>>(gpuWfc, 
+                        (cufftDoubleComplex*) gpu1dpAx, gpuWfc);
+    
+                    result = cufftExecZ2Z(plan_dim3,gpuWfc,gpuWfc,
+                                          CUFFT_INVERSE);
+                    scalarMult<<<grid,threads>>>(gpuWfc,
+                                                 renorm_factor_1d, gpuWfc);
+                    break; 
                 
                 case 2: //Real time evolution, even step
+                    // 1d forward / mult by Az
+                    result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_FORWARD); 
+                    scalarMult<<<grid,threads>>>(gpuWfc,
+                                                 renorm_factor_1d,gpuWfc);
+                    cMult<<<grid,threads>>>(gpuWfc, 
+                        (cufftDoubleComplex*) gpu1dpAz, gpuWfc);
+                    result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_INVERSE);
+                    scalarMult<<<grid,threads>>>(gpuWfc,
+                                                 renorm_factor_1d, gpuWfc);
+
+                    // loop to multiply by Ay
+                    for (int i = 0; i < yDim; i++){
+                        result = cufftExecZ2Z(plan_dim2,
+                                 &gpuWfc[i*xDim*zDim],
+                                 &gpuWfc[i*xDim*zDim],CUFFT_FORWARD);
+                    }
+
+                    scalarMult<<<grid,threads>>>(gpuWfc,
+                                                 renorm_factor_1d,gpuWfc);
+                    cMult<<<grid,threads>>>(gpuWfc, 
+                        (cufftDoubleComplex*) gpu1dpAy, gpuWfc);
+
+                    for (int i = 0; i < yDim; i++){
+                        result = cufftExecZ2Z(plan_dim2,
+                                 &gpuWfc[i*xDim*zDim],
+                                 &gpuWfc[i*xDim*zDim],CUFFT_FORWARD);
+                    }
+                    scalarMult<<<grid,threads>>>(gpuWfc,
+                                                 renorm_factor_1d,gpuWfc);
+
+
+                    // 1D FFT to wfc_pAx
+                    result = cufftExecZ2Z(plan_dim3,gpuWfc,gpuWfc,
+                                          CUFFT_FORWARD);
+                    scalarMult<<<grid,threads>>>(gpuWfc,
+                                                 renorm_factor_1d,gpuWfc);
+                    cMult<<<grid,threads>>>(gpuWfc, 
+                        (cufftDoubleComplex*) gpu1dpAx, gpuWfc);
+    
+                    result = cufftExecZ2Z(plan_dim3,gpuWfc,gpuWfc,
+                                          CUFFT_INVERSE);
+                    scalarMult<<<grid,threads>>>(gpuWfc,
+                                                 renorm_factor_1d, gpuWfc);
+
                     break;
                 
-                case 3:    //Real time evolution, odd step
-                    break;
-            
             }
         }
     

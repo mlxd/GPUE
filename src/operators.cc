@@ -200,11 +200,28 @@ double rotation_pAy(Grid &par, Op &opr, int i, int j, int k){
     }
 }
 
+double rotation_pAz(Grid &par, Op &opr, int i, int j, int k){
+    double *zp = par.dsval("zp");
+    if (par.Afn != "file"){
+        return opr.Az_fn(par.Afn)(par, opr, i, j, k) * zp[j];
+    }
+    else{
+        double *Az = opr.dsval("Az");
+        int zDim = par.ival("zDim");
+        int count = i*zDim + j; 
+        return Az[count] * zp[j];
+    }
+}
+
 double rotation_Ax(Grid &par, Op &opr, int i, int j, int k){
     double *y = par.dsval("y");
     double omega = par.dval("omega");
     double omegaX = par.dval("omegaX");
     return -y[j] * omega * omegaX;
+}
+
+double rotation_Az(Grid &par, Op &opr, int i, int j, int k){
+    return 0;
 }
 
 double rotation_Ay(Grid &par, Op &opr, int i, int j, int k){

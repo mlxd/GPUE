@@ -492,8 +492,10 @@ void Op::set_fns(){
     Op_V_fns["harmonic_V_dimensionless"] = harmonic_V_dimensionless;
     Op_pAy_fns["rotation"] = rotation_pAy;
     Op_pAx_fns["rotation"] = rotation_pAx;
+    Op_pAz_fns["rotation"] = rotation_pAx;
     Op_Ax_fns["rotation"] = rotation_Ax;
     Op_Ay_fns["rotation"] = rotation_Ay;
+    Op_Az_fns["rotation"] = rotation_Az;
     Op_Ax_fns["dynamic"] = dynamic_Ax;
     Op_Ay_fns["dynamic"] = dynamic_Ay;
     Op_Ay_fns["fiber2d"] = fiber2d_Ay;

@@ -142,6 +142,15 @@ double rotation_pAx(Grid &par, Op &opr, int i, int j, int k);
 double rotation_pAy(Grid &par, Op &opr, int i, int j, int k);
 
  /**
+ * @brief       determines pAy for the standard rotational case
+ * @ingroup     data
+ * @param       Grid simulation data
+ * @param       location in x, y, z
+ * @return      V at that location
+ */
+double rotation_pAz(Grid &par, Op &opr, int i, int j, int k);
+
+ /**
  * @brief       determines pAx for the standard rotational case
  * @ingroup     data
  * @param       Grid simulation data
@@ -158,6 +167,15 @@ double rotation_Ax(Grid &par, Op &opr, int i, int j, int k);
  * @return      V at that location
  */
 double rotation_Ay(Grid &par, Op &opr, int i, int j, int k);
+
+ /**
+ * @brief       determines pAy for the standard rotational case
+ * @ingroup     data
+ * @param       Grid simulation data
+ * @param       location in x, y, z
+ * @return      V at that location
+ */
+double rotation_Az(Grid &par, Op &opr, int i, int j, int k);
 
 
  /**
