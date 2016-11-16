@@ -599,6 +599,7 @@ void evolve_3d(Wave &wave, Op &opr,
     int printSteps = par.ival("printSteps");
     bool nonlin = par.bval("gpe");
     bool lz = par.bval("corotating");
+    std::cout << "COROTATING IS: " << lz << '\n';
     bool ramp = par.bval("ramp");
     int xDim = par.ival("xDim");
     int yDim = par.ival("yDim");
@@ -629,7 +630,7 @@ void evolve_3d(Wave &wave, Op &opr,
 
     // Because no two operations are created equally. 
     // Multiplication is faster than divisions.
-    double renorm_factor_2d=1.0/pow(gridSize,0.5);
+    double renorm_factor_3d=1.0/pow(gridSize,(1/3));
     double renorm_factor_1d=1.0/pow(xDim,0.5);
 
     // outputting a bunch of variables just to check thigs out...
@@ -738,12 +739,12 @@ void evolve_3d(Wave &wave, Op &opr,
         result = cufftExecZ2Z(plan_3d,gpuWfc,gpuWfc,CUFFT_FORWARD);
 
         // Normalise
-        scalarMult<<<grid,threads>>>(gpuWfc,renorm_factor_2d,gpuWfc);
+        scalarMult<<<grid,threads>>>(gpuWfc,renorm_factor_3d,gpuWfc);
         cMult<<<grid,threads>>>(K_gpu,gpuWfc,gpuWfc);
         result = cufftExecZ2Z(plan_3d,gpuWfc,gpuWfc,CUFFT_INVERSE);
 
         // Normalise
-        scalarMult<<<grid,threads>>>(gpuWfc,renorm_factor_2d,gpuWfc);
+        scalarMult<<<grid,threads>>>(gpuWfc,renorm_factor_3d,gpuWfc);
         
         // U_r(dt/2)*wfc
         if(nonlin == 1){
@@ -755,7 +756,7 @@ void evolve_3d(Wave &wave, Op &opr,
         }
 
         // Angular momentum pAy-pAx (if engaged)  //
-        if(lz == 1){
+        if(lz == true){
             // Multiplying by ramping factor if necessary
             // Note: using scalarPow to do the scaling inside of the exp
             if (ramp == 1){
@@ -769,7 +770,7 @@ void evolve_3d(Wave &wave, Op &opr,
                                             omega_0/(omega * omegaZ),
                                             (cufftDoubleComplex*) gpu1dpAz);
             }
-            switch((gstate<<1)){
+            switch(gstate){
                 case 0: //Groundstate solver, even step
 
                     // 1d forward / mult by Az
@@ -817,7 +818,7 @@ void evolve_3d(Wave &wave, Op &opr,
                                                  renorm_factor_1d, gpuWfc);
                     break; 
                 
-                case 2: //Real time evolution, even step
+                case 1: //Real time evolution, even step
                     // 1d forward / mult by Az
                     result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_FORWARD); 
                     scalarMult<<<grid,threads>>>(gpuWfc,

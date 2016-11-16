@@ -77,6 +77,15 @@ double rotation_K(Grid &par, Op &opr, int i, int j, int k){
     return (HBAR*HBAR/(2*mass))*(xp[i]*xp[i] + yp[j]*yp[j]);
 }
 
+// A simple 3d rotation with i, j, and k as integers
+double rotation_K3d(Grid &par, Op &opr, int i, int j, int k){
+    double *xp = par.dsval("xp");
+    double *yp = par.dsval("yp");
+    double *zp = par.dsval("zp");
+    double mass = par.dval("mass");
+    return (HBAR*HBAR/(2*mass))*(xp[i]*xp[i] + yp[j]*yp[j] + zp[k]*zp[k]);
+}
+
 // Function for simple 2d rotation with i and j as the interators dimensionless
 double rotation_K_dimensionless(Grid &par, Op &opr, int i, int j, int k){
     double *xp = par.dsval("xp");
@@ -126,6 +135,43 @@ double harmonic_V(Grid &par, Op &opr, int i , int j, int k){
         int count = i*yDim + j; 
         return 0.5 * mass * ( V_x * V_x + V_y * V_y) + 
                0.5 * mass * pow(Ax[count],2) + 
+               0.5 * mass * pow(Ay[count],2);
+    }
+
+}
+
+// Function for simple 3d harmonic V with i and j as the iterators
+double harmonic_V3d(Grid &par, Op &opr, int i , int j, int k){
+    double *x = par.dsval("x");
+    double *y = par.dsval("y");
+    double *z = par.dsval("z");
+    double omegaX = par.dval("omegaX");
+    double omegaY = par.dval("omegaY");
+    double omegaZ = par.dval("omegaZ");
+    double gammaY = par.dval("gammaY");
+    double yOffset = 0.0;
+    double xOffset = 0.0;
+    double zOffset = 0.0;
+    double mass = par.dval("mass");
+    double V_x = omegaX*(x[i]+xOffset); 
+    double V_y = gammaY*omegaY*(y[j]+yOffset);
+    double V_z = gammaY*omegaZ*(z[k]+zOffset);
+    if (par.Afn != "file"){
+        return 0.5 * mass * ( V_x * V_x + V_y * V_y + V_z*V_z) + 
+               0.5 * mass * pow(opr.Ax_fn(par.Afn)(par, opr, i, j, k),2) + 
+               0.5 * mass * pow(opr.Az_fn(par.Afn)(par, opr, i, j, k),2) + 
+               0.5 * mass * pow(opr.Ay_fn(par.Afn)(par, opr, i, j, k),2);
+    }
+    else{
+        double *Ax = opr.dsval("Ax");
+        double *Ay = opr.dsval("Ay");
+        double *Az = opr.dsval("Az");
+        int yDim = par.ival("yDim");
+        int zDim = par.ival("zDim");
+        int count = i*yDim*zDim + j*zDim + k; 
+        return 0.5 * mass * ( V_x * V_x + V_y * V_y + V_z * V_z) + 
+               0.5 * mass * pow(Ax[count],2) + 
+               0.5 * mass * pow(Az[count],2) + 
                0.5 * mass * pow(Ay[count],2);
     }
 
@@ -182,7 +228,14 @@ double rotation_pAx(Grid &par, Op &opr, int i, int j, int k){
     else{
         double *Ax = opr.dsval("Ax");
         int yDim = par.ival("yDim");
-        int count = i*yDim + j; 
+        int count = 0;
+        if (par.ival("dimnum") == 2){
+            count = i*yDim + j; 
+        }
+        else if (par.ival("dimnum") == 3){
+            int zDim = par.ival("zDim");
+            count = k + j*zDim + i*yDim*zDim;
+        }
         return Ax[count] * xp[i];
     }
 }
@@ -195,7 +248,14 @@ double rotation_pAy(Grid &par, Op &opr, int i, int j, int k){
     else{
         double *Ay = opr.dsval("Ay");
         int yDim = par.ival("yDim");
-        int count = i*yDim + j; 
+        int count = 0;
+        if (par.ival("dimnum") == 2){
+            count = i*yDim + j; 
+        }
+        else if (par.ival("dimnum") == 3){
+            int zDim = par.ival("zDim");
+            count = k + j*zDim + i*yDim*zDim;
+        }
         return Ay[count] * yp[j];
     }
 }
@@ -203,12 +263,19 @@ double rotation_pAy(Grid &par, Op &opr, int i, int j, int k){
 double rotation_pAz(Grid &par, Op &opr, int i, int j, int k){
     double *zp = par.dsval("zp");
     if (par.Afn != "file"){
-        return opr.Az_fn(par.Afn)(par, opr, i, j, k) * zp[j];
+        return opr.Az_fn(par.Afn)(par, opr, i, j, k) * zp[k];
     }
     else{
         double *Az = opr.dsval("Az");
-        int zDim = par.ival("zDim");
-        int count = i*zDim + j; 
+        int yDim = par.ival("yDim");
+        int count = 0;
+        if (par.ival("dimnum") == 2){
+            count = i*yDim + j; 
+        }
+        else if (par.ival("dimnum") == 3){
+            int zDim = par.ival("zDim");
+            count = k + j*zDim + i*yDim*zDim;
+        }
         return Az[count] * zp[j];
     }
 }

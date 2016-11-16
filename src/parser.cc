@@ -59,7 +59,7 @@ Grid parseArgs(int argc, char** argv){
     par.store("winding", 0.0);
     par.store("corotating", false);
     par.store("gpe", false);
-    par.store("omegaZ", 0.0);
+    par.store("omegaZ", 6.283);
     par.store("interaction",0.0);
     par.store("laser_power",0.0);
     par.store("angle_sweep",0.0);
@@ -340,6 +340,12 @@ Grid parseArgs(int argc, char** argv){
             {
                 int dimnum = atoi(optarg);
                 printf("Argument for number of coordinates is %d\n",dimnum);
+
+                //setting 3d parameters
+                if (dimnum == 3){
+                    par.Kfn = "rotation_K3d";
+                    par.Vfn = "harmonic_V3d";
+                }
                 par.store("dimnum",(int)dimnum);
                 break;
             }

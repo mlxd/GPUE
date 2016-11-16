@@ -723,8 +723,10 @@ int init_3d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
 
     par.store("x", x);
     par.store("y", y);
+    par.store("z", z);
     par.store("xp", xp);
     par.store("yp", yp);
+    par.store("zp", zp);
     
 
     //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%//
@@ -783,7 +785,7 @@ int init_3d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     par.store("Cores_Max",cores/2);
     omp_set_num_threads(cores/2);
     //std::cout << "GAMMAY IS: " << gammaY << '\n';
-    #pragma omp parallel for private(j)
+    //#pragma omp parallel for private(k)
     #endif
     for( i=0; i < xDim; i++ ){
         for( j=0; j < yDim; j++ ){
@@ -791,15 +793,15 @@ int init_3d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
                 index = i * yDim * zDim + j * zDim + k;
                 Phi[index] = fmod(l*atan2(y[j], x[i]),2*PI);
                 
-                    wfc[index].x = exp(-( pow((x[i])/(Rxy*a0x),2) + 
-                                          pow((y[j])/(Rxy*a0y),2) +
-                                          pow((z[k])/(Rxy*a0z),2)) ) *
-                                          cos(Phi[index]);
-                    wfc[index].y = -exp(-( pow((x[i])/(Rxy*a0x),2) + 
-                                           pow((y[j])/(Rxy*a0y),2) +
-                                           pow((z[k])/(Rxy*a0z),2)) ) *
-                                              sin(Phi[index]);
-                    
+                wfc[index].x = exp(-( pow((x[i])/(Rxy*a0x),2) + 
+                                      pow((y[j])/(Rxy*a0y),2) +
+                                      pow((z[k])/(Rxy*a0z),2)) ) *
+                                      cos(Phi[index]);
+                wfc[index].y = -exp(-( pow((x[i])/(Rxy*a0x),2) + 
+                                       pow((y[j])/(Rxy*a0y),2) +
+                                       pow((z[k])/(Rxy*a0z),2)) ) *
+                                       sin(Phi[index]);
+                
                 V[index] = opr.V_fn(par.Vfn)(par, opr, i, j, k);
                 K[index] = opr.K_fn(par.Kfn)(par, opr, i, j, k);
     
