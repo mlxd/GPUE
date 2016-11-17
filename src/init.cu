@@ -608,7 +608,8 @@ int init_3d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
         printf("Outside range of supported indexing");
         exit(-1);
     }
-    printf("Compute grid dimensions chosen as X=%d    Y=%d\n",xD,yD);
+    printf("Compute grid dimensions chosen as X=%d    Y=%d    Z=%d\n",
+          xD,yD,zD);
     
     grid.x=xD; 
     grid.y=yD; 

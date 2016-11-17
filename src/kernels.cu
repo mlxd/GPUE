@@ -186,7 +186,8 @@ __global__ void vecMult(double2 *in, double *factor, double2 *out){
 __global__ void cMultDensity(double2* in1, double2* in2, double2* out, double dt, double mass,double omegaZ, int gstate, int N){
     double2 result;
     double gDensity;
-    int gid = blockIdx.y*gridDim.x*blockDim.x + blockIdx.x*blockDim.x + threadIdx.x;
+    //int gid = blockIdx.y*gridDim.x*blockDim.x + blockIdx.x*blockDim.x + threadIdx.x;
+    int gid = getGid3d3d();
     double2 tin1 = in1[gid];
     double2 tin2 = in2[gid];
     gDensity = gDenConst*complexMagnitudeSquared(in2[gid])*(dt/HBAR); // scaling of interaction strength doesn't work now
