@@ -139,7 +139,7 @@ __global__ void cMultPhi(cufftDoubleComplex* in1, double* in2, cufftDoubleComple
 * @param	gState If performing real (1) or imaginary (0) time evolution
 * @param	N Number of atoms in condensate
 */
-__global__ void cMultDensity(double2* in1, double2* in2, double2* out, double dt, double mass,double omegaZ, int gstate, int N);
+__global__ void cMultDensity(double2* in1, double2* in2, double2* out, double dt, double mass, int gstate, int N);
 
 //##############################################################################
 

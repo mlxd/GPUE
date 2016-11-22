@@ -352,7 +352,7 @@ void evolve_2d(Wave &wave, Op &opr,
             //std::cout << Dt << '\t' << mass << '\t' << omegaZ << '\t' 
             //          << gstate << '\t' << N*interaction << '\n';
             cMultDensity<<<grid,threads>>>(V_gpu,gpuWfc,gpuWfc,0.5*Dt,
-                                           mass,omegaZ,gstate,N*interaction);
+                                           mass,gstate,N*interaction);
         }
         else {
             cMult<<<grid,threads>>>(V_gpu,gpuWfc,gpuWfc);
@@ -372,7 +372,7 @@ void evolve_2d(Wave &wave, Op &opr,
         // U_r(dt/2)*wfc
         if(nonlin == 1){
             cMultDensity<<<grid,threads>>>(V_gpu,gpuWfc,gpuWfc,Dt*0.5,
-                                           mass,omegaZ,gstate,N*interaction);
+                                           mass,gstate,N*interaction);
         }
         else {
             cMult<<<grid,threads>>>(V_gpu,gpuWfc,gpuWfc);
@@ -672,7 +672,7 @@ void evolve_3d(Wave &wave, Op &opr,
         if(i % printSteps == 0) { 
             // If the unit_test flag is on, we need a special case
             printf("Step: %d    Omega: %lf\n", i, omega_0 / omegaX);
-            cudaMemcpy(wfc, gpuWfc, sizeof(cufftDoubleComplex) * xDim * yDim, 
+            cudaMemcpy(wfc, gpuWfc, sizeof(cufftDoubleComplex)*xDim*yDim*zDim, 
                        cudaMemcpyDeviceToHost);
 
             // Printing out time of iteration
@@ -729,7 +729,7 @@ void evolve_3d(Wave &wave, Op &opr,
             //std::cout << Dt << '\t' << mass << '\t' << omegaZ << '\t' 
             //          << gstate << '\t' << N*interaction << '\n';
             cMultDensity<<<grid,threads>>>(V_gpu,gpuWfc,gpuWfc,0.5*Dt,
-                                           mass,omegaZ,gstate,N*interaction);
+                                           mass,gstate,N*interaction);
         }
         else {
             cMult<<<grid,threads>>>(V_gpu,gpuWfc,gpuWfc);
@@ -749,7 +749,7 @@ void evolve_3d(Wave &wave, Op &opr,
         // U_r(dt/2)*wfc
         if(nonlin == 1){
             cMultDensity<<<grid,threads>>>(V_gpu,gpuWfc,gpuWfc,Dt*0.5,
-                                           mass,omegaZ,gstate,N*interaction);
+                                           mass,gstate,N*interaction);
         }
         else {
             cMult<<<grid,threads>>>(V_gpu,gpuWfc,gpuWfc);

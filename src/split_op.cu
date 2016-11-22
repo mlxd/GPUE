@@ -82,18 +82,29 @@ int isError(int result, char* c){
 void parSum(double2* gpuWfc, double2* gpuParSum, Grid &par, 
             Cuda &cupar){ 
     // May need to add double l
+    int dimnum = par.ival("dimnum");
     double dx = par.dval("dx");
     double dy = par.dval("dy");
+    double dz = par.dval("dz");
     int threads = par.ival("threads");
     int xDim = par.ival("xDim");
     int yDim = par.ival("yDim");
+    int zDim = par.ival("zDim");
     int grid_tmp = xDim*yDim;
+    int gsize = xDim*yDim;
+
+    // Setting option for 3d
+    if (dimnum == 3){
+        grid_tmp *= zDim;
+        gsize *= zDim;
+    }
     int block = grid_tmp/threads;
     int thread_tmp = threads;
     int pass = 0;
+
     dim3 grid = cupar.dim3val("grid");
     while((double)grid_tmp/threads > 1.0){
-        if(grid_tmp == xDim*yDim){
+        if(grid_tmp == gsize){
             multipass<<<block,threads,threads*sizeof(double2)>>>(&gpuWfc[0],
                 &gpuParSum[0],pass); 
         }
