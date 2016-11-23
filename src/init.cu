@@ -184,6 +184,7 @@ int init_2d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     double dy = yMax/(yDim>>1);
     par.store("dx",dx);
     par.store("dy",dy);
+    par.store("dz",0.0);
     
     double dpx, dpy;
     dpx = PI/(xMax);

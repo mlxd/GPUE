@@ -92,11 +92,13 @@ void parSum(double2* gpuWfc, double2* gpuParSum, Grid &par,
     int zDim = par.ival("zDim");
     int grid_tmp = xDim*yDim;
     int gsize = xDim*yDim;
+    double dg = dx * dy;
 
     // Setting option for 3d
     if (dimnum == 3){
         grid_tmp *= zDim;
         gsize *= zDim;
+        dg *= dz;
     }
     int block = grid_tmp/threads;
     int thread_tmp = threads;
@@ -119,7 +121,16 @@ void parSum(double2* gpuWfc, double2* gpuParSum, Grid &par,
     thread_tmp = grid_tmp;
     multipass<<<1,thread_tmp,thread_tmp*sizeof(double2)>>>(&gpuParSum[0],
                                                            &gpuParSum[0], pass);
-    scalarDiv_wfcNorm<<<grid,threads>>>(gpuWfc, dx*dy, gpuParSum, gpuWfc);
+
+    // Writing out in the parSum Function (not recommended, for debugging)
+/*
+    double2 *sum;
+    sum = (cufftDoubleComplex *) malloc(sizeof(cufftDoubleComplex)*gsize);
+    cudaMemcpy(sum,gpuParSum,sizeof(cufftDoubleComplex)*gsize,
+               cudaMemcpyDeviceToHost);
+    std::cout << sum[0].x << '\n';
+*/
+    scalarDiv_wfcNorm<<<grid,threads>>>(gpuWfc, dg, gpuParSum, gpuWfc);
 }
 
 /**

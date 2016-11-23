@@ -283,6 +283,8 @@ __global__ void angularOp(double omega, double dt, double2* wfc, double* xpyypx,
 __global__ void multipass(double2* input, double2* output, int pass){
     unsigned int tid = threadIdx.x;
     unsigned int bid = blockIdx.y*gridDim.x*blockDim.x + blockIdx.x;
+    //unsigned int tid = getTid3d3d();
+    //unsigned int bid = getBid3d3d();
     // printf("bid0=%d\n",bid);
 
     unsigned int gid = getGid3d3d();
