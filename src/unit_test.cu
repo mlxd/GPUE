@@ -72,6 +72,9 @@ void test_all(){
 // Test of the parSum function in 3d
 void parSum_test(){
 
+    // Setting error
+    cudaError_t err;
+
     // first, we need to initialize the Grid and Cuda classes
     Grid par;
     Cuda cupar;
@@ -79,12 +82,12 @@ void parSum_test(){
     // 2D test first
 
     // For now, we will assume an 8x8 array for summing
-    int threads = 64;
+    int threads = 16;
 
     par.store("dimnum", 2);
     par.store("xDim", 8);
     par.store("yDim", 8);
-    par.store("zDim", 0);
+    par.store("zDim", 1);
     par.store("dx",1.0);
     par.store("dy",1.0);
     par.store("dz",1.0);
@@ -99,24 +102,33 @@ void parSum_test(){
     cupar.store("grid", grid);
 
     // now we need to initialize the wfc to all 1's;
-    double2 *wfc;
+    double2 *wfc, *host_sum;
     wfc = (cufftDoubleComplex *) malloc(sizeof(cufftDoubleComplex) * gsize);
+    host_sum = (cufftDoubleComplex *) 
+               malloc(sizeof(cufftDoubleComplex) * gsize / threads);
 
+    // init wfc
     for (int i = 0; i < gsize; i++){
         wfc[i].x = 1;
         wfc[i].y = 1;
+    }
+
+    // init host_sum
+    for (int i = 0; i < gsize / threads; i++){
+        host_sum[i].x = 0.0;
+        host_sum[i].y = 0.0;
     }
 
     double2 *gpu_wfc;
     cudaMalloc((void**) &gpu_wfc, sizeof(cufftDoubleComplex)*gsize);
 
     // copying wfc to device
-    cudaMemcpy(gpu_wfc, wfc, sizeof(cufftDoubleComplex)*gsize,
-               cudaMemcpyHostToDevice);
+    err = cudaMemcpy(gpu_wfc, wfc, sizeof(cufftDoubleComplex)*gsize,
+                     cudaMemcpyHostToDevice);
 
-    // creating host parsum vector
-    double2 *sum;
-    sum = (cufftDoubleComplex *) malloc(sizeof(cufftDoubleComplex) * gsize);
+    if (err!=cudaSuccess){
+        std::cout << "ERROR: Could not copy wfc to device!" << '\n';
+    }
 
     // Creating parsum on device
     double2 *par_sum;
@@ -125,18 +137,23 @@ void parSum_test(){
     parSum(gpu_wfc, par_sum, par, cupar);
 
     // copying parsum back
-    cudaMemcpy(sum, par_sum, sizeof(cufftDoubleComplex)*gsize, 
-               cudaMemcpyDeviceToHost);
+    err = cudaMemcpy(host_sum, par_sum, 
+                     sizeof(cufftDoubleComplex)*gsize / threads, 
+                     cudaMemcpyDeviceToHost);
+    if (err!=cudaSuccess){
+        std::cout << "ERROR: Could not copy par_sum to the host!" << '\n';
+        exit(1);
+    }
 
     // The output value should be 64
     std::cout << "2d parSum is:" << '\n';
-    std::cout << sum[0].x << " + " << sum[0].y << " i" << '\n';
+    std::cout << host_sum[0].x << " + " << host_sum[0].y << " i" << '\n';
 
     // Now for the 3d case
     // For now, we will assume a 4x4x4 array for summing
     par.store("dimnum", 2);
-    par.store("xDim", 8);
-    par.store("yDim", 8);
+    par.store("xDim", 4);
+    par.store("yDim", 4);
     par.store("zDim", 4);
     par.store("dx",1.0);
     par.store("dy",1.0);
@@ -153,11 +170,16 @@ void parSum_test(){
     parSum(gpu_wfc, par_sum, par, cupar);
 
     // copying parsum back
-    cudaMemcpy(sum, par_sum, sizeof(cufftDoubleComplex)*gsize, 
-               cudaMemcpyDeviceToHost);
+    err = cudaMemcpy(host_sum, par_sum, 
+                     sizeof(cufftDoubleComplex)*gsize / threads, 
+                     cudaMemcpyDeviceToHost);
+    if (err!=cudaSuccess){
+        std::cout << "ERROR: Could not copy par_sum to the host!" << '\n';
+        exit(1);
+    }
 
     std::cout << "3d parSum is:" << '\n';
-    std::cout << sum[0].x << " + " << sum[0].y << " i" << '\n';
+    std::cout << host_sum[0].x << " + " << host_sum[0].y << " i" << '\n';
 
 }
 
