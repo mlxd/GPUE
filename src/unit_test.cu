@@ -82,7 +82,7 @@ void parSum_test(){
     // 2D test first
 
     // For now, we will assume an 8x8 array for summing
-    int threads = 16;
+    int threads = 8;
 
     par.store("dimnum", 2);
     par.store("xDim", 8);
@@ -110,7 +110,7 @@ void parSum_test(){
     // init wfc
     for (int i = 0; i < gsize; i++){
         wfc[i].x = 1;
-        wfc[i].y = 1;
+        wfc[i].y = 0;
     }
 
     // init host_sum
@@ -151,7 +151,7 @@ void parSum_test(){
 
     // Now for the 3d case
     // For now, we will assume a 4x4x4 array for summing
-    par.store("dimnum", 2);
+    par.store("dimnum", 3);
     par.store("xDim", 4);
     par.store("yDim", 4);
     par.store("zDim", 4);
