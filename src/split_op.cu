@@ -122,13 +122,15 @@ void parSum(double2* gpuWfc, double2* gpuParSum, Grid &par,
     multipass<<<1,thread_tmp,thread_tmp*sizeof(double2)>>>(&gpuParSum[0],
                                                            &gpuParSum[0], pass);
 
-    // Writing out in the parSum Function (not recommended, for debugging)
 /*
+    // Writing out in the parSum Function (not recommended, for debugging)
     double2 *sum;
-    sum = (cufftDoubleComplex *) malloc(sizeof(cufftDoubleComplex)*gsize);
-    cudaMemcpy(sum,gpuParSum,sizeof(cufftDoubleComplex)*gsize,
+    sum = (cufftDoubleComplex *) malloc(sizeof(cufftDoubleComplex)*gsize / threads);
+    cudaMemcpy(sum,gpuParSum,sizeof(cufftDoubleComplex)*gsize/threads,
                cudaMemcpyDeviceToHost);
-    std::cout << sum[0].x << '\n';
+    for (int i = 0; i < gsize/threads; i++){
+        std::cout << sum[i].x << '\n';
+    }
 */
     scalarDiv_wfcNorm<<<grid,threads>>>(gpuWfc, dg, gpuParSum, gpuWfc);
 }

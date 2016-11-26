@@ -85,8 +85,8 @@ void parSum_test(){
     int threads = 8;
 
     par.store("dimnum", 2);
-    par.store("xDim", 8);
-    par.store("yDim", 8);
+    par.store("xDim", 64);
+    par.store("yDim", 64);
     par.store("zDim", 1);
     par.store("dx",1.0);
     par.store("dy",1.0);
@@ -94,7 +94,7 @@ void parSum_test(){
     par.store("threads",threads);
 
     // Now we need to initialize the grid for the getGid3d3d kernel
-    int gsize = 64;
+    int gsize = 4096;
     dim3 grid;
     grid.x = gsize;
     grid.y = 1;
@@ -111,12 +111,6 @@ void parSum_test(){
     for (int i = 0; i < gsize; i++){
         wfc[i].x = 1;
         wfc[i].y = 0;
-    }
-
-    // init host_sum
-    for (int i = 0; i < gsize / threads; i++){
-        host_sum[i].x = 0.0;
-        host_sum[i].y = 0.0;
     }
 
     double2 *gpu_wfc;
@@ -145,16 +139,21 @@ void parSum_test(){
         exit(1);
     }
 
-    // The output value should be 64
+    // The output value should be 4096
     std::cout << "2d parSum is:" << '\n';
     std::cout << host_sum[0].x << " + " << host_sum[0].y << " i" << '\n';
+
+    if (host_sum[0].x != 4096){
+        std::cout << "parSum 2d test has failed!" << '\n';
+        assert((int)host_sum[0].x == 4096);
+    }
 
     // Now for the 3d case
     // For now, we will assume a 4x4x4 array for summing
     par.store("dimnum", 3);
-    par.store("xDim", 4);
-    par.store("yDim", 4);
-    par.store("zDim", 4);
+    par.store("xDim", 16);
+    par.store("yDim", 16);
+    par.store("zDim", 16);
     par.store("dx",1.0);
     par.store("dy",1.0);
     par.store("dz",1.0);
@@ -166,6 +165,10 @@ void parSum_test(){
     grid.z = 1;
 
     cupar.store("grid", grid);
+
+    // copying host wfc back to device
+    err = cudaMemcpy(gpu_wfc, wfc, sizeof(cufftDoubleComplex)*gsize,
+                     cudaMemcpyHostToDevice);
 
     parSum(gpu_wfc, par_sum, par, cupar);
 
@@ -180,6 +183,11 @@ void parSum_test(){
 
     std::cout << "3d parSum is:" << '\n';
     std::cout << host_sum[0].x << " + " << host_sum[0].y << " i" << '\n';
+
+    if (host_sum[0].x != 4096){
+        std::cout << "parSum 3d test has failed!" << '\n';
+        assert((int)host_sum[0].x == 4096);
+    }
 
 }
 
