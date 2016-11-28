@@ -630,7 +630,7 @@ void evolve_3d(Wave &wave, Op &opr,
 
     // Because no two operations are created equally. 
     // Multiplication is faster than divisions.
-    double renorm_factor_3d=1.0/pow(gridSize,(1/3));
+    double renorm_factor_3d=1.0/pow(gridSize,0.5);
     double renorm_factor_1d=1.0/pow(xDim,0.5);
 
     // outputting a bunch of variables just to check thigs out...

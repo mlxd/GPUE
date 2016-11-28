@@ -632,9 +632,9 @@ int init_3d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
 
     double sum = 0.0;
 
-    a0x = sqrt(HBAR/(2*mass*omegaX));
-    a0y = sqrt(HBAR/(2*mass*omegaY));
-    a0z = sqrt(HBAR/(2*mass*omegaZ));
+    a0x = pow(HBAR/(2*mass*omegaX), 0.5);
+    a0y = pow(HBAR/(2*mass*omegaY), 0.5);
+    a0z = pow(HBAR/(2*mass*omegaZ), 0.5);
     par.store("a0x",a0x);
     par.store("a0y",a0y);
     par.store("a0z",a0z);
