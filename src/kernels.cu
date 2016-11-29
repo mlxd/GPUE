@@ -39,7 +39,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 __constant__ double gDenConst = 6.6741e-40;
 
 inline __device__ unsigned int getGid3d3d(){
-    return blockDim.x * ( ( blockDim.y * ( ( blockIdx.z * blockDim.z + threadIdx.z ) + blockIdx.y ) + threadIdx.y ) + blockIdx.x ) + threadIdx.x;
+    //return blockDim.x * ( ( blockDim.y * ( ( blockIdx.z * blockDim.z + threadIdx.z ) + blockIdx.y ) + threadIdx.y ) + blockIdx.x ) + threadIdx.x;
+    return blockDim.x * blockIdx.x + threadIdx.x 
+           + blockDim.x * (blockDim.y * blockIdx.y + threadIdx.y)
+           + blockDim.y * blockDim.x * (blockDim.z * blockIdx.z + threadIdx.z);
 }
 
 // function to perform a transposition (2d) or permutation (3d)

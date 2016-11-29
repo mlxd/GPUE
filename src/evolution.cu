@@ -90,7 +90,7 @@ void evolve_2d(Wave &wave, Op &opr,
     cufftHandle plan_2d = cupar.cufftHandleval("plan_2d");
     cufftHandle plan_other2d = cupar.cufftHandleval("plan_other2d");
 
-    int threads = par.ival("threads");
+    dim3 threads = cupar.dim3val("threads");
     dim3 grid = cupar.dim3val("grid");
 
     // Because no two operations are created equally. 
@@ -625,7 +625,7 @@ void evolve_3d(Wave &wave, Op &opr,
     cufftHandle plan_3d = cupar.cufftHandleval("plan_3d");
     cufftHandle plan_dim2 = cupar.cufftHandleval("plan_dim2");
     cufftHandle plan_dim3 = cupar.cufftHandleval("plan_dim3");
-    int threads = par.ival("threads");
+    dim3 threads = cupar.dim3val("threads");
     dim3 grid = cupar.dim3val("grid");
 
     // Because no two operations are created equally. 

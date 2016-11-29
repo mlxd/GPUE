@@ -86,7 +86,7 @@ void parSum(double2* gpuWfc, double2* gpuParSum, Grid &par,
     double dx = par.dval("dx");
     double dy = par.dval("dy");
     double dz = par.dval("dz");
-    int threads = par.ival("threads");
+    dim3 threads = cupar.dim3val("threads");
     int xDim = par.ival("xDim");
     int yDim = par.ival("yDim");
     int zDim = par.ival("zDim");
@@ -100,22 +100,22 @@ void parSum(double2* gpuWfc, double2* gpuParSum, Grid &par,
         gsize *= zDim;
         dg *= dz;
     }
-    int block = grid_tmp/threads;
-    int thread_tmp = threads;
+    int block = grid_tmp/threads.x;
+    int thread_tmp = threads.x;
     int pass = 0;
 
     dim3 grid = cupar.dim3val("grid");
-    while((double)grid_tmp/threads > 1.0){
+    while((double)grid_tmp/threads.x > 1.0){
         if(grid_tmp == gsize){
-            multipass<<<block,threads,threads*sizeof(double2)>>>(&gpuWfc[0],
+            multipass<<<block,threads,threads.x*sizeof(double2)>>>(&gpuWfc[0],
                 &gpuParSum[0],pass); 
         }
         else{
             multipass<<<block,thread_tmp,thread_tmp*sizeof(double2)>>>(
                 &gpuParSum[0],&gpuParSum[0],pass);
         }
-        grid_tmp /= threads;
-        block = (int) ceil((double)grid_tmp/threads);
+        grid_tmp /= threads.x;
+        block = (int) ceil((double)grid_tmp/threads.x);
         pass++;
     }
     thread_tmp = grid_tmp;
@@ -125,10 +125,10 @@ void parSum(double2* gpuWfc, double2* gpuParSum, Grid &par,
 /*
     // Writing out in the parSum Function (not recommended, for debugging)
     double2 *sum;
-    sum = (cufftDoubleComplex *) malloc(sizeof(cufftDoubleComplex)*gsize / threads);
-    cudaMemcpy(sum,gpuParSum,sizeof(cufftDoubleComplex)*gsize/threads,
+    sum = (cufftDoubleComplex *) malloc(sizeof(cufftDoubleComplex)*gsize / threads.x);
+    cudaMemcpy(sum,gpuParSum,sizeof(cufftDoubleComplex)*gsize/threads.x,
                cudaMemcpyDeviceToHost);
-    for (int i = 0; i < gsize/threads; i++){
+    for (int i = 0; i < gsize/threads.x; i++){
         std::cout << sum[i].x << '\n';
     }
 */

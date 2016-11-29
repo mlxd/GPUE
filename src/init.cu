@@ -38,13 +38,15 @@ int init_2d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     // Setting functions for operators
     opr.set_fns();
 
+    int max_threads = 128;
+
     // Re-establishing variables from parsed Grid class
     // Initializes uninitialized variables to 0 values
     std::string data_dir = par.sval("data_dir");
     int N = par.ival("atoms");
     int xDim = par.ival("xDim");
     int yDim = par.ival("yDim");
-    int threads;
+    dim3 threads;
     unsigned int gSize = xDim*yDim;
     double omega = par.dval("omega");
     double gdt = par.dval("gdt");
@@ -104,39 +106,41 @@ int init_2d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     double Rxy; //Condensate scaling factor.
     double a0x, a0y; //Harmonic oscillator length in x and y directions
 
-    unsigned int xD=1,yD=1;
-    threads = 128;
+    int xD = 1, yD = 1, zD = 1;
 
-    // number of blocks in simulation
-    unsigned int b = xDim*yDim/threads;
+    if (xDim <= max_threads){
+        threads.x = xDim;
+        threads.y = 1;
+        threads.z = 1;
 
-    // largest number of elements
-    unsigned long long maxElements = 65536*65536ULL; 
-
-    if( b < (1<<16) ){
-        xD = b;
-    }
-    else if( (b >= (1<<16) ) && (b <= (maxElements)) ){
-        int t1 = log(b)/log(2);
-        float t2 = (float) t1/2;
-        t1 = (int) t2;
-        if(t2 > (float) t1){
-            xD <<= t1;
-            yD <<= (t1 + 1);
-        }
-        else if(t2 == (float) t1){
-            xD <<= t1;
-            yD <<= t1;
-        }
-    }
+        xD = yDim;
+        yD = 1;
+        zD = 1;
+    } 
     else{
-        printf("Outside range of supported indexing");
-        exit(-1);
+        int count = 0;
+        int dim_tmp = xDim;
+        while (dim_tmp > max_threads){
+            count++;
+            dim_tmp /= 2;
+        }
+
+        std::cout << "count is: " << count << '\n';
+
+        threads.x = dim_tmp;
+        threads.y = 1;
+        threads.z = 1;
+        xD = yDim;
+        yD = 1;
+        zD = 1;
     }
-    printf("Compute grid dimensions chosen as X=%d    Y=%d\n",xD,yD);
-    
+
+    std::cout << "threads in x are: " << threads.x << '\n';
+    std::cout << "dimensions are: " << xD << '\t' << yD << '\t' << zD << '\n';
+
     grid.x=xD; 
     grid.y=yD; 
+    grid.z=zD; 
     //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%//
     
     int i,j; //Used in for-loops for indexing
@@ -242,7 +246,7 @@ int init_2d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     Phi = (double *) malloc(sizeof(double) * gSize);
     wfc = (cufftDoubleComplex *) malloc(sizeof(cufftDoubleComplex) * gSize);
     wfc_backup = (cufftDoubleComplex *) malloc(sizeof(cufftDoubleComplex) * 
-                                               (gSize/threads));
+                                               (gSize/threads.x));
     K = (double *) malloc(sizeof(double) * gSize);
     V = (double *) malloc(sizeof(double) * gSize);
     V_opt = (double *) malloc(sizeof(double) * gSize);
@@ -271,7 +275,7 @@ int init_2d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     cudaMalloc((void**) &V_gpu, sizeof(cufftDoubleComplex) * gSize);
     cudaMalloc((void**) &pAy_gpu, sizeof(cufftDoubleComplex) * gSize);
     cudaMalloc((void**) &pAx_gpu, sizeof(cufftDoubleComplex) * gSize);
-    cudaMalloc((void**) &par_sum, sizeof(cufftDoubleComplex) * (gSize/threads));
+    cudaMalloc((void**) &par_sum, sizeof(cufftDoubleComplex) * (gSize/threads.x));
     //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%//
 
     //std::cout << "all variables malloc'd" << '\n';
@@ -469,7 +473,7 @@ int init_2d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     par.store("atoms", N);
     par.store("xDim", xDim);
     par.store("yDim", yDim);
-    par.store("threads", threads);
+    cupar.store("threads", threads);
     wave.store("wfc", wfc);
     opr.store("V_gpu", V_gpu);
     opr.store("EV_opt", EV_opt);
@@ -514,7 +518,7 @@ int init_3d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     int xDim = par.ival("xDim");
     int yDim = par.ival("yDim");
     int zDim = par.ival("zDim");
-    int threads;
+    dim3 threads(128,1,1);
     unsigned int gSize = xDim*yDim*zDim;
     double omega = par.dval("omega");
     double gdt = par.dval("gdt");
@@ -581,10 +585,9 @@ int init_3d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     double a0x, a0y, a0z; //Harmonic oscillator length in x and y directions
 
     unsigned int xD=1,yD=1,zD=1;
-    threads = 128;
 
     // number of blocks in simulation
-    unsigned int b = xDim*yDim*zDim/threads;
+    unsigned int b = xDim*yDim*zDim/threads.x;
 
     // largest number of elements
     unsigned long long maxElements = 65536*65536ULL; 
@@ -740,7 +743,7 @@ int init_3d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     Phi = (double *) malloc(sizeof(double) * gSize);
     wfc = (cufftDoubleComplex *) malloc(sizeof(cufftDoubleComplex) * gSize);
     wfc_backup = (cufftDoubleComplex *) malloc(sizeof(cufftDoubleComplex) * 
-                                               (gSize/threads));
+                                               (gSize/threads.x));
     K = (double *) malloc(sizeof(double) * gSize);
     V = (double *) malloc(sizeof(double) * gSize);
     V_opt = (double *) malloc(sizeof(double) * gSize);
@@ -773,7 +776,7 @@ int init_3d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     cudaMalloc((void**) &pAy_gpu, sizeof(cufftDoubleComplex) * gSize);
     cudaMalloc((void**) &pAx_gpu, sizeof(cufftDoubleComplex) * gSize);
     cudaMalloc((void**) &pAz_gpu, sizeof(cufftDoubleComplex) * gSize);
-    cudaMalloc((void**) &par_sum, sizeof(cufftDoubleComplex) * (gSize/threads));
+    cudaMalloc((void**) &par_sum, sizeof(cufftDoubleComplex)*(gSize/threads.x));
     //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%//
 
     //std::cout << "all variables malloc'd" << '\n';
@@ -964,7 +967,7 @@ int init_3d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     opr.store("pAz", pAz);
     opr.store("Energy_gpu", Energy_gpu);
     par.store("atoms", N);
-    par.store("threads", threads);
+    cupar.store("threads", threads);
     wave.store("wfc", wfc);
     opr.store("V_gpu", V_gpu);
     opr.store("EV_opt", EV_opt);
