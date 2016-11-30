@@ -113,8 +113,8 @@ int init_2d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
         threads.y = 1;
         threads.z = 1;
 
-        xD = yDim;
-        yD = 1;
+        xD = 1;
+        yD = yDim;
         zD = 1;
     } 
     else{
@@ -130,8 +130,8 @@ int init_2d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
         threads.x = dim_tmp;
         threads.y = 1;
         threads.z = 1;
-        xD = yDim;
-        yD = 1;
+        xD = pow(2,count);
+        yD = yDim;
         zD = 1;
     }
 

@@ -39,10 +39,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 __constant__ double gDenConst = 6.6741e-40;
 
 inline __device__ unsigned int getGid3d3d(){
-    //return blockDim.x * ( ( blockDim.y * ( ( blockIdx.z * blockDim.z + threadIdx.z ) + blockIdx.y ) + threadIdx.y ) + blockIdx.x ) + threadIdx.x;
-    return blockDim.x * blockIdx.x + threadIdx.x 
-           + blockDim.x * (blockDim.y * blockIdx.y + threadIdx.y)
-           + blockDim.y * blockDim.x * (blockDim.z * blockIdx.z + threadIdx.z);
+    int blockId = blockIdx.x + blockIdx.y * gridDim.x
+                  + gridDim.x * gridDim.y * blockIdx.z;
+    int threadId = blockId * (blockDim.x * blockDim.y)
+                   + (threadIdx.y * blockDim.x) + threadIdx.x;
+    return threadId;
 }
 
 // function to perform a transposition (2d) or permutation (3d)
@@ -278,6 +279,18 @@ __global__ void angularOp(double omega, double dt, double2* wfc, double* xpyypx,
     result.x=wfc[gid].x*op;
     result.y=wfc[gid].y*op;
     out[gid]=result;
+}
+
+/**
+ * Kernel for a quick test of the threads and such for GPU computing
+ */
+__global__ void thread_test(double *in, double *out){
+
+    unsigned int Gid = getGid3d3d();
+
+    // Now we set each element in the 
+    out[Gid] = Gid;
+    //in[Gid] = Gid;
 }
 
 /**
