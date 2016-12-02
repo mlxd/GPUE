@@ -656,9 +656,9 @@ int init_3d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
                                                ( 1 - omega*omega) ) ));
 
     //std::cout << "Rxy is: " << Rxy << '\n';
-    double xMax = 6*Rxy*a0x; //10*bec_length; //6*Rxy*a0x;
-    double yMax = 6*Rxy*a0y; //10*bec_length;
-    double zMax = 6*Rxy*a0z; //10*bec_length
+    double xMax = 100*bec_length;//6*Rxy*a0x; //6*Rxy*a0x;
+    double yMax = 100*bec_length;//6*Rxy*a0y; 
+    double zMax = 100*bec_length;//6*Rxy*a0z;
     par.store("xMax",xMax);
     par.store("yMax",yMax);
     par.store("zMax",zMax);
