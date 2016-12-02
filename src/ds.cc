@@ -300,8 +300,13 @@ void Cuda::store(std::string id, cudaStream_t streamin){
     }
 }
 
-void Cuda::store(std::string id, dim3 gridin){
-    grid = gridin;
+void Cuda::store(std::string id, dim3 dim3in){
+    if (id == "grid"){
+        grid = dim3in;
+    }
+    else if (id == "threads"){
+        threads = dim3in;
+    }
 }
 
 // Functions to retrieve data from Cuda class
@@ -346,7 +351,16 @@ cudaStream_t Cuda::cudaStream_tval(std::string id){
 }
 
 dim3 Cuda::dim3val(std::string id){
-    return grid;
+    if (id == "grid"){
+        return grid;
+    }
+    else if (id == "threads"){
+        return threads;
+    }
+    else{
+        std::cout << "Item " << id << " Not found in Cuda!" << '\n';
+        exit(1);
+    }
 }
 
 /*----------------------------------------------------------------------------//

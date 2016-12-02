@@ -180,7 +180,7 @@ void parSum_test(){
     // 2D test first
 
     // For now, we will assume an 8x8 array for summing
-    dim3 threads(64, 1, 1);
+    dim3 threads(32, 1, 1);
     int total_threads = threads.x*threads.y*threads.z;
     int xDim = 64;
     int yDim = 64;
@@ -198,7 +198,7 @@ void parSum_test(){
     // Now we need to initialize the grid for the getGid3d3d kernel
     int gsize = xDim*yDim;
     dim3 grid;
-    grid.x = 1;
+    grid.x = 2;
     grid.y = yDim;
 
     cupar.store("grid", grid);
