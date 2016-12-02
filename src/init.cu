@@ -508,6 +508,8 @@ int init_2d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
 // initializing all variables for 3d
 int init_3d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
 
+    int max_threads = 128;
+
     // Setting functions for operators
     opr.set_fns();
 
@@ -518,7 +520,7 @@ int init_3d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     int xDim = par.ival("xDim");
     int yDim = par.ival("yDim");
     int zDim = par.ival("zDim");
-    dim3 threads(128,1,1);
+    dim3 threads(max_threads,1,1);
     unsigned int gSize = xDim*yDim*zDim;
     double omega = par.dval("omega");
     double gdt = par.dval("gdt");
@@ -584,40 +586,42 @@ int init_3d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     double Rxy; //Condensate scaling factor.
     double a0x, a0y, a0z; //Harmonic oscillator length in x and y directions
 
-    unsigned int xD=1,yD=1,zD=1;
+    int xD = 1, yD = 1, zD = 1;
 
-    // number of blocks in simulation
-    unsigned int b = xDim*yDim*zDim/threads.x;
+    if (xDim <= max_threads){
+        threads.x = xDim;
+        threads.y = 1;
+        threads.z = 1;
 
-    // largest number of elements
-    unsigned long long maxElements = 65536*65536ULL; 
-
-    if( b < (1<<16) ){
-        xD = b;
-    }
-    else if( (b >= (1<<16) ) && (b <= (maxElements)) ){
-        int t1 = log(b)/log(2);
-        float t2 = (float) t1/2;
-        t1 = (int) t2;
-        if(t2 > (float) t1){
-            xD <<= t1;
-            yD <<= (t1 + 1);
-        }
-        else if(t2 == (float) t1){
-            xD <<= t1;
-            yD <<= t1;
-        }
-    }
+        xD = 1;
+        yD = yDim;
+        zD = zDim;
+    } 
     else{
-        printf("Outside range of supported indexing");
-        exit(-1);
+        int count = 0;
+        int dim_tmp = xDim;
+        while (dim_tmp > max_threads){
+            count++;
+            dim_tmp /= 2;
+        }
+
+        std::cout << "count is: " << count << '\n';
+
+        threads.x = dim_tmp;
+        threads.y = 1;
+        threads.z = 1;
+        xD = pow(2,count);
+        yD = yDim;
+        zD = zDim;
     }
-    printf("Compute grid dimensions chosen as X=%d    Y=%d    Z=%d\n",
-          xD,yD,zD);
-    
+
+    std::cout << "threads in x are: " << threads.x << '\n';
+    std::cout << "dimensions are: " << xD << '\t' << yD << '\t' << zD << '\n';
+
     grid.x=xD; 
     grid.y=yD; 
     grid.z=zD; 
+
     //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%//
     
     int i, j, k; //Used in for-loops for indexing
