@@ -67,7 +67,7 @@ void test_all(){
     //parameter_test();
     //parser_test();
     //evolve_2d_test();
-    grid_test();
+    //grid_test();
     parSum_test();
 
     std::cout << "All tests completed. GPUE passed." << '\n';
@@ -180,7 +180,7 @@ void parSum_test(){
     // 2D test first
 
     // For now, we will assume an 8x8 array for summing
-    dim3 threads(8, 1, 1);
+    dim3 threads(64, 1, 1);
     int total_threads = threads.x*threads.y*threads.z;
     int xDim = 64;
     int yDim = 64;
@@ -198,7 +198,7 @@ void parSum_test(){
     // Now we need to initialize the grid for the getGid3d3d kernel
     int gsize = xDim*yDim;
     dim3 grid;
-    grid.x = 8;
+    grid.x = 1;
     grid.y = yDim;
 
     cupar.store("grid", grid);
@@ -237,6 +237,7 @@ void parSum_test(){
                      sizeof(cufftDoubleComplex)*gsize / total_threads, 
                      cudaMemcpyDeviceToHost);
     if (err!=cudaSuccess){
+        std::cout << err << '\n';
         std::cout << "ERROR: Could not copy par_sum to the host!" << '\n';
         exit(1);
     }
@@ -246,7 +247,8 @@ void parSum_test(){
     std::cout << host_sum[0].x << " + " << host_sum[0].y << " i" << '\n';
 
     if (host_sum[0].x != 4096){
-        std::cout << "parSum 2d test has failed!" << '\n';
+        std::cout << "parSum 2d test has failed! Sum is: "
+                  << host_sum[0].x << '\n';
         assert((int)host_sum[0].x == 4096);
     }
 

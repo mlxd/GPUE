@@ -294,8 +294,8 @@ int init_2d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
         opr.store("Ax",Ax);
         file_A(par.Ayfile, Ay);
         opr.store("Ay", Ay);
+        std::cout << "finished reading Ax / Ay from file" << '\n';
     }
-    std::cout << "finished reading Ax / Ay from file" << '\n';
     std::cout << Ax[256] << '\t' << Ay[0] << '\n';
     #pragma omp parallel for private(j)
     #endif

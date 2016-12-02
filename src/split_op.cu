@@ -90,36 +90,44 @@ void parSum(double2* gpuWfc, double2* gpuParSum, Grid &par,
     int xDim = par.ival("xDim");
     int yDim = par.ival("yDim");
     int zDim = par.ival("zDim");
-    int grid_tmp = xDim*yDim;
+    dim3 grid_tmp(xDim*yDim, 1, 1);
     int gsize = xDim*yDim;
     double dg = dx * dy;
 
     // Setting option for 3d
     if (dimnum == 3){
-        grid_tmp *= zDim;
+        grid_tmp.x *= zDim;
         gsize *= zDim;
         dg *= dz;
     }
-    int block = grid_tmp/threads.x;
-    int thread_tmp = threads.x;
+    dim3 block(grid_tmp.x/threads.x, 1, 1);
+    dim3 thread_tmp = threads;
     int pass = 0;
 
-    dim3 grid = cupar.dim3val("grid");
-    while((double)grid_tmp/threads.x > 1.0){
-        if(grid_tmp == gsize){
+/*
+    std::cout << "grid / threads = " << '\t'
+              << (double)grid_tmp.x/threads.x << '\n'
+              << "grid.x is: " << grid_tmp.x << '\t'
+              << "threads.x are: " << threads.x << '\n';
+*/
+
+    //dim3 grid = cupar.dim3val("grid");
+    while((double)grid_tmp.x/threads.x > 1.0){
+        if(grid_tmp.x == gsize){
             multipass<<<block,threads,threads.x*sizeof(double2)>>>(&gpuWfc[0],
                 &gpuParSum[0],pass); 
         }
         else{
-            multipass<<<block,thread_tmp,thread_tmp*sizeof(double2)>>>(
+            multipass<<<block,thread_tmp/*,thread_tmp*sizeof(double2)*/>>>(
                 &gpuParSum[0],&gpuParSum[0],pass);
         }
-        grid_tmp /= threads.x;
-        block = (int) ceil((double)grid_tmp/threads.x);
+        grid_tmp.x /= threads.x;
+        block = (int) ceil((double)grid_tmp.x/threads.x);
         pass++;
+        //std::cout << grid_tmp << '\n';
     }
-    thread_tmp = grid_tmp;
-    multipass<<<1,thread_tmp,thread_tmp*sizeof(double2)>>>(&gpuParSum[0],
+    thread_tmp = grid_tmp.x;
+    multipass<<<1,thread_tmp,thread_tmp.x*sizeof(double2)>>>(&gpuParSum[0],
                                                            &gpuParSum[0], pass);
 
 /*
@@ -132,7 +140,7 @@ void parSum(double2* gpuWfc, double2* gpuParSum, Grid &par,
         std::cout << sum[i].x << '\n';
     }
 */
-    scalarDiv_wfcNorm<<<grid,threads>>>(gpuWfc, dg, gpuParSum, gpuWfc);
+    //scalarDiv_wfcNorm<<<grid,threads>>>(gpuWfc, dg, gpuParSum, gpuWfc);
 }
 
 /**
