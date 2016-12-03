@@ -1153,9 +1153,15 @@ int main(int argc, char **argv){
 
         // Special cases for 3d
         if (dimnum == 3){
-
+            pAz_gpu = opr.dsval("pAz_gpu");
+            GpAz = opr.cufftDoubleComplexval("GpAz");
             err=cudaMemcpy(pAz_gpu, GpAz, sizeof(cufftDoubleComplex)*gsize,
                            cudaMemcpyHostToDevice);
+
+            if(err!=cudaSuccess){
+                std::cout << "ERROR: Could not copy pAz_gpu to device" << '\n';
+                exit(1);
+            } 
             opr.store("pAz_gpu", pAz_gpu);
         
             evolve_3d(wave, opr, par_sum,
@@ -1235,8 +1241,14 @@ int main(int argc, char **argv){
 
         // Special variables / instructions for 3d case
         if (dimnum == 3){
+            pAz_gpu = opr.dsval("pAz_gpu");
+            EpAz = opr.cufftDoubleComplexval("EpAz");
             err=cudaMemcpy(pAz_gpu, EpAz, sizeof(cufftDoubleComplex)*gsize,
                            cudaMemcpyHostToDevice);
+            if(err!=cudaSuccess){
+                std::cout << "ERROR: Could not copy pAz_gpu to device" << '\n';
+                exit(1);
+            } 
             opr.store("pAz_gpu", pAz_gpu);
             evolve_3d(wave, opr, par_sum,
                       esteps, cupar, 1, par, buffer);
