@@ -57,6 +57,9 @@ void parSum_test();
 void grid_test2d();
 void grid_test3d();
 
+// Test of 1D fft's along all 3d grids
+void fft_test();
+
 // Kernel testing will be added later
 
 /*----------------------------------------------------------------------------//
@@ -68,11 +71,104 @@ void test_all(){
     //parameter_test();
     //parser_test();
     //evolve_2d_test();
-    grid_test2d();
-    grid_test3d();
-    parSum_test();
+    //grid_test2d();
+    //grid_test3d();
+    //parSum_test();
+    fft_test();
 
     std::cout << "All tests completed. GPUE passed." << '\n';
+}
+
+// Test of 1D fft's along all 3d grids
+// In particular, we need to test the generate_plan_other3d function
+// These will be checked against 1d 
+void fft_test(){
+
+    // For these tests, we are assuming that the x, y and z dimensions are 
+    // All the same (2x2x2)
+    // Note that yDim needs to be singled out differently, but z/x need no loops
+
+    // now we need to create the necessary parameters and store everything
+    int xDim = 2;
+    int yDim = 2;
+    int zDim = 2;
+    int gsize = xDim * yDim * zDim;
+
+    Grid par;
+    par.store("xDim", xDim);
+    par.store("yDim", yDim);
+    par.store("zDim", zDim);
+
+    // Now creating the plans
+    cufftHandle plan_x = generate_plan_other3d(par, 0);
+    cufftHandle plan_y = generate_plan_other3d(par, 1);
+    cufftHandle plan_z = generate_plan_other3d(par, 2);
+
+    // And the result / error
+    cudaError_t err;
+    cufftResult result;
+
+    // Creating the initial array for the x dimension fft
+    double2 *array, *gpu_array;
+    array = (double2 *) malloc(sizeof(double2)*gsize);
+    cudaMalloc((void**) &gpu_array, sizeof(double2)*gsize);
+    for (int i = 0; i < gsize; i++){
+        array[i].x = 1;
+        array[i].y = 0;
+    }
+
+    // transferring to gpu
+    err = cudaMemcpy(gpu_array, array, sizeof(double2)*gsize,
+                     cudaMemcpyHostToDevice);
+    if (err != cudaSuccess){
+        std::cout << "Could not coppy array to device!" << '\n';
+        std::cout << "error code: " << err << '\n';
+        exit(1);
+    }
+
+    // Performing the x transformation
+    for (int i = 0; i < yDim; i++){
+        result = cufftExecZ2Z(plan_y, &gpu_array[i*xDim*yDim], 
+                                      &gpu_array[i*xDim*yDim], CUFFT_FORWARD);
+    }
+    //result = cufftExecZ2Z(plan_z, gpu_array, gpu_array, CUFFT_FORWARD);
+
+    // transferring back to host to check output
+    err = cudaMemcpy(array, gpu_array, sizeof(double2)*gsize, 
+                     cudaMemcpyDeviceToHost);
+    if (err != cudaSuccess){
+        std::cout << "Could not coppy gpu_array to host!" << '\n';
+        std::cout << "error code: " << err << '\n';
+        exit(1);
+    }
+
+    for (int i = 0; i < gsize; i++){
+        std::cout << array[i].x << '\t' << array[i].y << '\n';
+    }
+
+    // Now to try the inverse direction
+
+    for (int i = 0; i < yDim; i++){
+        result = cufftExecZ2Z(plan_y, &gpu_array[i*xDim*yDim], 
+                                      &gpu_array[i*xDim*yDim], CUFFT_INVERSE);
+    }
+    //result = cufftExecZ2Z(plan_z, gpu_array, gpu_array, CUFFT_INVERSE);
+
+    // copying back
+    err = cudaMemcpy(array, gpu_array, sizeof(double2)*gsize, 
+                     cudaMemcpyDeviceToHost);
+    if (err != cudaSuccess){
+        std::cout << "Could not coppy gpu_array to host!" << '\n';
+        std::cout << "error code: " << err << '\n';
+        exit(1);
+    }
+
+    for (int i = 0; i < gsize; i++){
+        std::cout << array[i].x << '\t' << array[i].y << '\n';
+    }
+
+
+
 }
 
 // Simple test of CUDA grid stuff

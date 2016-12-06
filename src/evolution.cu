@@ -770,21 +770,9 @@ void evolve_3d(Wave &wave, Op &opr,
                                             omega_0/(omega * omegaZ),
                                             (cufftDoubleComplex*) gpu1dpAz);
             }
+            int size = xDim*zDim;
             switch(gstate){
                 case 0: //Groundstate solver, even step
-
-                    // 1D FFT to wfc_pAx
-                    result = cufftExecZ2Z(plan_dim3,gpuWfc,gpuWfc,
-                                          CUFFT_FORWARD);
-                    scalarMult<<<grid,threads>>>(gpuWfc,
-                                                 renorm_factor_1d,gpuWfc);
-                    cMult<<<grid,threads>>>(gpuWfc, 
-                        (cufftDoubleComplex*) gpu1dpAx, gpuWfc);
-    
-                    result = cufftExecZ2Z(plan_dim3,gpuWfc,gpuWfc,
-                                          CUFFT_INVERSE);
-                    scalarMult<<<grid,threads>>>(gpuWfc,
-                                                 renorm_factor_1d, gpuWfc);
 
                     // 1d forward / mult by Az
                     result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_FORWARD); 
@@ -798,9 +786,10 @@ void evolve_3d(Wave &wave, Op &opr,
 
                     // loop to multiply by Ay
                     for (int i = 0; i < yDim; i++){
+                        //size = xDim * zDim;
                         result = cufftExecZ2Z(plan_dim2,
-                                 &gpuWfc[i*xDim*zDim],
-                                 &gpuWfc[i*xDim*zDim],CUFFT_FORWARD);
+                                 &gpuWfc[i*size],
+                                 &gpuWfc[i*size],CUFFT_FORWARD);
                     }
 
                     scalarMult<<<grid,threads>>>(gpuWfc,
@@ -809,15 +798,14 @@ void evolve_3d(Wave &wave, Op &opr,
                         (cufftDoubleComplex*) gpu1dpAy, gpuWfc);
 
                     for (int i = 0; i < yDim; i++){
+                        //size = xDim * zDim;
                         result = cufftExecZ2Z(plan_dim2,
-                                 &gpuWfc[i*xDim*zDim],
-                                 &gpuWfc[i*xDim*zDim],CUFFT_FORWARD);
+                                 &gpuWfc[i*size],
+                                 &gpuWfc[i*size],CUFFT_INVERSE);
                     }
                     scalarMult<<<grid,threads>>>(gpuWfc,
                                                  renorm_factor_1d,gpuWfc);
 
-
-/*
                     // 1D FFT to wfc_pAx
                     result = cufftExecZ2Z(plan_dim3,gpuWfc,gpuWfc,
                                           CUFFT_FORWARD);
@@ -830,7 +818,7 @@ void evolve_3d(Wave &wave, Op &opr,
                                           CUFFT_INVERSE);
                     scalarMult<<<grid,threads>>>(gpuWfc,
                                                  renorm_factor_1d, gpuWfc);
-*/
+
                     break; 
                 
                 case 1: //Real time evolution, even step
@@ -859,7 +847,7 @@ void evolve_3d(Wave &wave, Op &opr,
                     for (int i = 0; i < yDim; i++){
                         result = cufftExecZ2Z(plan_dim2,
                                  &gpuWfc[i*xDim*zDim],
-                                 &gpuWfc[i*xDim*zDim],CUFFT_FORWARD);
+                                 &gpuWfc[i*xDim*zDim],CUFFT_INVERSE);
                     }
                     scalarMult<<<grid,threads>>>(gpuWfc,
                                                  renorm_factor_1d,gpuWfc);

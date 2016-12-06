@@ -82,15 +82,30 @@ cufftHandle generate_plan_other3d(Grid &par, int axis){
     cufftResult result;
     cufftHandle plan_fft1d;
 
-    // Along first dimension (x)
+    // Along first dimension (z)
     if (axis == 0){
         result = cufftPlan1d(&plan_fft1d, xDim, CUFFT_Z2Z, yDim*xDim);
+/*
+        int batch = xDim*yDim;
+        int rank = 1;
+        int n[] = {xDim, yDim, zDim};
+        int idist = xDim;
+        int odist = xDim;
+        int inembed[] = {xDim, yDim, zDim};
+        int onembed[] = {xDim, yDim, zDim};
+        int istride = 1;
+        int ostride = 1;
+    
+        result = cufftPlanMany(&plan_fft1d, rank, n, inembed, istride, 
+                               idist, onembed, ostride, odist, 
+                               CUFFT_Z2Z, batch);
+*/
     }
 
     // Along second dimension (y)
     // This one is a bit complicated because of how the data is aligned
     else if (axis == 1){
-        int batch = xDim*yDim;
+        int batch = yDim;
         int rank = 1;
         int n[] = {xDim, yDim};
         int idist = 1;
@@ -103,21 +118,22 @@ cufftHandle generate_plan_other3d(Grid &par, int axis){
         result = cufftPlanMany(&plan_fft1d, rank, n, inembed, istride, 
                                idist, onembed, ostride, odist, 
                                CUFFT_Z2Z, batch);
+        //result = cufftPlan2d(&plan_fft1d, xDim, yDim, CUFFT_Z2Z);
         
     }
 
-    // Along third dimension (z)
+    // Along third dimension (x)
     else if (axis == 2){
 
-        int batch = zDim;
+        int batch = xDim*yDim;
         int rank = 1;
         int n[] = {xDim, yDim, zDim};
         int idist = 1;
         int odist = 1;
         int inembed[] = {xDim, yDim, zDim};
         int onembed[] = {xDim, yDim, zDim};
-        int istride = yDim;
-        int ostride = yDim;
+        int istride = xDim*yDim;
+        int ostride = xDim*yDim;
     
         result = cufftPlanMany(&plan_fft1d, rank, n, inembed, istride, 
                                idist, onembed, ostride, odist, 

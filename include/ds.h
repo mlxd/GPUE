@@ -154,7 +154,6 @@ class Cuda{
     private:
         cudaError_t err;
         cufftResult result;
-        //cufftHandle plan_1d, plan_2d, plan_other2d;
         std::unordered_map<std::string, cufftHandle> plan_map;
         cudaStream_t streamA, streamB, streamC, streamD;
         dim3 grid, threads;

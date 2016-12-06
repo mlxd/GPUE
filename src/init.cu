@@ -920,8 +920,8 @@ int init_3d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
         return -1;
     }
 
-    cufftHandle plan_dim2 = generate_plan_other3d(par, 2);
-    cufftHandle plan_dim3 = generate_plan_other3d(par, 3);
+    cufftHandle plan_dim2 = generate_plan_other3d(par, 1);
+    cufftHandle plan_dim3 = generate_plan_other3d(par, 2);
 
     result = cufftPlan1d(&plan_1d, xDim, CUFFT_Z2Z, yDim);
     if(result != CUFFT_SUCCESS){
