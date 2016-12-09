@@ -804,11 +804,11 @@ int init_3d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
                 
                 wfc[index].x = exp(-( pow((x[i])/(Rxy*a0x),2) + 
                                       pow((y[j])/(Rxy*a0y),2) +
-                                      pow((z[k])/(Rxy*a0z),2)) ) *
+                                      pow((z[k])/(Rxy*a0z),2))) *
                                       cos(Phi[index]);
                 wfc[index].y = -exp(-( pow((x[i])/(Rxy*a0x),2) + 
                                        pow((y[j])/(Rxy*a0y),2) +
-                                       pow((z[k])/(Rxy*a0z),2)) ) *
+                                       pow((z[k])/(Rxy*a0z),2))) *
                                        sin(Phi[index]);
                 
                 V[index] = opr.V_fn(par.Vfn)(par, opr, i, j, k);
