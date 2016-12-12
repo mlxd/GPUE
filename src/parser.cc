@@ -174,7 +174,11 @@ Grid parseArgs(int argc, char** argv){
             }
             case 'r':
             {
-                printf("Reading wavefunction from file\n");
+                printf("Reading wavefunction from file.\n");
+                std::string infile = filecheck("data/wfc_load");
+                std::string infilei = filecheck("data/wfci_load");
+                par.store("infile", infile);
+                par.store("infilei", infilei);
                 par.store("read_wfc",true);
                 break;
             }
@@ -345,6 +349,9 @@ Grid parseArgs(int argc, char** argv){
                 if (dimnum == 3){
                     par.Kfn = "rotation_K3d";
                     par.Vfn = "harmonic_V3d";
+                }
+                if (dimnum == 2){
+                    par.store("zDim", 1);
                 }
                 par.store("dimnum",(int)dimnum);
                 break;
