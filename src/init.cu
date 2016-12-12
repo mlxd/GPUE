@@ -1055,6 +1055,7 @@ int main(int argc, char **argv){
     double *pAz_gpu = nullptr;
     int xDim = par.ival("xDim");
     int yDim = par.ival("yDim");
+    int zDim = par.ival("zDim");
     bool read_wfc = par.bval("read_wfc");
     int gsteps = par.ival("gsteps");
     int esteps = par.ival("esteps");
@@ -1082,7 +1083,6 @@ int main(int argc, char **argv){
         double *z = par.dsval("z");
         double *pAz = opr.dsval("pAz");
         double *pAz_gpu = opr.dsval("pAz_gpu");
-        int zDim = par.ival("zDim");
         cufftDoubleComplex *GpAz = opr.cufftDoubleComplexval("GpAz");
         cufftDoubleComplex *EpAz = opr.cufftDoubleComplexval("EpAz");
         gsize = xDim*yDim*zDim;
@@ -1101,7 +1101,12 @@ int main(int argc, char **argv){
     // Note: This only works in 2d case
     if(read_wfc){
         printf("Loading wavefunction...");
-        wfc=FileIO::readIn("wfc_load","wfci_load",xDim, yDim);
+        if (dimnum == 2){
+            wfc=FileIO::readIn("wfc_load","wfci_load",xDim, yDim);
+        }
+        else if (dimnum == 3){
+            wfc=FileIO::readIn3d("wfc_load","wfci_load",xDim, yDim, zDim);
+        }
         printf("Wavefunction loaded.\n");
     }
 
