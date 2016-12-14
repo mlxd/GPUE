@@ -13,6 +13,9 @@ def wfc_density(xDim, yDim, zDim, data_dir, pltval, i):
     print(i)
     data_real = "../" + data_dir + "/wfc_0_const_%s" % i
     data_im = "../" + data_dir + "/wfc_0_consti_%s" % i
+    if (pltval == "wfc_ev"):
+        data_real = "../" + data_dir + "/wfc_ev_%s" % i
+        data_im = "../" + data_dir + "/wfc_evi_%s" % i
     lines_real = np.loadtxt(data_real)
     lines_im = np.loadtxt(data_im)
     print(len(lines_real))
@@ -27,6 +30,9 @@ def wfc_phase(xDim, yDim, zDim, data_dir, pltval, i):
     print(i)
     data_real = "../" + data_dir + "/wfc_0_const_%s" % i
     data_im = "../" + data_dir + "/wfc_0_consti_%s" % i
+    if (pltval == "wfc_ev"):
+        data_real = "../" + data_dir + "/wfc_ev_%s" % i
+        data_im = "../" + data_dir + "/wfc_evi_%s" % i
     lines_real = np.loadtxt(data_real)
     lines_im = np.loadtxt(data_im)
     wfc_real = np.reshape(lines_real, (xDim,yDim, zDim));
@@ -56,6 +62,9 @@ def proj_2d(xDim, yDim, zDim, data_dir, pltval, i):
     print(i)
     data_real = "../" + data_dir + "/wfc_0_const_%s" % i
     data_im = "../" + data_dir + "/wfc_0_consti_%s" % i
+    if (pltval == "wfc_ev"):
+        data_real = "../" + data_dir + "/wfc_ev_%s" % i
+        data_im = "../" + data_dir + "/wfc_evi_%s" % i
     lines_real = np.loadtxt(data_real)
     lines_im = np.loadtxt(data_im)
     print(len(lines_real))
@@ -69,11 +78,30 @@ def proj_2d(xDim, yDim, zDim, data_dir, pltval, i):
             file.write(str(wfc[zDim/2][k][j]) + '\n')
     file.close()
 
-#proj_2d(xDim, yDim, zDim,"data","wfc",45000)
+def proj_k2d(xDim, yDim, zDim, data_dir, pltval, i):
+    filename = "../" + data_dir + "/wfc_1"
+    print(i)
+    data_real = "../" + data_dir + "/wfc_0_const_%s" % i
+    data_im = "../" + data_dir + "/wfc_0_consti_%s" % i
+    lines_real = np.loadtxt(data_real)
+    lines_im = np.loadtxt(data_im)
+    print(len(lines_real))
+    wfc_real = np.reshape(lines_real, (xDim,yDim,zDim));
+    wfc_im = np.reshape(lines_im, (xDim,yDim, zDim));
+    wfc = np.fft.fftshift(np.fft.fftn(wfc_real + 1j * wfc_im))
+    wfc = abs(wfc) * abs(wfc)
+    file = open(filename,'w')
+    for k in range(0,xDim):
+        for j in range(0,yDim):
+            file.write(str(wfc[zDim/2][k][j]) + '\n')
+    file.close()
 
-#item = wfc_density(xDim, yDim, zDim,"data","wfc",2)
-#item = wfc_phase(xDim, yDim, zDim,"data","wfc",45000)
-item = var(xDim, yDim, zDim,"data","V_0")
+proj_2d(xDim, yDim, zDim,"data","wfc_ev",9)
+#proj_k2d(xDim, yDim, zDim,"data","wfc",10000)
+
+item = wfc_density(xDim, yDim, zDim,"data","wfc_ev",9)
+#item = wfc_phase(xDim, yDim, zDim,"data","wfc_ev",0)
+#item = var(xDim, yDim, zDim,"data","Ax_0")
 
 nx, ny, nz, nframes = xDim, yDim, zDim,1
 header = np.array([nx,ny,nz,nframes])
