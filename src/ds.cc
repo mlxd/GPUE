@@ -82,15 +82,30 @@ cufftHandle generate_plan_other3d(Grid &par, int axis){
     cufftResult result;
     cufftHandle plan_fft1d;
 
-    // Along first dimension (x)
+    // Along first dimension (z)
     if (axis == 0){
         result = cufftPlan1d(&plan_fft1d, xDim, CUFFT_Z2Z, yDim*xDim);
+/*
+        int batch = xDim*yDim;
+        int rank = 1;
+        int n[] = {xDim, yDim, zDim};
+        int idist = xDim;
+        int odist = xDim;
+        int inembed[] = {xDim, yDim, zDim};
+        int onembed[] = {xDim, yDim, zDim};
+        int istride = 1;
+        int ostride = 1;
+    
+        result = cufftPlanMany(&plan_fft1d, rank, n, inembed, istride, 
+                               idist, onembed, ostride, odist, 
+                               CUFFT_Z2Z, batch);
+*/
     }
 
     // Along second dimension (y)
     // This one is a bit complicated because of how the data is aligned
     else if (axis == 1){
-        int batch = xDim*yDim;
+        int batch = yDim;
         int rank = 1;
         int n[] = {xDim, yDim};
         int idist = 1;
@@ -103,21 +118,22 @@ cufftHandle generate_plan_other3d(Grid &par, int axis){
         result = cufftPlanMany(&plan_fft1d, rank, n, inembed, istride, 
                                idist, onembed, ostride, odist, 
                                CUFFT_Z2Z, batch);
+        //result = cufftPlan2d(&plan_fft1d, xDim, yDim, CUFFT_Z2Z);
         
     }
 
-    // Along third dimension (z)
+    // Along third dimension (x)
     else if (axis == 2){
 
-        int batch = zDim;
+        int batch = xDim*yDim;
         int rank = 1;
         int n[] = {xDim, yDim, zDim};
         int idist = 1;
         int odist = 1;
         int inembed[] = {xDim, yDim, zDim};
         int onembed[] = {xDim, yDim, zDim};
-        int istride = yDim;
-        int ostride = yDim;
+        int istride = xDim*yDim;
+        int ostride = xDim*yDim;
     
         result = cufftPlanMany(&plan_fft1d, rank, n, inembed, istride, 
                                idist, onembed, ostride, odist, 
@@ -300,8 +316,13 @@ void Cuda::store(std::string id, cudaStream_t streamin){
     }
 }
 
-void Cuda::store(std::string id, dim3 gridin){
-    grid = gridin;
+void Cuda::store(std::string id, dim3 dim3in){
+    if (id == "grid"){
+        grid = dim3in;
+    }
+    else if (id == "threads"){
+        threads = dim3in;
+    }
 }
 
 // Functions to retrieve data from Cuda class
@@ -346,7 +367,16 @@ cudaStream_t Cuda::cudaStream_tval(std::string id){
 }
 
 dim3 Cuda::dim3val(std::string id){
-    return grid;
+    if (id == "grid"){
+        return grid;
+    }
+    else if (id == "threads"){
+        return threads;
+    }
+    else{
+        std::cout << "Item " << id << " Not found in Cuda!" << '\n';
+        exit(1);
+    }
 }
 
 /*----------------------------------------------------------------------------//
@@ -494,7 +524,7 @@ void Op::set_fns(){
     Op_V_fns["harmonic_V_dimensionless"] = harmonic_V_dimensionless;
     Op_pAy_fns["rotation"] = rotation_pAy;
     Op_pAx_fns["rotation"] = rotation_pAx;
-    Op_pAz_fns["rotation"] = rotation_pAx;
+    Op_pAz_fns["rotation"] = rotation_pAz;
     Op_Ax_fns["rotation"] = rotation_Ax;
     Op_Ay_fns["rotation"] = rotation_Ay;
     Op_Az_fns["rotation"] = rotation_Az;

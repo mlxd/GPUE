@@ -227,6 +227,14 @@ __global__ void scalarDiv_wfcNorm(double2* in, double dr, double2* pSum, double2
 */
 __global__ void reduce(double2* in, double* out);
 /**
+* @brief        Performs wavefunction renormalisation using parallel summation and applying scalarDiv_wfcNorm
+* @ingroup      gpu
+* @param        input Wavefunction to be renormalised
+* @param        output Pass by reference return of renormalised wavefunction
+* @param        pass Number of passes performed by routine
+*/
+__global__ void thread_test(double* input, double* output);
+/**
 * @brief	Performs wavefunction renormalisation using parallel summation and applying scalarDiv_wfcNorm
 * @ingroup	gpu
 * @param	input Wavefunction to be renormalised

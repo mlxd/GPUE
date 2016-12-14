@@ -154,11 +154,9 @@ class Cuda{
     private:
         cudaError_t err;
         cufftResult result;
-        //cufftHandle plan_1d, plan_2d, plan_other2d;
         std::unordered_map<std::string, cufftHandle> plan_map;
         cudaStream_t streamA, streamB, streamC, streamD;
-        dim3 grid;
-        int threads;
+        dim3 grid, threads;
     public:
 
         // Functions to store data
@@ -166,7 +164,7 @@ class Cuda{
         void store(std::string id, cufftResult resultin);
         void store(std::string id, cufftHandle planin);
         void store(std::string id, cudaStream_t streamin);
-        void store(std::string id, dim3 gridin);
+        void store(std::string id, dim3 dim3in);
         //void store(std::string id, int threadsin);
 
         // Functions to retrieve data

@@ -38,13 +38,15 @@ int init_2d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     // Setting functions for operators
     opr.set_fns();
 
+    int max_threads = 128;
+
     // Re-establishing variables from parsed Grid class
     // Initializes uninitialized variables to 0 values
     std::string data_dir = par.sval("data_dir");
     int N = par.ival("atoms");
     int xDim = par.ival("xDim");
     int yDim = par.ival("yDim");
-    int threads;
+    dim3 threads;
     unsigned int gSize = xDim*yDim;
     double omega = par.dval("omega");
     double gdt = par.dval("gdt");
@@ -74,6 +76,9 @@ int init_2d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     double *pAx_gpu;
     double *Energy_gpu;
     cufftDoubleComplex *wfc;
+    if (par.bval("read_wfc")){
+        wfc = wave.cufftDoubleComplexval("wfc");
+    }
     cufftDoubleComplex *V_gpu;
     cufftDoubleComplex *EV_opt;
     cufftDoubleComplex *wfc_backup;
@@ -104,39 +109,41 @@ int init_2d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     double Rxy; //Condensate scaling factor.
     double a0x, a0y; //Harmonic oscillator length in x and y directions
 
-    unsigned int xD=1,yD=1;
-    threads = 128;
+    int xD = 1, yD = 1, zD = 1;
 
-    // number of blocks in simulation
-    unsigned int b = xDim*yDim/threads;
+    if (xDim <= max_threads){
+        threads.x = xDim;
+        threads.y = 1;
+        threads.z = 1;
 
-    // largest number of elements
-    unsigned long long maxElements = 65536*65536ULL; 
-
-    if( b < (1<<16) ){
-        xD = b;
-    }
-    else if( (b >= (1<<16) ) && (b <= (maxElements)) ){
-        int t1 = log(b)/log(2);
-        float t2 = (float) t1/2;
-        t1 = (int) t2;
-        if(t2 > (float) t1){
-            xD <<= t1;
-            yD <<= (t1 + 1);
-        }
-        else if(t2 == (float) t1){
-            xD <<= t1;
-            yD <<= t1;
-        }
-    }
+        xD = 1;
+        yD = yDim;
+        zD = 1;
+    } 
     else{
-        printf("Outside range of supported indexing");
-        exit(-1);
+        int count = 0;
+        int dim_tmp = xDim;
+        while (dim_tmp > max_threads){
+            count++;
+            dim_tmp /= 2;
+        }
+
+        std::cout << "count is: " << count << '\n';
+
+        threads.x = dim_tmp;
+        threads.y = 1;
+        threads.z = 1;
+        xD = pow(2,count);
+        yD = yDim;
+        zD = 1;
     }
-    printf("Compute grid dimensions chosen as X=%d    Y=%d\n",xD,yD);
-    
+
+    std::cout << "threads in x are: " << threads.x << '\n';
+    std::cout << "dimensions are: " << xD << '\t' << yD << '\t' << zD << '\n';
+
     grid.x=xD; 
     grid.y=yD; 
+    grid.z=zD; 
     //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%//
     
     int i,j; //Used in for-loops for indexing
@@ -184,6 +191,7 @@ int init_2d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     double dy = yMax/(yDim>>1);
     par.store("dx",dx);
     par.store("dy",dy);
+    par.store("dz",0.0);
     
     double dpx, dpy;
     dpx = PI/(xMax);
@@ -239,9 +247,11 @@ int init_2d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     Energy = (double*) malloc(sizeof(double) * gSize);
     r = (double *) malloc(sizeof(double) * gSize);
     Phi = (double *) malloc(sizeof(double) * gSize);
-    wfc = (cufftDoubleComplex *) malloc(sizeof(cufftDoubleComplex) * gSize);
+    if (!par.bval("read_wfc")){
+        wfc = (cufftDoubleComplex *) malloc(sizeof(cufftDoubleComplex) * gSize);
+    }
     wfc_backup = (cufftDoubleComplex *) malloc(sizeof(cufftDoubleComplex) * 
-                                               (gSize/threads));
+                                               (gSize/threads.x));
     K = (double *) malloc(sizeof(double) * gSize);
     V = (double *) malloc(sizeof(double) * gSize);
     V_opt = (double *) malloc(sizeof(double) * gSize);
@@ -270,7 +280,7 @@ int init_2d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     cudaMalloc((void**) &V_gpu, sizeof(cufftDoubleComplex) * gSize);
     cudaMalloc((void**) &pAy_gpu, sizeof(cufftDoubleComplex) * gSize);
     cudaMalloc((void**) &pAx_gpu, sizeof(cufftDoubleComplex) * gSize);
-    cudaMalloc((void**) &par_sum, sizeof(cufftDoubleComplex) * (gSize/threads));
+    cudaMalloc((void**) &par_sum, sizeof(cufftDoubleComplex) * (gSize/threads.x));
     //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%//
 
     //std::cout << "all variables malloc'd" << '\n';
@@ -289,8 +299,8 @@ int init_2d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
         opr.store("Ax",Ax);
         file_A(par.Ayfile, Ay);
         opr.store("Ay", Ay);
+        std::cout << "finished reading Ax / Ay from file" << '\n';
     }
-    std::cout << "finished reading Ax / Ay from file" << '\n';
     std::cout << Ax[256] << '\t' << Ay[0] << '\n';
     #pragma omp parallel for private(j)
     #endif
@@ -310,6 +320,10 @@ int init_2d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
                 wfc[(i*yDim + j)].y = -exp(-( pow((x[i]),2) + 
                                               pow((y[j]),2) ) ) *
                                           sin(Phi[(i*xDim + j)]);
+            }
+            else if (par.bval("read_wfc")){
+                wfc[(i*yDim + j)].x *= cos(Phi[(i*xDim + j)]); 
+                wfc[(i*yDim + j)].y *= sin(Phi[(i*xDim + j)]);
             }
             else{
                 wfc[(i*yDim + j)].x = exp(-( pow((x[i])/(Rxy*a0x),2) + 
@@ -468,7 +482,7 @@ int init_2d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     par.store("atoms", N);
     par.store("xDim", xDim);
     par.store("yDim", yDim);
-    par.store("threads", threads);
+    cupar.store("threads", threads);
     wave.store("wfc", wfc);
     opr.store("V_gpu", V_gpu);
     opr.store("EV_opt", EV_opt);
@@ -503,6 +517,8 @@ int init_2d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
 // initializing all variables for 3d
 int init_3d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
 
+    int max_threads = 128;
+
     // Setting functions for operators
     opr.set_fns();
 
@@ -513,7 +529,7 @@ int init_3d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     int xDim = par.ival("xDim");
     int yDim = par.ival("yDim");
     int zDim = par.ival("zDim");
-    int threads;
+    dim3 threads(max_threads,1,1);
     unsigned int gSize = xDim*yDim*zDim;
     double omega = par.dval("omega");
     double gdt = par.dval("gdt");
@@ -547,6 +563,9 @@ int init_3d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     double *pAz_gpu;
     double *Energy_gpu;
     cufftDoubleComplex *wfc;
+    if (par.bval("read_wfc")){
+        wfc = wave.cufftDoubleComplexval("wfc");
+    }
     cufftDoubleComplex *V_gpu;
     cufftDoubleComplex *EV_opt;
     cufftDoubleComplex *wfc_backup;
@@ -579,41 +598,42 @@ int init_3d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     double Rxy; //Condensate scaling factor.
     double a0x, a0y, a0z; //Harmonic oscillator length in x and y directions
 
-    unsigned int xD=1,yD=1,zD=1;
-    threads = 128;
+    int xD = 1, yD = 1, zD = 1;
 
-    // number of blocks in simulation
-    unsigned int b = xDim*yDim*zDim/threads;
+    if (xDim <= max_threads){
+        threads.x = xDim;
+        threads.y = 1;
+        threads.z = 1;
 
-    // largest number of elements
-    unsigned long long maxElements = 65536*65536ULL; 
-
-    if( b < (1<<16) ){
-        xD = b;
-    }
-    else if( (b >= (1<<16) ) && (b <= (maxElements)) ){
-        int t1 = log(b)/log(2);
-        float t2 = (float) t1/2;
-        t1 = (int) t2;
-        if(t2 > (float) t1){
-            xD <<= t1;
-            yD <<= (t1 + 1);
-        }
-        else if(t2 == (float) t1){
-            xD <<= t1;
-            yD <<= t1;
-        }
-    }
+        xD = 1;
+        yD = yDim;
+        zD = zDim;
+    } 
     else{
-        printf("Outside range of supported indexing");
-        exit(-1);
+        int count = 0;
+        int dim_tmp = xDim;
+        while (dim_tmp > max_threads){
+            count++;
+            dim_tmp /= 2;
+        }
+
+        std::cout << "count is: " << count << '\n';
+
+        threads.x = dim_tmp;
+        threads.y = 1;
+        threads.z = 1;
+        xD = pow(2,count);
+        yD = yDim;
+        zD = zDim;
     }
-    printf("Compute grid dimensions chosen as X=%d    Y=%d    Z=%d\n",
-          xD,yD,zD);
-    
+
+    std::cout << "threads in x are: " << threads.x << '\n';
+    std::cout << "dimensions are: " << xD << '\t' << yD << '\t' << zD << '\n';
+
     grid.x=xD; 
     grid.y=yD; 
     grid.z=zD; 
+
     //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%//
     
     int i, j, k; //Used in for-loops for indexing
@@ -631,9 +651,9 @@ int init_3d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
 
     double sum = 0.0;
 
-    a0x = sqrt(HBAR/(2*mass*omegaX));
-    a0y = sqrt(HBAR/(2*mass*omegaY));
-    a0z = sqrt(HBAR/(2*mass*omegaZ));
+    a0x = pow(HBAR/(2*mass*omegaX), 0.5);
+    a0y = pow(HBAR/(2*mass*omegaY), 0.5);
+    a0z = pow(HBAR/(2*mass*omegaZ), 0.5);
     par.store("a0x",a0x);
     par.store("a0y",a0y);
     par.store("a0z",a0z);
@@ -648,9 +668,9 @@ int init_3d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
                                                ( 1 - omega*omega) ) ));
 
     //std::cout << "Rxy is: " << Rxy << '\n';
-    double xMax = 6*Rxy*a0x; //10*bec_length; //6*Rxy*a0x;
-    double yMax = 6*Rxy*a0y; //10*bec_length;
-    double zMax = 6*Rxy*a0z; //10*bec_length
+    double xMax = 100*bec_length;//6*Rxy*a0x; //6*Rxy*a0x;
+    double yMax = 100*bec_length;//6*Rxy*a0y; 
+    double zMax = 100*bec_length;//6*Rxy*a0z;
     par.store("xMax",xMax);
     par.store("yMax",yMax);
     par.store("zMax",zMax);
@@ -737,9 +757,11 @@ int init_3d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     Energy = (double*) malloc(sizeof(double) * gSize);
     r = (double *) malloc(sizeof(double) * gSize);
     Phi = (double *) malloc(sizeof(double) * gSize);
-    wfc = (cufftDoubleComplex *) malloc(sizeof(cufftDoubleComplex) * gSize);
+    if (!par.bval("read_wfc")){
+        wfc = (cufftDoubleComplex *) malloc(sizeof(cufftDoubleComplex) * gSize);
+    }
     wfc_backup = (cufftDoubleComplex *) malloc(sizeof(cufftDoubleComplex) * 
-                                               (gSize/threads));
+                                               (gSize/threads.x));
     K = (double *) malloc(sizeof(double) * gSize);
     V = (double *) malloc(sizeof(double) * gSize);
     V_opt = (double *) malloc(sizeof(double) * gSize);
@@ -772,7 +794,7 @@ int init_3d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     cudaMalloc((void**) &pAy_gpu, sizeof(cufftDoubleComplex) * gSize);
     cudaMalloc((void**) &pAx_gpu, sizeof(cufftDoubleComplex) * gSize);
     cudaMalloc((void**) &pAz_gpu, sizeof(cufftDoubleComplex) * gSize);
-    cudaMalloc((void**) &par_sum, sizeof(cufftDoubleComplex) * (gSize/threads));
+    cudaMalloc((void**) &par_sum, sizeof(cufftDoubleComplex)*(gSize/threads.x));
     //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%//
 
     //std::cout << "all variables malloc'd" << '\n';
@@ -793,15 +815,21 @@ int init_3d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
             for( k=0; k < zDim; k++ ){
                 index = i * yDim * zDim + j * zDim + k;
                 Phi[index] = fmod(l*atan2(y[j], x[i]),2*PI);
-                
-                wfc[index].x = exp(-( pow((x[i])/(Rxy*a0x),2) + 
-                                      pow((y[j])/(Rxy*a0y),2) +
-                                      pow((z[k])/(Rxy*a0z),2)) ) *
-                                      cos(Phi[index]);
-                wfc[index].y = -exp(-( pow((x[i])/(Rxy*a0x),2) + 
-                                       pow((y[j])/(Rxy*a0y),2) +
-                                       pow((z[k])/(Rxy*a0z),2)) ) *
-                                       sin(Phi[index]);
+
+                if (par.bval("read_wfc")){
+                    wfc[index].x *= cos(Phi[index]);
+                    wfc[index].y *= sin(Phi[index]);
+                }
+                else{
+                    wfc[index].x = exp(-( pow((x[i])/(Rxy*a0x),2) + 
+                                          pow((y[j])/(Rxy*a0y),2) +
+                                          pow((z[k])/(Rxy*a0z),2))) *
+                                          cos(Phi[index]);
+                    wfc[index].y = -exp(-( pow((x[i])/(Rxy*a0x),2) + 
+                                           pow((y[j])/(Rxy*a0y),2) +
+                                           pow((z[k])/(Rxy*a0z),2))) *
+                                           sin(Phi[index]);
+                }
                 
                 V[index] = opr.V_fn(par.Vfn)(par, opr, i, j, k);
                 K[index] = opr.K_fn(par.Kfn)(par, opr, i, j, k);
@@ -912,8 +940,8 @@ int init_3d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
         return -1;
     }
 
-    cufftHandle plan_dim2 = generate_plan_other3d(par, 2);
-    cufftHandle plan_dim3 = generate_plan_other3d(par, 3);
+    cufftHandle plan_dim2 = generate_plan_other3d(par, 1);
+    cufftHandle plan_dim3 = generate_plan_other3d(par, 2);
 
     result = cufftPlan1d(&plan_1d, xDim, CUFFT_Z2Z, yDim);
     if(result != CUFFT_SUCCESS){
@@ -963,7 +991,7 @@ int init_3d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     opr.store("pAz", pAz);
     opr.store("Energy_gpu", Energy_gpu);
     par.store("atoms", N);
-    par.store("threads", threads);
+    cupar.store("threads", threads);
     wave.store("wfc", wfc);
     opr.store("V_gpu", V_gpu);
     opr.store("EV_opt", EV_opt);
@@ -1021,6 +1049,32 @@ int main(int argc, char **argv){
     */
     //************************************************************//
 
+    // If we want to read in a wfc, we may also need to imprint a phase. This
+    // will be done in the init_2d and init_3d functions
+    // We need a number of parameters for now
+    int xDim = par.ival("xDim");
+    int yDim = par.ival("yDim");
+    int zDim = par.ival("zDim");
+    if(par.bval("read_wfc")){
+
+        // Initializing the wfc
+        int gSize = xDim * yDim * zDim;
+        cufftDoubleComplex *wfc;
+        wfc = (cufftDoubleComplex *) malloc(sizeof(cufftDoubleComplex) * gSize);
+
+        std::string infile = par.sval("infile");
+        std::string infilei = par.sval("infilei");
+        printf("Loading wavefunction...");
+        if (dimnum == 2){
+            wfc=FileIO::readIn(infile,infilei,xDim, yDim);
+        }
+        else if (dimnum == 3){
+            wfc=FileIO::readIn3d(infile,infilei,xDim, yDim, zDim);
+        }
+        wave.store("wfc",wfc);
+        printf("Wavefunction loaded.\n");
+    }
+
     // Initialization split between 2d and 3d
     if (dimnum == 2){
         init_2d(opr, cupar, par, wave);
@@ -1045,9 +1099,6 @@ int main(int argc, char **argv){
     double *pAy_gpu = opr.dsval("pAy_gpu");
     double *pAx_gpu = opr.dsval("pAx_gpu");
     double *pAz_gpu = nullptr;
-    int xDim = par.ival("xDim");
-    int yDim = par.ival("yDim");
-    bool read_wfc = par.bval("read_wfc");
     int gsteps = par.ival("gsteps");
     int esteps = par.ival("esteps");
     cufftDoubleComplex *wfc = wave.cufftDoubleComplexval("wfc");
@@ -1074,7 +1125,6 @@ int main(int argc, char **argv){
         double *z = par.dsval("z");
         double *pAz = opr.dsval("pAz");
         double *pAz_gpu = opr.dsval("pAz_gpu");
-        int zDim = par.ival("zDim");
         cufftDoubleComplex *GpAz = opr.cufftDoubleComplexval("GpAz");
         cufftDoubleComplex *EpAz = opr.cufftDoubleComplexval("EpAz");
         gsize = xDim*yDim*zDim;
@@ -1090,15 +1140,6 @@ int main(int argc, char **argv){
     //************************************************************//
     FileIO::writeOutParam(buffer, par, data_dir + "Params.dat");
 
-    // Note: This only works in 2d case
-    if(read_wfc){
-        printf("Loading wavefunction...");
-        wfc=FileIO::readIn("wfc_load","wfci_load",xDim, yDim);
-        printf("Wavefunction loaded.\n");
-    }
-
-    //std::cout << "gsteps: " << gsteps << '\n';
-    
     if(gsteps > 0){
         err=cudaMemcpy(K_gpu, GK, sizeof(cufftDoubleComplex)*gsize,
                        cudaMemcpyHostToDevice);
@@ -1145,9 +1186,15 @@ int main(int argc, char **argv){
 
         // Special cases for 3d
         if (dimnum == 3){
-
+            pAz_gpu = opr.dsval("pAz_gpu");
+            GpAz = opr.cufftDoubleComplexval("GpAz");
             err=cudaMemcpy(pAz_gpu, GpAz, sizeof(cufftDoubleComplex)*gsize,
                            cudaMemcpyHostToDevice);
+
+            if(err!=cudaSuccess){
+                std::cout << "ERROR: Could not copy pAz_gpu to device" << '\n';
+                exit(1);
+            } 
             opr.store("pAz_gpu", pAz_gpu);
         
             evolve_3d(wave, opr, par_sum,
@@ -1227,8 +1274,14 @@ int main(int argc, char **argv){
 
         // Special variables / instructions for 3d case
         if (dimnum == 3){
+            pAz_gpu = opr.dsval("pAz_gpu");
+            EpAz = opr.cufftDoubleComplexval("EpAz");
             err=cudaMemcpy(pAz_gpu, EpAz, sizeof(cufftDoubleComplex)*gsize,
                            cudaMemcpyHostToDevice);
+            if(err!=cudaSuccess){
+                std::cout << "ERROR: Could not copy pAz_gpu to device" << '\n';
+                exit(1);
+            } 
             opr.store("pAz_gpu", pAz_gpu);
             evolve_3d(wave, opr, par_sum,
                       esteps, cupar, 1, par, buffer);

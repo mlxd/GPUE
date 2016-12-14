@@ -276,7 +276,7 @@ double rotation_pAz(Grid &par, Op &opr, int i, int j, int k){
             int zDim = par.ival("zDim");
             count = k + j*zDim + i*yDim*zDim;
         }
-        return Az[count] * zp[j];
+        return Az[count] * zp[k];
     }
 }
 

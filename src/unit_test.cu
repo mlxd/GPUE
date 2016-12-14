@@ -50,6 +50,16 @@ void parser_test();
 // Testing the evolve_2d function in evolution.cu
 void evolve_2d_test();
 
+// Testing the parSum function
+void parSum_test();
+
+// Simple test of grid / cuda stuff
+void grid_test2d();
+void grid_test3d();
+
+// Test of 1D fft's along all 3d grids
+void fft_test();
+
 // Kernel testing will be added later
 
 /*----------------------------------------------------------------------------//
@@ -58,11 +68,418 @@ void evolve_2d_test();
 
 void test_all(){
     std::cout << "Starting unit tests..." << '\n';
-    parameter_test();
-    parser_test();
-    evolve_2d_test();
+    //parameter_test();
+    //parser_test();
+    //evolve_2d_test();
+    //grid_test2d();
+    //grid_test3d();
+    //parSum_test();
+    fft_test();
 
     std::cout << "All tests completed. GPUE passed." << '\n';
+}
+
+// Test of 1D fft's along all 3d grids
+// In particular, we need to test the generate_plan_other3d function
+// These will be checked against 1d 
+void fft_test(){
+
+    // For these tests, we are assuming that the x, y and z dimensions are 
+    // All the same (2x2x2)
+    // Note that yDim needs to be singled out differently, but z/x need no loops
+
+    // now we need to create the necessary parameters and store everything
+    int xDim = 2;
+    int yDim = 2;
+    int zDim = 2;
+    int gsize = xDim * yDim * zDim;
+
+    Grid par;
+    par.store("xDim", xDim);
+    par.store("yDim", yDim);
+    par.store("zDim", zDim);
+
+    // Now creating the plans
+    cufftHandle plan_x = generate_plan_other3d(par, 0);
+    cufftHandle plan_y = generate_plan_other3d(par, 1);
+    cufftHandle plan_z = generate_plan_other3d(par, 2);
+
+    // And the result / error
+    cudaError_t err;
+    cufftResult result;
+
+    // Creating the initial array for the x dimension fft
+    double2 *array, *gpu_array;
+    array = (double2 *) malloc(sizeof(double2)*gsize);
+    cudaMalloc((void**) &gpu_array, sizeof(double2)*gsize);
+    for (int i = 0; i < gsize; i++){
+        array[i].x = 1;
+        array[i].y = 0;
+    }
+
+    // transferring to gpu
+    err = cudaMemcpy(gpu_array, array, sizeof(double2)*gsize,
+                     cudaMemcpyHostToDevice);
+    if (err != cudaSuccess){
+        std::cout << "Could not coppy array to device!" << '\n';
+        std::cout << "error code: " << err << '\n';
+        exit(1);
+    }
+
+    // Performing the x transformation
+    for (int i = 0; i < yDim; i++){
+        result = cufftExecZ2Z(plan_y, &gpu_array[i*xDim*yDim], 
+                                      &gpu_array[i*xDim*yDim], CUFFT_FORWARD);
+    }
+    //result = cufftExecZ2Z(plan_z, gpu_array, gpu_array, CUFFT_FORWARD);
+
+    // transferring back to host to check output
+    err = cudaMemcpy(array, gpu_array, sizeof(double2)*gsize, 
+                     cudaMemcpyDeviceToHost);
+    if (err != cudaSuccess){
+        std::cout << "Could not coppy gpu_array to host!" << '\n';
+        std::cout << "error code: " << err << '\n';
+        exit(1);
+    }
+
+    for (int i = 0; i < gsize; i++){
+        std::cout << array[i].x << '\t' << array[i].y << '\n';
+    }
+
+    // Now to try the inverse direction
+
+    for (int i = 0; i < yDim; i++){
+        result = cufftExecZ2Z(plan_y, &gpu_array[i*xDim*yDim], 
+                                      &gpu_array[i*xDim*yDim], CUFFT_INVERSE);
+    }
+    //result = cufftExecZ2Z(plan_z, gpu_array, gpu_array, CUFFT_INVERSE);
+
+    // copying back
+    err = cudaMemcpy(array, gpu_array, sizeof(double2)*gsize, 
+                     cudaMemcpyDeviceToHost);
+    if (err != cudaSuccess){
+        std::cout << "Could not coppy gpu_array to host!" << '\n';
+        std::cout << "error code: " << err << '\n';
+        exit(1);
+    }
+
+    for (int i = 0; i < gsize; i++){
+        std::cout << array[i].x << '\t' << array[i].y << '\n';
+    }
+
+
+
+}
+
+// Simple test of CUDA grid stuff
+void grid_test2d(){
+
+    std::cout << "testing grid / threads and stuff" << '\n';
+
+    int max_threads = 128;
+
+    int xDim = 1024;
+    int yDim = 1024;
+    int zDim = 1;
+
+    int xD = 1, yD = 1, zD = 1;
+
+    int gsize = xDim * yDim;
+
+    // Now to set up the CUDA grid / threads
+    dim3 block;
+    dim3 grid;
+
+    if (xDim <= max_threads){
+        block.x = xDim;
+        block.y = 1;
+        block.z = 1;
+
+        xD = 1;
+        yD = yDim;
+        zD = 1;
+    } 
+    else{
+        int count = 0;
+        int dim_tmp = xDim;
+        while (dim_tmp > max_threads){
+            count++;
+            dim_tmp /= 2;
+        }
+
+        std::cout << "count is: " << count << '\n';
+
+        block.x = dim_tmp;
+        block.y = 1;
+        block.z = 1;
+        xD = pow(2,count);
+        yD = yDim;
+        zD = 1;
+    }
+
+    std::cout << "threads in x are: " << block.x << '\n';
+    std::cout << "dimensions are: " << xD << '\t' << yD << '\t' << zD << '\n';
+
+    grid.x=xD; 
+    grid.y=yD; 
+    grid.z=zD; 
+
+    int total_threads = block.x * block.y * block.z;
+
+    // Now we need to initialize our double * and send it to the gpu
+    double *host_array, *device_array;
+    host_array = (double *) malloc(sizeof(double)*gsize);
+    cudaMalloc((void**) &device_array, sizeof(double)*gsize);
+
+    // initializing 2d array
+    for (int i = 0; i < gsize; i++){
+        host_array[i] = -1;
+    }
+
+    // Now to copy to device
+    cudaMemcpy(device_array, host_array,
+               sizeof(double)*gsize,
+               cudaMemcpyHostToDevice);
+
+    // Test
+    thread_test<<<grid,block>>>(device_array,device_array);
+
+    // Now to copy back and print
+    cudaMemcpy(host_array, device_array,
+               sizeof(double)*gsize,
+               cudaMemcpyDeviceToHost);
+    
+    
+/*
+    for (int i = 0; i < gsize; i++){
+        std::cout << i << '\t' <<  host_array[i] << '\n';
+    }
+*/
+    std::cout << "1024 x 1024 is: " << host_array[gsize-1] << '\n';
+    assert(host_array[gsize-1] == 1024*1024-1);
+
+    std::cout << "2d grid tests completed. now for 3d cases" << '\n';
+
+}
+
+// Simple test of CUDA grid stuff
+void grid_test3d(){
+
+    std::cout << "testing grid / threads and stuff for 3d" << '\n';
+
+    int max_threads = 128;
+
+    int xDim = 256;
+    int yDim = 256;
+    int zDim = 256;
+
+    int xD = 1, yD = 1, zD = 1;
+
+    int gsize = xDim * yDim * zDim;
+
+    // Now to set up the CUDA grid / threads
+    dim3 block;
+    dim3 grid;
+
+    if (xDim <= max_threads){
+        block.x = xDim;
+        block.y = 1;
+        block.z = 1;
+
+        xD = 1;
+        yD = yDim;
+        zD = zDim;
+    } 
+    else{
+        int count = 0;
+        int dim_tmp = xDim;
+        while (dim_tmp > max_threads){
+            count++;
+            dim_tmp /= 2;
+        }
+
+        std::cout << "count is: " << count << '\n';
+
+        block.x = dim_tmp;
+        block.y = 1;
+        block.z = 1;
+        xD = pow(2,count);
+        yD = yDim;
+        zD = zDim;
+    }
+
+    std::cout << "threads in x are: " << block.x << '\n';
+    std::cout << "dimensions are: " << xD << '\t' << yD << '\t' << zD << '\n';
+
+    grid.x=xD; 
+    grid.y=yD; 
+    grid.z=zD; 
+
+    int total_threads = block.x * block.y * block.z;
+
+    // Now we need to initialize our double * and send it to the gpu
+    double *host_array, *device_array;
+    host_array = (double *) malloc(sizeof(double)*gsize);
+    cudaMalloc((void**) &device_array, sizeof(double)*gsize);
+
+    // initializing 2d array
+    for (int i = 0; i < gsize; i++){
+        host_array[i] = -1;
+    }
+
+    // Now to copy to device
+    cudaMemcpy(device_array, host_array,
+               sizeof(double)*gsize,
+               cudaMemcpyHostToDevice);
+
+    // Test
+    thread_test<<<grid,block>>>(device_array,device_array);
+
+    // Now to copy back and print
+    cudaMemcpy(host_array, device_array,
+               sizeof(double)*gsize,
+               cudaMemcpyDeviceToHost);
+    
+    
+/*
+    for (int i = 0; i < gsize; i++){
+        std::cout << i << '\t' <<  host_array[i] << '\n';
+    }
+*/
+    std::cout << "256x256x256 is: " << host_array[gsize-1] << '\n';
+    assert(host_array[gsize-1] == 256*256*256-1);
+
+    std::cout << "3d grid tests completed. now for 3d cases" << '\n';
+
+}
+
+// Test of the parSum function in 3d
+void parSum_test(){
+
+    // Setting error
+    cudaError_t err;
+
+    // first, we need to initialize the Grid and Cuda classes
+    Grid par;
+    Cuda cupar;
+
+    // 2D test first
+
+    // For now, we will assume an 8x8 array for summing
+    dim3 threads(32, 1, 1);
+    int total_threads = threads.x*threads.y*threads.z;
+    int xDim = 64;
+    int yDim = 64;
+    int zDim = 1;
+
+    par.store("dimnum", 2);
+    par.store("xDim", xDim);
+    par.store("yDim", yDim);
+    par.store("zDim", zDim);
+    par.store("dx",1.0);
+    par.store("dy",1.0);
+    par.store("dz",1.0);
+    cupar.store("threads",threads);
+
+    // Now we need to initialize the grid for the getGid3d3d kernel
+    int gsize = xDim*yDim;
+    dim3 grid;
+    grid.x = 2;
+    grid.y = yDim;
+
+    cupar.store("grid", grid);
+
+    // now we need to initialize the wfc to all 1's;
+    double2 *wfc, *host_sum;
+    wfc = (cufftDoubleComplex *) malloc(sizeof(cufftDoubleComplex) * gsize);
+    host_sum = (cufftDoubleComplex *) 
+               malloc(sizeof(cufftDoubleComplex) * gsize / total_threads);
+
+    // init wfc
+    for (int i = 0; i < gsize; i++){
+        wfc[i].x = 1;
+        wfc[i].y = 0;
+    }
+
+    double2 *gpu_wfc;
+    cudaMalloc((void**) &gpu_wfc, sizeof(cufftDoubleComplex)*gsize);
+
+    // copying wfc to device
+    err = cudaMemcpy(gpu_wfc, wfc, sizeof(cufftDoubleComplex)*gsize,
+                     cudaMemcpyHostToDevice);
+
+    if (err!=cudaSuccess){
+        std::cout << "ERROR: Could not copy wfc to device!" << '\n';
+    }
+
+    // Creating parsum on device
+    double2 *par_sum;
+    cudaMalloc((void**) &par_sum, sizeof(cufftDoubleComplex)*gsize/total_threads);
+
+    parSum(gpu_wfc, par_sum, par, cupar);
+
+    // copying parsum back
+    err = cudaMemcpy(host_sum, par_sum, 
+                     sizeof(cufftDoubleComplex)*gsize / total_threads, 
+                     cudaMemcpyDeviceToHost);
+    if (err!=cudaSuccess){
+        std::cout << err << '\n';
+        std::cout << "ERROR: Could not copy par_sum to the host!" << '\n';
+        exit(1);
+    }
+
+    // The output value should be 4096
+    std::cout << "2d parSum is:" << '\n';
+    std::cout << host_sum[0].x << " + " << host_sum[0].y << " i" << '\n';
+
+    if (host_sum[0].x != 4096){
+        std::cout << "parSum 2d test has failed! Sum is: "
+                  << host_sum[0].x << '\n';
+        assert((int)host_sum[0].x == 4096);
+    }
+
+    // Now for the 3d case
+    // For now, we will assume a 4x4x4 array for summing
+    par.store("dimnum", 3);
+    par.store("xDim", 16);
+    par.store("yDim", 16);
+    par.store("zDim", 16);
+    par.store("dx",1.0);
+    par.store("dy",1.0);
+    par.store("dz",1.0);
+
+    cupar.store("threads",threads);
+
+    // Now we need to initialize the grid for the getGid3d3d kernel
+    grid.x = gsize;
+    grid.y = 1;
+    grid.z = 1;
+
+    cupar.store("grid", grid);
+
+    // copying host wfc back to device
+    err = cudaMemcpy(gpu_wfc, wfc, sizeof(cufftDoubleComplex)*gsize,
+                     cudaMemcpyHostToDevice);
+
+    parSum(gpu_wfc, par_sum, par, cupar);
+
+    // copying parsum back
+    err = cudaMemcpy(host_sum, par_sum, 
+                     sizeof(cufftDoubleComplex)*gsize / total_threads, 
+                     cudaMemcpyDeviceToHost);
+    if (err!=cudaSuccess){
+        std::cout << "ERROR: Could not copy par_sum to the host!" << '\n';
+        exit(1);
+    }
+
+    std::cout << "3d parSum is:" << '\n';
+    std::cout << host_sum[0].x << " + " << host_sum[0].y << " i" << '\n';
+
+    if (host_sum[0].x != 4096){
+        std::cout << "parSum 3d test has failed!" << '\n';
+        assert((int)host_sum[0].x == 4096);
+    }
+
 }
 
 // Test for the Grid structure with paramters in it

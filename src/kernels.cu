@@ -39,7 +39,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 __constant__ double gDenConst = 6.6741e-40;
 
 inline __device__ unsigned int getGid3d3d(){
-    return blockDim.x * ( ( blockDim.y * ( ( blockIdx.z * blockDim.z + threadIdx.z ) + blockIdx.y ) + threadIdx.y ) + blockIdx.x ) + threadIdx.x;
+    //return blockDim.x * ( ( blockDim.y * ( ( blockIdx.z * blockDim.z + threadIdx.z ) + blockIdx.y ) + threadIdx.y ) + blockIdx.x ) + threadIdx.x;
+    int blockId = blockIdx.x + blockIdx.y * gridDim.x
+                  + gridDim.x * gridDim.y * blockIdx.z;
+    int threadId = blockId * (blockDim.x * blockDim.y * blockDim.z)
+                   + (threadIdx.y * blockDim.x)
+                   + (threadIdx.z * blockDim.x * blockDim.y) + threadIdx.x;
+    return threadId;
 }
 
 // function to perform a transposition (2d) or permutation (3d)
@@ -278,11 +284,28 @@ __global__ void angularOp(double omega, double dt, double2* wfc, double* xpyypx,
 }
 
 /**
+ * Kernel for a quick test of the threads and such for GPU computing
+ */
+__global__ void thread_test(double *in, double *out){
+
+    unsigned int Gid = getGid3d3d();
+
+    // Now we set each element in the 
+    out[Gid] = Gid;
+    //in[Gid] = Gid;
+}
+
+/**
  * Routine for parallel summation. Can be looped over from host.
  */
 __global__ void multipass(double2* input, double2* output, int pass){
-    unsigned int tid = threadIdx.x;
-    unsigned int bid = blockIdx.y*gridDim.x*blockDim.x + blockIdx.x;
+    unsigned int tid = threadIdx.x + threadIdx.y*blockDim.x 
+                       + threadIdx.z * blockDim.x * blockDim.y;
+    unsigned int bid = blockIdx.x + blockIdx.y * gridDim.x
+                       + gridDim.x * gridDim.y * blockIdx.z;
+
+    //unsigned int tid = getTid3d3d();
+    //unsigned int bid = getBid3d3d();
     // printf("bid0=%d\n",bid);
 
     unsigned int gid = getGid3d3d();
@@ -294,7 +317,7 @@ __global__ void multipass(double2* input, double2* output, int pass){
     }
     __syncthreads();
     for(int i = blockDim.x>>1; i > 0; i>>=1){
-        if(tid < blockDim.x>>1){
+        if(tid < i){
             sdata[tid].x += sdata[tid + i].x;
             sdata[tid].y += sdata[tid + i].y;
         }
