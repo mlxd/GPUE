@@ -139,7 +139,7 @@ __global__ void cMultPhi(cufftDoubleComplex* in1, double* in2, cufftDoubleComple
 * @param	gState If performing real (1) or imaginary (0) time evolution
 * @param	N Number of atoms in condensate
 */
-__global__ void cMultDensity(double2* in1, double2* in2, double2* out, double dt, double mass, int gstate, int N);
+__global__ void cMultDensity(double2* in1, double2* in2, double2* out, double dt, double mass, int gstate, int N, double gDenConst);
 
 //##############################################################################
 
@@ -285,7 +285,7 @@ __global__ void naivetranspose2d2(int xDim, int yDim,
 * @param	op_space Check if position space with non-linear term or not.
 * @param	sqrt_omegaz_mass sqrt(omegaZ/mass), part of the nonlin interaction term.
 */
-__global__ void energyCalc(double2 *wfc, double2 *op, double dt, double2 *energy, int gnd_state, int op_space, double sqrt_omegaz_mass);
+__global__ void energyCalc(double2 *wfc, double2 *op, double dt, double2 *energy, int gnd_state, int op_space, double sqrt_omegaz_mass, double gDenConst);
 /**
 * @brief	Performs bra-ket state multiplication. Not fully implemented.
 * @ingroup	gpu

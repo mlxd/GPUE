@@ -36,7 +36,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 //Evaluted in MATLAB: N*4*HBAR*HBAR*PI*(4.67e-9/mass)*sqrt(mass*(omegaZ)/(2*PI*HBAR))
-__constant__ double gDenConst = 6.6741e-40;
+//__constant__ double gDenConst = 6.6741e-40;
 
 inline __device__ unsigned int getGid3d3d(){
     //return blockDim.x * ( ( blockDim.y * ( ( blockIdx.z * blockDim.z + threadIdx.z ) + blockIdx.y ) + threadIdx.y ) + blockIdx.x ) + threadIdx.x;
@@ -44,7 +44,7 @@ inline __device__ unsigned int getGid3d3d(){
                   + gridDim.x * gridDim.y * blockIdx.z;
     int threadId = blockId * (blockDim.x * blockDim.y * blockDim.z)
                    + (threadIdx.y * blockDim.x)
-                   + (threadIdx.z * blockDim.x * blockDim.y) + threadIdx.x;
+                   + (threadIdx.z * (blockDim.x * blockDim.y)) + threadIdx.x;
     return threadId;
 }
 
@@ -185,11 +185,10 @@ __global__ void vecMult(double2 *in, double *factor, double2 *out){
     out[gid] = result;
 }
 
-
 /**
  * Performs the non-linear evolution term of Gross--Pitaevskii equation.
  */
-__global__ void cMultDensity(double2* in1, double2* in2, double2* out, double dt, double mass, int gstate, int N){
+__global__ void cMultDensity(double2* in1, double2* in2, double2* out, double dt, double mass, int gstate, int N, double gDenConst){
     double2 result;
     double gDensity;
     //int gid = blockIdx.y*gridDim.x*blockDim.x + blockIdx.x*blockDim.x + threadIdx.x;
@@ -332,7 +331,7 @@ __global__ void multipass(double2* input, double2* output, int pass){
 /*
 * Calculates all of the energy of the current state. sqrt_omegaz_mass = sqrt(omegaZ/mass), part of the nonlin interaction term
 */
-__global__ void energyCalc(double2 *wfc, double2 *op, double dt, double2 *energy, int gnd_state, int op_space, double sqrt_omegaz_mass){
+__global__ void energyCalc(double2 *wfc, double2 *op, double dt, double2 *energy, int gnd_state, int op_space, double sqrt_omegaz_mass, double gDenConst){
     unsigned int gid = getGid3d3d();
     double hbar_dt = HBAR/dt;
     double g_local = 0.0;

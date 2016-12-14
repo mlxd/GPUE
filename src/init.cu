@@ -170,6 +170,12 @@ int init_2d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
 
     //std::cout << N << '\t' << a_s << '\t' << mass << '\t' << omegaZ << '\n';
     
+    // Let's go ahead and define the gDensConst here
+    // N*4*HBAR*HBAR*PI*(4.67e-9/mass)*sqrt(mass*(omegaZ)/(2*PI*HBAR)
+    double gDenConst = N*4*HBAR*HBAR*PI*(4.67e-9/mass)
+                       *sqrt(mass*(omegaZ)/(2*PI*HBAR));
+    par.store("gDenConst", gDenConst);
+
     Rxy = pow(15,0.2)*pow(N*a_s*sqrt(mass*omegaZ/HBAR),0.2);
     par.store("Rxy",Rxy);
     double bec_length = sqrt( HBAR/(mass*sqrt( omegaX*omegaX * 
@@ -595,6 +601,7 @@ int init_3d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     dim3 grid = cupar.dim3val("grid");
 
     std::string buffer;
+
     double Rxy; //Condensate scaling factor.
     double a0x, a0y, a0z; //Harmonic oscillator length in x and y directions
 
@@ -649,6 +656,12 @@ int init_3d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     double a_s = 4.76e-9;
     par.store("a_s",a_s);
 
+    // Let's go ahead and define the gDensConst here
+    // N*4*HBAR*HBAR*PI*(4.67e-9/mass)*sqrt(mass*(omegaZ)/(2*PI*HBAR)
+    double gDenConst = N*4*HBAR*HBAR*PI*(4.67e-9/mass);
+    par.store("gDenConst", gDenConst);
+
+
     double sum = 0.0;
 
     a0x = pow(HBAR/(2*mass*omegaX), 0.5);
@@ -668,9 +681,9 @@ int init_3d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
                                                ( 1 - omega*omega) ) ));
 
     //std::cout << "Rxy is: " << Rxy << '\n';
-    double xMax = 100*bec_length;//6*Rxy*a0x; //6*Rxy*a0x;
-    double yMax = 100*bec_length;//6*Rxy*a0y; 
-    double zMax = 100*bec_length;//6*Rxy*a0z;
+    double xMax = 20*bec_length;//6*Rxy*a0x; //6*Rxy*a0x;
+    double yMax = 20*bec_length;//6*Rxy*a0y; 
+    double zMax = 20*bec_length;//6*Rxy*a0z;
     par.store("xMax",xMax);
     par.store("yMax",yMax);
     par.store("zMax",zMax);

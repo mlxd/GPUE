@@ -51,6 +51,7 @@ void evolve_2d(Wave &wave, Op &opr,
     double dy = par.dval("dy");
     double interaction = par.dval("interaction");
     double laser_power = par.dval("laser_power");
+    double gDenConst = par.dval("gDenConst");
     double *x = par.dsval("x");
     double *y = par.dsval("y");
     double *V = opr.dsval("V");
@@ -352,7 +353,7 @@ void evolve_2d(Wave &wave, Op &opr,
             //std::cout << Dt << '\t' << mass << '\t' << omegaZ << '\t' 
             //          << gstate << '\t' << N*interaction << '\n';
             cMultDensity<<<grid,threads>>>(V_gpu,gpuWfc,gpuWfc,0.5*Dt,
-                                           mass,gstate,N*interaction);
+                                           mass,gstate,N*interaction,gDenConst);
         }
         else {
             cMult<<<grid,threads>>>(V_gpu,gpuWfc,gpuWfc);
@@ -372,7 +373,7 @@ void evolve_2d(Wave &wave, Op &opr,
         // U_r(dt/2)*wfc
         if(nonlin == 1){
             cMultDensity<<<grid,threads>>>(V_gpu,gpuWfc,gpuWfc,Dt*0.5,
-                                           mass,gstate,N*interaction);
+                                           mass,gstate,N*interaction,gDenConst);
         }
         else {
             cMult<<<grid,threads>>>(V_gpu,gpuWfc,gpuWfc);
@@ -583,6 +584,7 @@ void evolve_3d(Wave &wave, Op &opr,
     double dz = par.dval("dz");
     double interaction = par.dval("interaction");
     double laser_power = par.dval("laser_power");
+    double gDenConst = par.dval("gDenConst");
     double *x = par.dsval("x");
     double *y = par.dsval("y");
     double *z = par.dsval("z");
@@ -729,7 +731,7 @@ void evolve_3d(Wave &wave, Op &opr,
             //std::cout << Dt << '\t' << mass << '\t' << omegaZ << '\t' 
             //          << gstate << '\t' << N*interaction << '\n';
             cMultDensity<<<grid,threads>>>(V_gpu,gpuWfc,gpuWfc,0.5*Dt,
-                                           mass,gstate,N*interaction);
+                                           mass,gstate,N*interaction,gDenConst);
         }
         else {
             cMult<<<grid,threads>>>(V_gpu,gpuWfc,gpuWfc);
@@ -749,7 +751,7 @@ void evolve_3d(Wave &wave, Op &opr,
         // U_r(dt/2)*wfc
         if(nonlin == 1){
             cMultDensity<<<grid,threads>>>(V_gpu,gpuWfc,gpuWfc,Dt*0.5,
-                                           mass,gstate,N*interaction);
+                                           mass,gstate,N*interaction,gDenConst);
         }
         else {
             cMult<<<grid,threads>>>(V_gpu,gpuWfc,gpuWfc);
