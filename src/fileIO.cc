@@ -43,11 +43,11 @@ namespace FileIO{
      * Reads datafile into memory.
      */
     double2* readIn(std::string fileR, std::string fileI, 
-                        int xDim, int yDim){
+                        int gSize){
         FILE *f;
         f = fopen(fileR.c_str(),"r");
         int i = 0;
-        double2 *arr = (double2*) malloc(sizeof(double2)*xDim*yDim);
+        double2 *arr = (double2*) malloc(sizeof(double2)*gSize);
         double line;
         while(fscanf(f,"%lE",&line) > 0){
             arr[i].x = line;
@@ -63,32 +63,6 @@ namespace FileIO{
         fclose(f);
         return arr;
     }
-
-    /*
-     * Reads datafile into memory 3D!
-     */
-    double2* readIn3d(std::string fileR, std::string fileI,
-                     int xDim, int yDim, int zDim){
-        FILE *f;
-        f = fopen(fileR.c_str(),"r");
-        int i = 0;
-        double2 *arr = (double2*) malloc(sizeof(double2)*xDim*yDim*zDim);
-        double line;
-        while(fscanf(f,"%lE",&line) > 0){
-            arr[i].x = line;
-            ++i;
-        }
-        fclose(f);
-        f = fopen(fileI.c_str(),"r");
-        i = 0;
-        while(fscanf(f,"%lE",&line) > 0){
-            arr[i].y = line;
-            ++i;
-        }
-        fclose(f);
-        return arr;
-    }
-                    
 
     /*
      * Writes out the parameter file.

@@ -76,7 +76,7 @@ int init_2d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     double *pAx_gpu;
     double *Energy_gpu;
     cufftDoubleComplex *wfc;
-    if (par.bval("read_wfc")){
+    if (par.bval("read_wfc") == true){
         wfc = wave.cufftDoubleComplexval("wfc");
     }
     cufftDoubleComplex *V_gpu;
@@ -253,7 +253,7 @@ int init_2d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     Energy = (double*) malloc(sizeof(double) * gSize);
     r = (double *) malloc(sizeof(double) * gSize);
     Phi = (double *) malloc(sizeof(double) * gSize);
-    if (!par.bval("read_wfc")){
+    if (par.bval("read_wfc") == false){
         wfc = (cufftDoubleComplex *) malloc(sizeof(cufftDoubleComplex) * gSize);
     }
     wfc_backup = (cufftDoubleComplex *) malloc(sizeof(cufftDoubleComplex) * 
@@ -327,7 +327,7 @@ int init_2d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
                                               pow((y[j]),2) ) ) *
                                           sin(Phi[(i*xDim + j)]);
             }
-            else if (par.bval("read_wfc")){
+            else if (par.bval("read_wfc") == true){
                 wfc[(i*yDim + j)].x *= cos(Phi[(i*xDim + j)]); 
                 wfc[(i*yDim + j)].y *= sin(Phi[(i*xDim + j)]);
             }
@@ -569,7 +569,7 @@ int init_3d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     double *pAz_gpu;
     double *Energy_gpu;
     cufftDoubleComplex *wfc;
-    if (par.bval("read_wfc")){
+    if (par.bval("read_wfc") == true){
         wfc = wave.cufftDoubleComplexval("wfc");
     }
     cufftDoubleComplex *V_gpu;
@@ -681,9 +681,9 @@ int init_3d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
                                                ( 1 - omega*omega) ) ));
 
     //std::cout << "Rxy is: " << Rxy << '\n';
-    double xMax = 20*bec_length;//6*Rxy*a0x; //6*Rxy*a0x;
-    double yMax = 20*bec_length;//6*Rxy*a0y; 
-    double zMax = 20*bec_length;//6*Rxy*a0z;
+    double xMax = 15*bec_length;//6*Rxy*a0x; //6*Rxy*a0x;
+    double yMax = 15*bec_length;//6*Rxy*a0y; 
+    double zMax = 15*bec_length;//6*Rxy*a0z;
     par.store("xMax",xMax);
     par.store("yMax",yMax);
     par.store("zMax",zMax);
@@ -770,7 +770,7 @@ int init_3d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     Energy = (double*) malloc(sizeof(double) * gSize);
     r = (double *) malloc(sizeof(double) * gSize);
     Phi = (double *) malloc(sizeof(double) * gSize);
-    if (!par.bval("read_wfc")){
+    if (par.bval("read_wfc") == false){
         wfc = (cufftDoubleComplex *) malloc(sizeof(cufftDoubleComplex) * gSize);
     }
     wfc_backup = (cufftDoubleComplex *) malloc(sizeof(cufftDoubleComplex) * 
@@ -829,7 +829,7 @@ int init_3d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
                 index = i * yDim * zDim + j * zDim + k;
                 Phi[index] = fmod(l*atan2(y[j], x[i]),2*PI);
 
-                if (par.bval("read_wfc")){
+                if (par.bval("read_wfc") == true){
                     wfc[index].x *= cos(Phi[index]);
                     wfc[index].y *= sin(Phi[index]);
                 }
@@ -1068,22 +1068,17 @@ int main(int argc, char **argv){
     int xDim = par.ival("xDim");
     int yDim = par.ival("yDim");
     int zDim = par.ival("zDim");
-    if(par.bval("read_wfc")){
+    if(par.bval("read_wfc") == true){
 
         // Initializing the wfc
         int gSize = xDim * yDim * zDim;
         cufftDoubleComplex *wfc;
-        wfc = (cufftDoubleComplex *) malloc(sizeof(cufftDoubleComplex) * gSize);
+        //wfc = (cufftDoubleComplex *) malloc(sizeof(cufftDoubleComplex) * gSize);
 
         std::string infile = par.sval("infile");
         std::string infilei = par.sval("infilei");
         printf("Loading wavefunction...");
-        if (dimnum == 2){
-            wfc=FileIO::readIn(infile,infilei,xDim, yDim);
-        }
-        else if (dimnum == 3){
-            wfc=FileIO::readIn3d(infile,infilei,xDim, yDim, zDim);
-        }
+        wfc=FileIO::readIn(infile,infilei,gSize);
         wave.store("wfc",wfc);
         printf("Wavefunction loaded.\n");
     }

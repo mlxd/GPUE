@@ -79,8 +79,6 @@ void evolve_2d(Wave &wave, Op &opr,
         opr.cufftDoubleComplexval("K_gpu");
     cufftDoubleComplex *V_gpu =
         opr.cufftDoubleComplexval("V_gpu");
-    cufftDoubleComplex *GK = opr.cufftDoubleComplexval("GK");
-    cufftDoubleComplex *GV = opr.cufftDoubleComplexval("GV");
 
     std::cout << x[0] << '\t' << EV[0].x << '\t' << wfc[0].x << '\t'
               << EV_opt[0].x << '\t' << '\n';
@@ -615,8 +613,6 @@ void evolve_3d(Wave &wave, Op &opr,
         opr.cufftDoubleComplexval("K_gpu");
     cufftDoubleComplex *V_gpu =
         opr.cufftDoubleComplexval("V_gpu");
-    cufftDoubleComplex *GK = opr.cufftDoubleComplexval("GK");
-    cufftDoubleComplex *GV = opr.cufftDoubleComplexval("GV");
 
     std::cout << x[0] << '\t' << EV[0].x << '\t' << wfc[0].x << '\t'
               << EV_opt[0].x << '\t' << '\n';

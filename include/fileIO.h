@@ -68,9 +68,7 @@ namespace FileIO {
     * @param	yDim Size of y-grid
     * @return	*double2 Memory address of read-in data. Complex only
     */
-    double2 *readIn(std::string fileR, std::string fileI, int xDim, int yDim);
-    double2 *readIn3d(std::string fileR, std::string fileI, int xDim, int yDim,
-                      int zDim);
+    double2 *readIn(std::string fileR, std::string fileI, int gSize);
 
     /**
     * @brief	Writes the specified double2 array to a text file
