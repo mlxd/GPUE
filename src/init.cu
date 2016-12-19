@@ -338,6 +338,8 @@ int init_2d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
                 wfc[(i*yDim + j)].y = -exp(-( pow((x[i])/(Rxy*a0x),2) + 
                                               pow((y[j])/(Rxy*a0y),2) ) ) *
                                           sin(Phi[(i*xDim + j)]);
+                sum+=sqrt(wfc[(i*xDim + j)].x*wfc[(i*xDim + j)].x + 
+                          wfc[(i*xDim + j)].y*wfc[(i*xDim + j)].y);
             }
                 
             V[(i*yDim + j)] = opr.V_fn(par.Vfn)(par, opr, i, j, 0);
@@ -375,8 +377,6 @@ int init_2d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
             EpAx[(i*yDim + j)].x=cos(-omega*omegaX*pAx[(i*xDim + j)]*dt);
             EpAx[(i*yDim + j)].y=sin(-omega*omegaX*pAx[(i*xDim + j)]*dt);
     
-            sum+=sqrt(wfc[(i*xDim + j)].x*wfc[(i*xDim + j)].x + 
-                      wfc[(i*xDim + j)].y*wfc[(i*xDim + j)].y);
         }
     }
 
@@ -417,12 +417,14 @@ int init_2d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
 
     //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%//
 
-    sum=sqrt(sum*dx*dy);
-    //#pragma omp parallel for reduction(+:sum) private(j)
-    for (i = 0; i < xDim; i++){
-        for (j = 0; j < yDim; j++){
-            wfc[(i*yDim + j)].x = (wfc[(i*yDim + j)].x)/(sum);
-            wfc[(i*yDim + j)].y = (wfc[(i*yDim + j)].y)/(sum);
+    if (par.bval("read_wfc") == false){
+        sum=sqrt(sum*dx*dy);
+        //#pragma omp parallel for reduction(+:sum) private(j)
+        for (i = 0; i < xDim; i++){
+            for (j = 0; j < yDim; j++){
+                wfc[(i*yDim + j)].x = (wfc[(i*yDim + j)].x)/(sum);
+                wfc[(i*yDim + j)].y = (wfc[(i*yDim + j)].y)/(sum);
+            }
         }
     }
     
@@ -681,9 +683,9 @@ int init_3d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
                                                ( 1 - omega*omega) ) ));
 
     //std::cout << "Rxy is: " << Rxy << '\n';
-    double xMax = 15*bec_length;//6*Rxy*a0x; //6*Rxy*a0x;
-    double yMax = 15*bec_length;//6*Rxy*a0y; 
-    double zMax = 15*bec_length;//6*Rxy*a0z;
+    double xMax = 20*bec_length;//6*Rxy*a0x; //6*Rxy*a0x;
+    double yMax = 20*bec_length;//6*Rxy*a0y; 
+    double zMax = 20*bec_length;//6*Rxy*a0z;
     par.store("xMax",xMax);
     par.store("yMax",yMax);
     par.store("zMax",zMax);
@@ -842,6 +844,8 @@ int init_3d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
                                            pow((y[j])/(Rxy*a0y),2) +
                                            pow((z[k])/(Rxy*a0z),2))) *
                                            sin(Phi[index]);
+                    sum+=sqrt(wfc[index].x*wfc[index].x + 
+                              wfc[index].y*wfc[index].y);
                 }
                 
                 V[index] = opr.V_fn(par.Vfn)(par, opr, i, j, k);
@@ -881,8 +885,6 @@ int init_3d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
                 EpAz[index].x=cos(-omega*omegaX*pAz[index]*dt);
                 EpAz[index].y=sin(-omega*omegaX*pAz[index]*dt);
         
-                sum+=sqrt(wfc[index].x*wfc[index].x + 
-                          wfc[index].y*wfc[index].y);
             }
         }
     }
@@ -927,14 +929,16 @@ int init_3d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
 
     //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%//
 
-    sum=sqrt(sum*dx*dy*dz);
-    //#pragma omp parallel for reduction(+:sum) private(j)
-    for (i = 0; i < xDim; i++){
-        for (j = 0; j < yDim; j++){
-            for (k = 0; k < zDim; k++){
-                index = i * yDim * zDim + j * zDim + k;
-                wfc[index].x = (wfc[index].x)/(sum);
-                wfc[index].y = (wfc[index].y)/(sum);
+    if (par.bval("read_wfc") == false){
+        sum=sqrt(sum*dx*dy*dz);
+        //#pragma omp parallel for reduction(+:sum) private(j)
+        for (i = 0; i < xDim; i++){
+            for (j = 0; j < yDim; j++){
+                for (k = 0; k < zDim; k++){
+                    index = i * yDim * zDim + j * zDim + k;
+                    wfc[index].x = (wfc[index].x)/(sum);
+                    wfc[index].y = (wfc[index].y)/(sum);
+                }
             }
         }
     }
