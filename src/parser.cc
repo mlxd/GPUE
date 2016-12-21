@@ -77,6 +77,7 @@ Grid parseArgs(int argc, char** argv){
     par.store("ramp", false);
     par.store("dimnum", 2);
     par.store("dimensionless", false);
+    par.store("write_file", true);
     par.Afn = "rotation";
     par.Kfn = "rotation_K";
     par.Vfn = "harmonic_V";
@@ -84,7 +85,7 @@ Grid parseArgs(int argc, char** argv){
     optind = 1;
 
     while ((opt = getopt (argc, argv, 
-           "d:D:Cx:y:w:G:g:e:T:t:n:p:ro:L:lsi:P:X:Y:O:k:WU:V:S:ahz:H:uA:R:v:Z:c:")) !=-1)
+           "d:D:Cx:y:w:G:g:e:T:t:n:p:ro:L:lsi:P:X:Y:O:k:WU:V:S:ahz:H:uA:R:v:Z:fc:")) !=-1)
     {
         switch (opt)
         {
@@ -200,6 +201,12 @@ Grid parseArgs(int argc, char** argv){
             {
                 printf("Angular momentum mode engaged\n");
                 par.store("corotating",true);
+                break;
+            }
+            case 'f':
+            {
+                printf("No longer writing initial variables to file.\n");
+                par.store("write_file", false);
                 break;
             }
             case 's':

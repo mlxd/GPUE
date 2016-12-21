@@ -777,7 +777,7 @@ void evolve_3d(Wave &wave, Op &opr,
                     scalarMult<<<grid,threads>>>(gpuWfc,
                                                  renorm_factor_1d,gpuWfc);
                     cMult<<<grid,threads>>>(gpuWfc, 
-                        (cufftDoubleComplex*) gpu1dpAz, gpuWfc);
+                        (cufftDoubleComplex*) gpu1dpAx, gpuWfc);
                     result = cufftExecZ2Z(plan_1d,gpuWfc,gpuWfc,CUFFT_INVERSE);
                     scalarMult<<<grid,threads>>>(gpuWfc,
                                                  renorm_factor_1d, gpuWfc);
@@ -810,7 +810,7 @@ void evolve_3d(Wave &wave, Op &opr,
                     scalarMult<<<grid,threads>>>(gpuWfc,
                                                  renorm_factor_1d,gpuWfc);
                     cMult<<<grid,threads>>>(gpuWfc, 
-                        (cufftDoubleComplex*) gpu1dpAx, gpuWfc);
+                        (cufftDoubleComplex*) gpu1dpAz, gpuWfc);
     
                     result = cufftExecZ2Z(plan_dim3,gpuWfc,gpuWfc,
                                           CUFFT_INVERSE);

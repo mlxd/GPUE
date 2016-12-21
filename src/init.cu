@@ -46,6 +46,7 @@ int init_2d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     int N = par.ival("atoms");
     int xDim = par.ival("xDim");
     int yDim = par.ival("yDim");
+    bool write_file = par.bval("write_file");
     dim3 threads;
     unsigned int gSize = xDim*yDim;
     double omega = par.dval("omega");
@@ -322,31 +323,31 @@ int init_2d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
             else if (par.bval("dimensionless")){
                 wfc[(i*yDim + j)].x = exp(-( pow((x[i]),2) + 
                                              pow((y[j]),2) ) ) *
-                                      cos(Phi[(i*xDim + j)]);
+                                      cos(Phi[(i*yDim + j)]);
                 wfc[(i*yDim + j)].y = -exp(-( pow((x[i]),2) + 
                                               pow((y[j]),2) ) ) *
-                                          sin(Phi[(i*xDim + j)]);
+                                          sin(Phi[(i*yDim + j)]);
             }
             else if (par.bval("read_wfc") == true){
-                wfc[(i*yDim + j)].x *= cos(Phi[(i*xDim + j)]); 
-                wfc[(i*yDim + j)].y *= sin(Phi[(i*xDim + j)]);
+                wfc[(i*yDim + j)].x *= cos(Phi[(i*yDim + j)]); 
+                wfc[(i*yDim + j)].y *= sin(Phi[(i*yDim + j)]);
             }
             else{
                 wfc[(i*yDim + j)].x = exp(-( pow((x[i])/(Rxy*a0x),2) + 
                                              pow((y[j])/(Rxy*a0y),2) ) ) *
-                                      cos(Phi[(i*xDim + j)]);
+                                      cos(Phi[(i*yDim + j)]);
                 wfc[(i*yDim + j)].y = -exp(-( pow((x[i])/(Rxy*a0x),2) + 
                                               pow((y[j])/(Rxy*a0y),2) ) ) *
-                                          sin(Phi[(i*xDim + j)]);
-                sum+=sqrt(wfc[(i*xDim + j)].x*wfc[(i*xDim + j)].x + 
-                          wfc[(i*xDim + j)].y*wfc[(i*xDim + j)].y);
+                                          sin(Phi[(i*yDim + j)]);
+                sum+=sqrt(wfc[(i*xDim + j)].x*wfc[(i*yDim + j)].x + 
+                          wfc[(i*xDim + j)].y*wfc[(i*yDim + j)].y);
             }
                 
             V[(i*yDim + j)] = opr.V_fn(par.Vfn)(par, opr, i, j, 0);
             K[(i*yDim + j)] = opr.K_fn(par.Kfn)(par, opr, i, j, 0);
 
-            GV[(i*yDim + j)].x = exp( -V[(i*xDim + j)]*(gdt/(2*HBAR)));
-            GK[(i*yDim + j)].x = exp( -K[(i*xDim + j)]*(gdt/HBAR));
+            GV[(i*yDim + j)].x = exp( -V[(i*yDim + j)]*(gdt/(2*HBAR)));
+            GK[(i*yDim + j)].x = exp( -K[(i*yDim + j)]*(gdt/HBAR));
             GV[(i*yDim + j)].y = 0.0;
             GK[(i*yDim + j)].y = 0.0;
 
@@ -362,51 +363,53 @@ int init_2d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
             //pAx[(i*yDim + j)] = -y[j]*xp[i];
             pAx[(i*yDim + j)] = opr.pAx_fn("rotation")(par, opr, i, j, 0);
 
-            GpAx[(i*yDim + j)].x = exp(-pAx[(i*xDim + j)]*gdt);
+            GpAx[(i*yDim + j)].x = exp(-pAx[(i*yDim + j)]*gdt);
             GpAx[(i*yDim + j)].y = 0;
-            GpAy[(i*yDim + j)].x = exp(-pAy[(i*xDim + j)]*gdt);
+            GpAy[(i*yDim + j)].x = exp(-pAy[(i*yDim + j)]*gdt);
             GpAy[(i*yDim + j)].y = 0;
             
-            EV[(i*yDim + j)].x=cos( -V[(i*xDim + j)]*(dt/(2*HBAR)));
-            EV[(i*yDim + j)].y=sin( -V[(i*xDim + j)]*(dt/(2*HBAR)));
-            EK[(i*yDim + j)].x=cos( -K[(i*xDim + j)]*(dt/HBAR));
-            EK[(i*yDim + j)].y=sin( -K[(i*xDim + j)]*(dt/HBAR));
+            EV[(i*yDim + j)].x=cos( -V[(i*yDim + j)]*(dt/(2*HBAR)));
+            EV[(i*yDim + j)].y=sin( -V[(i*yDim + j)]*(dt/(2*HBAR)));
+            EK[(i*yDim + j)].x=cos( -K[(i*yDim + j)]*(dt/HBAR));
+            EK[(i*yDim + j)].y=sin( -K[(i*yDim + j)]*(dt/HBAR));
             
-            EpAy[(i*yDim + j)].x=cos(-omega*omegaX*pAy[(i*xDim + j)]*dt);
-            EpAy[(i*yDim + j)].y=sin(-omega*omegaX*pAy[(i*xDim + j)]*dt);
-            EpAx[(i*yDim + j)].x=cos(-omega*omegaX*pAx[(i*xDim + j)]*dt);
-            EpAx[(i*yDim + j)].y=sin(-omega*omegaX*pAx[(i*xDim + j)]*dt);
+            EpAy[(i*yDim + j)].x=cos(-omega*omegaX*pAy[(i*yDim + j)]*dt);
+            EpAy[(i*yDim + j)].y=sin(-omega*omegaX*pAy[(i*yDim + j)]*dt);
+            EpAx[(i*yDim + j)].x=cos(-omega*omegaX*pAx[(i*yDim + j)]*dt);
+            EpAx[(i*yDim + j)].y=sin(-omega*omegaX*pAx[(i*yDim + j)]*dt);
     
         }
     }
 
     Bz = curl2d(par, Ax, Ay);
 
-    std::cout << "writing initial variables to file..." << '\n';
-    //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%//
-    //hdfWriteDouble(xDim, V, 0, "V_0"); //HDF COMING SOON!
-    //hdfWriteComplex(xDim, wfc, 0, "wfc_0");
-    //FileIO::writeOutDouble(buffer, data_dir + "V_opt",V_opt,xDim*yDim,0);
-    FileIO::writeOutDouble(buffer, data_dir + "V",V,xDim*yDim,0);
-    FileIO::writeOutDouble(buffer, data_dir + "K",K,xDim*yDim,0);
-    FileIO::writeOutDouble(buffer, data_dir + "pAy",pAy,xDim*yDim,0);
-    FileIO::writeOutDouble(buffer, data_dir + "pAx",pAx,xDim*yDim,0);
-    FileIO::writeOutDouble(buffer, data_dir + "Ax",Ax,xDim*yDim,0);
-    FileIO::writeOutDouble(buffer, data_dir + "Ay",Ay,xDim*yDim,0);
-    FileIO::writeOutDouble(buffer, data_dir + "Bz",Bz,xDim*yDim,0);
-    FileIO::writeOut(buffer, data_dir + "WFC",wfc,xDim*yDim,0);
-    FileIO::writeOut(buffer, data_dir + "EpAy",EpAy,xDim*yDim,0);
-    FileIO::writeOut(buffer, data_dir + "EpAx",EpAx,xDim*yDim,0);
-    FileIO::writeOutDouble(buffer, data_dir + "Phi",Phi,xDim*yDim,0);
-    FileIO::writeOutDouble(buffer, data_dir + "r",r,xDim*yDim,0);
-    FileIO::writeOutDouble(buffer, data_dir + "x",x,xDim,0);
-    FileIO::writeOutDouble(buffer, data_dir + "y",y,yDim,0);
-    FileIO::writeOutDouble(buffer, data_dir + "px",xp,xDim,0);
-    FileIO::writeOutDouble(buffer, data_dir + "py",yp,yDim,0);
-    FileIO::writeOut(buffer, data_dir + "GK",GK,xDim*yDim,0);
-    FileIO::writeOut(buffer, data_dir + "GV",GV,xDim*yDim,0);
-    FileIO::writeOut(buffer, data_dir + "GpAx",GpAx,xDim*yDim,0);
-    FileIO::writeOut(buffer, data_dir + "GpAy",GpAy,xDim*yDim,0);
+    if (write_file){
+        std::cout << "writing initial variables to file..." << '\n';
+        //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%//
+        //hdfWriteDouble(xDim, V, 0, "V_0"); //HDF COMING SOON!
+        //hdfWriteComplex(xDim, wfc, 0, "wfc_0");
+        //FileIO::writeOutDouble(buffer, data_dir + "V_opt",V_opt,xDim*yDim,0);
+        FileIO::writeOutDouble(buffer, data_dir + "V",V,xDim*yDim,0);
+        FileIO::writeOutDouble(buffer, data_dir + "K",K,xDim*yDim,0);
+        FileIO::writeOutDouble(buffer, data_dir + "pAy",pAy,xDim*yDim,0);
+        FileIO::writeOutDouble(buffer, data_dir + "pAx",pAx,xDim*yDim,0);
+        FileIO::writeOutDouble(buffer, data_dir + "Ax",Ax,xDim*yDim,0);
+        FileIO::writeOutDouble(buffer, data_dir + "Ay",Ay,xDim*yDim,0);
+        FileIO::writeOutDouble(buffer, data_dir + "Bz",Bz,xDim*yDim,0);
+        FileIO::writeOut(buffer, data_dir + "WFC",wfc,xDim*yDim,0);
+        FileIO::writeOut(buffer, data_dir + "EpAy",EpAy,xDim*yDim,0);
+        FileIO::writeOut(buffer, data_dir + "EpAx",EpAx,xDim*yDim,0);
+        FileIO::writeOutDouble(buffer, data_dir + "Phi",Phi,xDim*yDim,0);
+        FileIO::writeOutDouble(buffer, data_dir + "r",r,xDim*yDim,0);
+        FileIO::writeOutDouble(buffer, data_dir + "x",x,xDim,0);
+        FileIO::writeOutDouble(buffer, data_dir + "y",y,yDim,0);
+        FileIO::writeOutDouble(buffer, data_dir + "px",xp,xDim,0);
+        FileIO::writeOutDouble(buffer, data_dir + "py",yp,yDim,0);
+        FileIO::writeOut(buffer, data_dir + "GK",GK,xDim*yDim,0);
+        FileIO::writeOut(buffer, data_dir + "GV",GV,xDim*yDim,0);
+        FileIO::writeOut(buffer, data_dir + "GpAx",GpAx,xDim*yDim,0);
+        FileIO::writeOut(buffer, data_dir + "GpAy",GpAy,xDim*yDim,0);
+    }
 
     //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%//
 
@@ -538,6 +541,7 @@ int init_3d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     int yDim = par.ival("yDim");
     int zDim = par.ival("zDim");
     dim3 threads(max_threads,1,1);
+    bool write_file = par.bval("write_file");
     unsigned int gSize = xDim*yDim*zDim;
     double omega = par.dval("omega");
     double gdt = par.dval("gdt");
@@ -683,9 +687,9 @@ int init_3d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
                                                ( 1 - omega*omega) ) ));
 
     //std::cout << "Rxy is: " << Rxy << '\n';
-    double xMax = 20*bec_length;//6*Rxy*a0x; //6*Rxy*a0x;
-    double yMax = 20*bec_length;//6*Rxy*a0y; 
-    double zMax = 20*bec_length;//6*Rxy*a0z;
+    double xMax = 150*bec_length;//6*Rxy*a0x; //6*Rxy*a0x;
+    double yMax = 150*bec_length;//6*Rxy*a0y; 
+    double zMax = 150*bec_length;//6*Rxy*a0z;
     par.store("xMax",xMax);
     par.store("yMax",yMax);
     par.store("zMax",zMax);
@@ -889,36 +893,38 @@ int init_3d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
         }
     }
 
-    std::cout << "writing initial variables to file..." << '\n';
-    //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%//
-    //hdfWriteDouble(xDim, V, 0, "V_0"); //HDF COMING SOON!
-    //hdfWriteComplex(xDim, wfc, 0, "wfc_0");
-    //FileIO::writeOutDouble(buffer, data_dir + "V_opt",V_opt,gSize,0);
-    FileIO::writeOutDouble(buffer, data_dir + "V",V,gSize,0);
-    FileIO::writeOutDouble(buffer, data_dir + "K",K,gSize,0);
-    FileIO::writeOutDouble(buffer, data_dir + "pAy",pAy,gSize,0);
-    FileIO::writeOutDouble(buffer, data_dir + "pAx",pAx,gSize,0);
-    FileIO::writeOutDouble(buffer, data_dir + "pAz",pAz,gSize,0);
-    FileIO::writeOutDouble(buffer, data_dir + "Ax",Ax,gSize,0);
-    FileIO::writeOutDouble(buffer, data_dir + "Ay",Ay,gSize,0);
-    FileIO::writeOutDouble(buffer, data_dir + "Az",Az,gSize,0);
-    FileIO::writeOut(buffer, data_dir + "WFC",wfc,gSize,0);
-    FileIO::writeOut(buffer, data_dir + "EpAy",EpAy,gSize,0);
-    FileIO::writeOut(buffer, data_dir + "EpAx",EpAx,gSize,0);
-    FileIO::writeOut(buffer, data_dir + "EpAz",EpAz,gSize,0);
-    FileIO::writeOutDouble(buffer, data_dir + "Phi",Phi,gSize,0);
-    FileIO::writeOutDouble(buffer, data_dir + "r",r,gSize,0);
-    FileIO::writeOutDouble(buffer, data_dir + "x",x,xDim,0);
-    FileIO::writeOutDouble(buffer, data_dir + "y",y,yDim,0);
-    FileIO::writeOutDouble(buffer, data_dir + "z",z,zDim,0);
-    FileIO::writeOutDouble(buffer, data_dir + "px",xp,xDim,0);
-    FileIO::writeOutDouble(buffer, data_dir + "py",yp,yDim,0);
-    FileIO::writeOutDouble(buffer, data_dir + "pz",zp,zDim,0);
-    FileIO::writeOut(buffer, data_dir + "GK",GK,gSize,0);
-    FileIO::writeOut(buffer, data_dir + "GV",GV,gSize,0);
-    FileIO::writeOut(buffer, data_dir + "GpAx",GpAx,gSize,0);
-    FileIO::writeOut(buffer, data_dir + "GpAy",GpAy,gSize,0);
-    FileIO::writeOut(buffer, data_dir + "GpAz",GpAz,gSize,0);
+    if (write_file){
+        std::cout << "writing initial variables to file..." << '\n';
+        //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%//
+        //hdfWriteDouble(xDim, V, 0, "V_0"); //HDF COMING SOON!
+        //hdfWriteComplex(xDim, wfc, 0, "wfc_0");
+        //FileIO::writeOutDouble(buffer, data_dir + "V_opt",V_opt,gSize,0);
+        FileIO::writeOutDouble(buffer, data_dir + "V",V,gSize,0);
+        FileIO::writeOutDouble(buffer, data_dir + "K",K,gSize,0);
+        FileIO::writeOutDouble(buffer, data_dir + "pAy",pAy,gSize,0);
+        FileIO::writeOutDouble(buffer, data_dir + "pAx",pAx,gSize,0);
+        FileIO::writeOutDouble(buffer, data_dir + "pAz",pAz,gSize,0);
+        FileIO::writeOutDouble(buffer, data_dir + "Ax",Ax,gSize,0);
+        FileIO::writeOutDouble(buffer, data_dir + "Ay",Ay,gSize,0);
+        FileIO::writeOutDouble(buffer, data_dir + "Az",Az,gSize,0);
+        FileIO::writeOut(buffer, data_dir + "WFC",wfc,gSize,0);
+        FileIO::writeOut(buffer, data_dir + "EpAy",EpAy,gSize,0);
+        FileIO::writeOut(buffer, data_dir + "EpAx",EpAx,gSize,0);
+        FileIO::writeOut(buffer, data_dir + "EpAz",EpAz,gSize,0);
+        FileIO::writeOutDouble(buffer, data_dir + "Phi",Phi,gSize,0);
+        FileIO::writeOutDouble(buffer, data_dir + "r",r,gSize,0);
+        FileIO::writeOutDouble(buffer, data_dir + "x",x,xDim,0);
+        FileIO::writeOutDouble(buffer, data_dir + "y",y,yDim,0);
+        FileIO::writeOutDouble(buffer, data_dir + "z",z,zDim,0);
+        FileIO::writeOutDouble(buffer, data_dir + "px",xp,xDim,0);
+        FileIO::writeOutDouble(buffer, data_dir + "py",yp,yDim,0);
+        FileIO::writeOutDouble(buffer, data_dir + "pz",zp,zDim,0);
+        FileIO::writeOut(buffer, data_dir + "GK",GK,gSize,0);
+        FileIO::writeOut(buffer, data_dir + "GV",GV,gSize,0);
+        FileIO::writeOut(buffer, data_dir + "GpAx",GpAx,gSize,0);
+        FileIO::writeOut(buffer, data_dir + "GpAy",GpAy,gSize,0);
+        FileIO::writeOut(buffer, data_dir + "GpAz",GpAz,gSize,0);
+    }
 
     //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%//
 

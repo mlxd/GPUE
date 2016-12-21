@@ -514,6 +514,7 @@ Op::functionPtr Op::Az_fn(std::string id){
 // Unfortunately, these must be set one at a time.
 void Op::set_fns(){
 
+    // Non A functions
     Op_K_fns["rotation_K"] = rotation_K;
     Op_K_fns["rotation_K3d"] = rotation_K3d;
     Op_K_fns["rotation_gauge_K"] = rotation_gauge_K;
@@ -522,12 +523,27 @@ void Op::set_fns(){
     Op_V_fns["harmonic_V3d"] = harmonic_V3d;
     Op_V_fns["harmonic_gauge_V"] = harmonic_gauge_V;
     Op_V_fns["harmonic_V_dimensionless"] = harmonic_V_dimensionless;
+
+    // Rotation
     Op_pAy_fns["rotation"] = rotation_pAy;
     Op_pAx_fns["rotation"] = rotation_pAx;
     Op_pAz_fns["rotation"] = rotation_pAz;
     Op_Ax_fns["rotation"] = rotation_Ax;
     Op_Ay_fns["rotation"] = rotation_Ay;
+    Op_Ay_fns["rotation"] = rotation_Ay;
     Op_Az_fns["rotation"] = rotation_Az;
+
+    // Constant
+    Op_pAy_fns["constant"] = constant_A;
+    //Op_pAy_fns["constant"] = rotation_pAy;
+    Op_pAx_fns["constant"] = constant_A;
+    Op_pAz_fns["constant"] = constant_A;
+    Op_Ax_fns["constant"] = constant_A;
+    Op_Ay_fns["constant"] = constant_A;
+    //Op_Ay_fns["constant"] = rotation_Ay;
+    Op_Az_fns["constant"] = constant_A;
+
+    // 2D
     Op_Ax_fns["dynamic"] = dynamic_Ax;
     Op_Ay_fns["dynamic"] = dynamic_Ay;
     Op_Ay_fns["fiber2d"] = fiber2d_Ay;

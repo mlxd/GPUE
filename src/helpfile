@@ -45,6 +45,7 @@ Options:
 -D data         Set data directory / where to store data (here in data/)
 -d 0            Set device for GPU computing
 -e 1000         Set esteps, number of real-time evolution steps
+-f              Unset write to file flag
 -G 1            Set GammaY, ratio of omega_y to omega_x
 -g 1e4          Set gsteps, number of imaginary-time evolution steps
 -h              Print help menu, exit GPUE
