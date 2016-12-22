@@ -81,6 +81,7 @@ Grid parseArgs(int argc, char** argv){
     par.Afn = "rotation";
     par.Kfn = "rotation_K";
     par.Vfn = "harmonic_V";
+    par.Wfcfn = "standard_2d";
 
     optind = 1;
 
@@ -356,6 +357,7 @@ Grid parseArgs(int argc, char** argv){
                 if (dimnum == 3){
                     par.Kfn = "rotation_K3d";
                     par.Vfn = "harmonic_V3d";
+                    par.Wfcfn = "standard_3d";
                 }
                 if (dimnum == 2){
                     par.store("zDim", 1);

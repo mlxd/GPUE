@@ -564,6 +564,19 @@ void Wave::store(std::string id, double *data){
     Wave_dstar[id] = data;
 }
 
+// Map for function pointers and wfc
+Wave::functionPtr Wave::Wfc_fn(std::string id){
+    auto it = Wfc_fns.find(id);
+    if (it == Wfc_fns.end()){
+        std::cout << "ERROR: could not find string " << id 
+                  << " in Wave::Wfc_fns. Did you mean: " << '\n';
+        for (auto item : Wfc_fns){
+            std::cout << item.first << '\n';
+        }
+    }
+    return it->second;
+}
+
 void Wave::store(std::string id, cufftDoubleComplex *data){
     Wave_cdc[id] = data;
 }
@@ -587,6 +600,14 @@ cufftDoubleComplex *Wave::cufftDoubleComplexval(std::string id){
         assert(it != Wave_cdc.end());
     }
     return it->second;
+}
+
+// function to set functionPtrs for initial wavefunctions
+void Wave::set_fns(){
+    Wfc_fns["standard_2d"] = standard_wfc_2d;
+    Wfc_fns["standard_3d"] = standard_wfc_3d;
+    Wfc_fns["torus"] = torus_wfc;
+    
 }
 
 /*----------------------------------------------------------------------------//

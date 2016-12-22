@@ -672,3 +672,48 @@ void parse_equation(Grid par, std::string &equation, double &val,
         val /= inval;
     }
 }
+
+// Function to compute the wfc for the standard 2d case
+cufftDoubleComplex standard_wfc_2d(Grid &par, double Phi,
+                                   int i, int j, int k){
+    cufftDoubleComplex wfc;
+    double *x = par.dsval("x");
+    double *y = par.dsval("y");
+    double Rxy = par.dval("Rxy");
+    double a0y = par.dval("a0y");
+    double a0x = par.dval("a0x");
+    wfc.x = exp(-( pow((x[i])/(Rxy*a0x),2) + 
+                   pow((y[j])/(Rxy*a0y),2) ) ) * cos(Phi);
+    wfc.y = -exp(-( pow((x[i])/(Rxy*a0x),2) + 
+                    pow((y[j])/(Rxy*a0y),2) ) ) * sin(Phi);
+
+    return wfc;
+}
+
+// Function to compute the initial wavefunction for the standard 3d caase
+cufftDoubleComplex standard_wfc_3d(Grid &par, double Phi,
+                                   int i, int j, int k){
+    cufftDoubleComplex wfc;
+    double *x = par.dsval("x");
+    double *y = par.dsval("y");
+    double *z = par.dsval("z");
+    double Rxy = par.dval("Rxy");
+    double a0y = par.dval("a0y");
+    double a0x = par.dval("a0x");
+    double a0z = par.dval("a0z");
+    wfc.x = exp(-( pow((x[i])/(Rxy*a0x),2) + 
+                   pow((y[j])/(Rxy*a0y),2) +
+                   pow((z[k])/(Rxy*a0z),2))) *
+                   cos(Phi);
+    wfc.y = -exp(-( pow((x[i])/(Rxy*a0x),2) + 
+                    pow((y[j])/(Rxy*a0y),2) +
+                    pow((z[k])/(Rxy*a0z),2))) *
+                    sin(Phi);
+
+    return wfc;
+}
+
+// Function to initialize a toroidal wfc
+cufftDoubleComplex torus_wfc(Grid &par, double Phi,
+                             int i, int j, int k){
+}

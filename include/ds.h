@@ -140,7 +140,7 @@ class Grid{
 
         // Key values for operators
         // Note that Vector potential only have a single string for x, y, z
-        std::string Kfn, Vfn, Afn, Axfile, Ayfile, Azfile;
+        std::string Kfn, Vfn, Afn, Axfile, Ayfile, Azfile, Wfcfn;
 };
 typedef class Grid Grid;
 
@@ -232,6 +232,8 @@ typedef class Op Op;
  */
 class Wave{
     private:
+        typedef cufftDoubleComplex (*functionPtr)(Grid&, double, int, int, int);
+        std::unordered_map<std::string, functionPtr> Wfc_fns;
         std::unordered_map<std::string, double*> Wave_dstar;
         std::unordered_map<std::string, cufftDoubleComplex*> Wave_cdc;
         //double *Energy, *energy_gpu, *r, *Phi, *Phi_gpu;
@@ -245,6 +247,9 @@ class Wave{
         // Functions to retrieve data
         double *dsval(std::string id);
         cufftDoubleComplex *cufftDoubleComplexval(std::string id);
+
+        functionPtr Wfc_fn(std::string id);
+        void set_fns();
 };
 typedef class Wave Wave;
 

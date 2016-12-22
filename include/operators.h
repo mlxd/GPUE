@@ -307,4 +307,38 @@ std::string filecheck(std::string filename);
 void parse_equation(Grid par, std::string &equation, double &val, 
                     int i, int j, int k);
 
+/*----------------------------------------------------------------------------//
+* WFC
+*-----------------------------------------------------------------------------*/
+
+ /**
+ * @brief       creates the initial wavefunction for 2d
+ * @ingroup     data
+ * @param       Grid simulation data
+ * @param       location in x, y, z
+ * @return      V at that location
+ */
+cufftDoubleComplex standard_wfc_2d(Grid &par, double Phi,
+                                   int i, int j, int k);
+
+ /**
+ * @brief       creates the initial wavefunction for 2d
+ * @ingroup     data
+ * @param       Grid simulation data
+ * @param       location in x, y, z
+ * @return      V at that location
+ */
+cufftDoubleComplex standard_wfc_3d(Grid &par, double Phi,
+                                   int i, int j, int k);
+
+ /**
+ * @brief       creates the initial wavefunction for 2d
+ * @ingroup     data
+ * @param       Grid simulation data
+ * @param       location in x, y, z
+ * @return      V at that location
+ */
+cufftDoubleComplex torus_wfc(Grid &par, double Phi,
+                             int i, int j, int k);
+
 #endif

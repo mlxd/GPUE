@@ -37,6 +37,7 @@ int init_2d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
 
     // Setting functions for operators
     opr.set_fns();
+    wave.set_fns();
 
     int max_threads = 128;
 
@@ -333,12 +334,17 @@ int init_2d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
                 wfc[(i*yDim + j)].y *= sin(Phi[(i*yDim + j)]);
             }
             else{
+                wfc[(i*yDim + j)] = wave.Wfc_fn(par.Wfcfn)(par, 
+                                                           Phi[(i*yDim + j)], 
+                                                           i, j, 0);
+/*
                 wfc[(i*yDim + j)].x = exp(-( pow((x[i])/(Rxy*a0x),2) + 
                                              pow((y[j])/(Rxy*a0y),2) ) ) *
                                       cos(Phi[(i*yDim + j)]);
                 wfc[(i*yDim + j)].y = -exp(-( pow((x[i])/(Rxy*a0x),2) + 
                                               pow((y[j])/(Rxy*a0y),2) ) ) *
                                           sin(Phi[(i*yDim + j)]);
+*/
                 sum+=sqrt(wfc[(i*xDim + j)].x*wfc[(i*yDim + j)].x + 
                           wfc[(i*xDim + j)].y*wfc[(i*yDim + j)].y);
             }
@@ -532,6 +538,7 @@ int init_3d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
 
     // Setting functions for operators
     opr.set_fns();
+    wave.set_fns();
 
     // Re-establishing variables from parsed Grid class
     // Initializes uninitialized variables to 0 values
@@ -687,9 +694,9 @@ int init_3d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
                                                ( 1 - omega*omega) ) ));
 
     //std::cout << "Rxy is: " << Rxy << '\n';
-    double xMax = 150*bec_length;//6*Rxy*a0x; //6*Rxy*a0x;
-    double yMax = 150*bec_length;//6*Rxy*a0y; 
-    double zMax = 150*bec_length;//6*Rxy*a0z;
+    double xMax = 100*bec_length;//6*Rxy*a0x; //6*Rxy*a0x;
+    double yMax = 100*bec_length;//6*Rxy*a0y; 
+    double zMax = 100*bec_length;//6*Rxy*a0z;
     par.store("xMax",xMax);
     par.store("yMax",yMax);
     par.store("zMax",zMax);
@@ -840,6 +847,8 @@ int init_3d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
                     wfc[index].y *= sin(Phi[index]);
                 }
                 else{
+                    wfc[index] = wave.Wfc_fn(par.Wfcfn)(par, Phi[index],i,j,k);
+/*
                     wfc[index].x = exp(-( pow((x[i])/(Rxy*a0x),2) + 
                                           pow((y[j])/(Rxy*a0y),2) +
                                           pow((z[k])/(Rxy*a0z),2))) *
@@ -848,6 +857,7 @@ int init_3d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
                                            pow((y[j])/(Rxy*a0y),2) +
                                            pow((z[k])/(Rxy*a0z),2))) *
                                            sin(Phi[index]);
+*/
                     sum+=sqrt(wfc[index].x*wfc[index].x + 
                               wfc[index].y*wfc[index].y);
                 }
