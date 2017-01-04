@@ -124,7 +124,7 @@ void evolve_2d(Wave &wave, Op &opr,
     //std::cout << "numSteps is: " << numSteps << '\n';
     // Iterating through all of the steps in either g or esteps.
     for(int i=0; i < numSteps; ++i){
-        if ( ramp == 1 ){
+        if ( ramp ){
             //Adjusts omega for the appropriate trap frequency.
             omega_0=omegaX*((omega-0.39)*((double)i/(double)(numSteps)) + 0.39);
         }
@@ -358,7 +358,7 @@ void evolve_2d(Wave &wave, Op &opr,
         if(lz == 1){
             // Multiplying by ramping factor if necessary
             // Note: using scalarPow to do the scaling inside of the exp
-            if (ramp == 1){
+            if (ramp ){
                 scalarPow<<<grid,threads>>>((cufftDoubleComplex*) gpu1dpAy, 
                                             omega_0/(omega * omegaY),
                                             (cufftDoubleComplex*) gpu1dpAy);
@@ -629,7 +629,7 @@ void evolve_3d(Wave &wave, Op &opr,
     //std::cout << "numSteps is: " << numSteps << '\n';
     // Iterating through all of the steps in either g or esteps.
     for(int i=0; i < numSteps; ++i){
-        if ( ramp == 1 ){
+        if (ramp){
             //Adjusts omega for the appropriate trap frequency.
             omega_0=omegaX*((omega-0.39)*((double)i/(double)(numSteps)) + 0.39);
         }
@@ -726,7 +726,7 @@ void evolve_3d(Wave &wave, Op &opr,
         if(lz == true){
             // Multiplying by ramping factor if necessary
             // Note: using scalarPow to do the scaling inside of the exp
-            if (ramp == 1){
+            if (ramp){
                 scalarPow<<<grid,threads>>>((cufftDoubleComplex*) gpu1dpAy, 
                                             omega_0/(omega * omegaY),
                                             (cufftDoubleComplex*) gpu1dpAy);

@@ -259,16 +259,16 @@ double rotation_Az(Grid &par, Op &opr, int i, int j, int k){
     return 0;
 }
 
-// Function to return 0, this is for constant gauge field tests.
-double constant_A(Grid &par, Op &opr, int i, int j, int k){
-    return 0;
-}
-
 double rotation_Ay(Grid &par, Op &opr, int i, int j, int k){
     double *x = par.dsval("x");
     double omega = par.dval("omega");
     double omegaY = par.dval("omegaY");
     return x[i] * omega * omegaY;
+}
+
+// Function to return 0, this is for constant gauge field tests.
+double constant_A(Grid &par, Op &opr, int i, int j, int k){
+    return 0;
 }
 
 // Fuinctions for Ax, y, z for rotation along the z axis

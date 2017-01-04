@@ -576,7 +576,7 @@ int init_3d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     //          << "zDim is: " << zDim << '\n';
 
     cufftResult result;
-    cufftHandle plan_1d;
+    //cufftHandle plan_1d;
     cufftHandle plan_3d;
 
     dim3 grid = cupar.dim3val("grid");
@@ -941,9 +941,11 @@ int init_3d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
         return -1;
     }
 
+    cufftHandle plan_1d = generate_plan_other3d(par, 0);
     cufftHandle plan_dim2 = generate_plan_other3d(par, 1);
     cufftHandle plan_dim3 = generate_plan_other3d(par, 2);
 
+/*
     result = cufftPlan1d(&plan_1d, xDim, CUFFT_Z2Z, yDim);
     if(result != CUFFT_SUCCESS){
         printf("Result:=%d\n",result);
@@ -952,6 +954,7 @@ int init_3d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
                           (unsigned int)zDim);
         return -1;
     }
+*/
     
     //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%//
 
@@ -1136,7 +1139,9 @@ int main(int argc, char **argv){
     * Groundstate finder section
     */
     //************************************************************//
-    FileIO::writeOutParam(buffer, par, data_dir + "Params.dat");
+    if (par.bval("write_file")){
+        FileIO::writeOutParam(buffer, par, data_dir + "Params.dat");
+    }
 
     if(gsteps > 0){
         err=cudaMemcpy(K_gpu, GK, sizeof(cufftDoubleComplex)*gsize,
@@ -1151,8 +1156,10 @@ int main(int argc, char **argv){
             std::cout << "ERROR: Could not copy V_gpu to device" << '\n';
             exit(1);
         }
-        FileIO::writeOut(buffer, data_dir + "GK1",GK,gsize,0);
-        FileIO::writeOut(buffer, data_dir + "GV1",GV,gsize,0);
+        if (par.bval("write_file")){
+            FileIO::writeOut(buffer, data_dir + "GK1",GK,gsize,0);
+            FileIO::writeOut(buffer, data_dir + "GV1",GV,gsize,0);
+        }
         err=cudaMemcpy(pAy_gpu, GpAy, sizeof(cufftDoubleComplex)*gsize,
                        cudaMemcpyHostToDevice);
         if(err!=cudaSuccess){
