@@ -300,6 +300,7 @@ Grid parseArgs(int argc, char** argv){
                 std::string pot = optarg;
                 std::cout << "Chosen potential is: " << pot << '\n';
                 par.Vfn = pot;
+                par.Wfcfn = pot;
                 break;
             }
             case 'S':

@@ -97,6 +97,15 @@ double harmonic_V3d(Grid &par, Op &opr, int i, int j, int k);
  * @param       location in x, y, z
  * @return      V at that location
  */
+double torus_V(Grid &par, Op &opr, int i, int j, int k);
+
+ /**
+ * @brief       determines V for the standard harmonic case
+ * @ingroup     data
+ * @param       Grid simulation data
+ * @param       location in x, y, z
+ * @return      V at that location
+ */
 double harmonic_V_dimensionless(Grid &par, Op &opr, int i, int j, int k);
 
  /**

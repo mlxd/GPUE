@@ -488,6 +488,7 @@ void Op::set_fns(){
     Op_K_fns["rotation_gauge_K"] = rotation_gauge_K;
     Op_K_fns["rotation_K_dimensionless"] = rotation_K_dimensionless;
     Op_V_fns["harmonic_V"] = harmonic_V;
+    Op_V_fns["torus"] = torus_V;
     Op_V_fns["harmonic_V3d"] = harmonic_V3d;
     Op_V_fns["harmonic_gauge_V"] = harmonic_gauge_V;
     Op_V_fns["harmonic_V_dimensionless"] = harmonic_V_dimensionless;

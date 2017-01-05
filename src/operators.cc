@@ -108,6 +108,62 @@ double harmonic_V(Grid &par, Op &opr, int i , int j, int k){
 
 }
 
+// Function for simple 3d torus trapping potential
+double torus_V(Grid &par, Op &opr, int i, int j, int k){
+    double V;
+
+    double *x = par.dsval("x");
+    double *y = par.dsval("y");
+    double *z = par.dsval("z");
+
+    double xMax = par.dval("xMax");
+    double yMax = par.dval("yMax");
+
+    double omegaX = par.dval("omegaX");
+    double omegaY = par.dval("omegaY");
+    double omegaZ = par.dval("omegaZ");
+    double yOffset = 0.0;
+    double xOffset = 0.0;
+    double zOffset = 0.0;
+    double mass = par.dval("mass");
+
+    // Now we need to determine how we are representing V_xyz
+
+    double angle = atan(x[i]/y[j]);
+    if (y[j] <0){
+        angle += M_PI;
+    }
+
+    double rMax = sqrt(xMax*xMax + yMax*yMax);
+    double rad = sqrt(x[i]*x[i] + y[j]*y[j]) - rMax *0.5;
+    double omegaR = sqrt(omegaX*omegaX + omegaY*omegaY);
+    double V_r = omegaR*rad;
+    V_r = V_r*V_r;
+
+    double V_z = omegaZ*(z[k]+zOffset);
+    V_z = V_z * V_z;
+    if (par.Afn != "file"){
+        return 0.5 * mass * ( V_r * V_r + V_z * V_z) + 
+               0.5 * mass * pow(opr.Ax_fn(par.Afn)(par, opr, i, j, k),2) + 
+               0.5 * mass * pow(opr.Az_fn(par.Afn)(par, opr, i, j, k),2) + 
+               0.5 * mass * pow(opr.Ay_fn(par.Afn)(par, opr, i, j, k),2);
+    }
+    else{
+        double *Ax = opr.dsval("Ax");
+        double *Ay = opr.dsval("Ay");
+        double *Az = opr.dsval("Az");
+        int yDim = par.ival("yDim");
+        int zDim = par.ival("zDim");
+        int count = i*yDim*zDim + j*zDim + k; 
+        return 0.5 * mass * ( V_r * V_r + V_z * V_z) + 
+               0.5 * mass * pow(Ax[count],2) + 
+               0.5 * mass * pow(Az[count],2) + 
+               0.5 * mass * pow(Ay[count],2);
+    }
+
+    return V;
+}
+
 // Function for simple 3d harmonic V with i and j as the iterators
 double harmonic_V3d(Grid &par, Op &opr, int i , int j, int k){
     double *x = par.dsval("x");
@@ -682,6 +738,38 @@ cufftDoubleComplex standard_wfc_3d(Grid &par, double Phi,
 }
 
 // Function to initialize a toroidal wfc
+// note that we will need to specify the size of everything based on fiber
+// size and such.
 cufftDoubleComplex torus_wfc(Grid &par, double Phi,
                              int i, int j, int k){
+
+    cufftDoubleComplex wfc;
+
+    // Let's read in all the necessary parameters
+    double *x = par.dsval("x");
+    double *y = par.dsval("y");
+    double *z = par.dsval("z");
+
+    double xMax = par.dval("xMax");
+    double yMax = par.dval("yMax");
+
+    double Rxy = par.dval("Rxy");
+
+    double a0x = par.dval("a0x");
+    double a0y = par.dval("a0y");
+    double a0z = par.dval("a0z");
+
+    double rMax = sqrt(xMax*xMax + yMax*yMax);
+
+    // We will now create a 2d projection and extend it in a torus shape
+    double rad = sqrt(x[i]*x[i] + y[j]*y[j]) - rMax * 0.5;
+    double a0r = sqrt(a0x*a0x + a0y*a0y);
+
+    wfc.x = exp(-( pow((rad)/(Rxy*a0x*0.5),2) + 
+                   pow((z[k])/(Rxy*a0z*0.5),2) ) );
+    wfc.y = -exp(-( pow((rad)/(Rxy*a0x*0.5),2) + 
+                    pow((z[k])/(Rxy*a0z*0.5),2) ) );
+
+    return wfc;
+
 }
