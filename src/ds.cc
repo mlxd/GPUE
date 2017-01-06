@@ -512,6 +512,14 @@ void Op::set_fns(){
     //Op_Ay_fns["constant"] = rotation_Ay;
     Op_Az_fns["constant"] = constant_A;
 
+    // first ring
+    Op_pAy_fns["ring"] = rotation_pAx;
+    Op_pAx_fns["ring"] = rotation_pAy;
+    Op_pAz_fns["ring"] = constant_A;
+    Op_Ax_fns["ring"] = ring_Ax;
+    Op_Ay_fns["ring"] = ring_Ay;
+    Op_Az_fns["ring"] = constant_A;
+
     // 2D
     Op_Ax_fns["dynamic"] = dynamic_Ax;
     Op_Ay_fns["dynamic"] = dynamic_Ay;
@@ -519,6 +527,7 @@ void Op::set_fns(){
     Op_Ax_fns["fiber2d"] = fiber2d_Ax;
     Op_Ay_fns["test"] = test_Ay;
     Op_Ax_fns["test"] = test_Ax;
+    Op_Az_fns["test"] = constant_A;
     Op_Ay_fns["file"] = nullptr;
     Op_Ax_fns["file"] = nullptr;
     

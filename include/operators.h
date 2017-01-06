@@ -199,6 +199,24 @@ double test_Ax(Grid &par, Op &opr, int i, int j, int k);
 double test_Ay(Grid &par, Op &opr, int i, int j, int k);
 
  /**
+ * @brief       determines pAx for the standard rotational case
+ * @ingroup     data
+ * @param       Grid simulation data
+ * @param       location in x, y, z
+ * @return      V at that location
+ */
+double ring_Ax(Grid &par, Op &opr, int i, int j, int k);
+
+ /**
+ * @brief       determines pAy for the standard rotational case
+ * @ingroup     data
+ * @param       Grid simulation data
+ * @param       location in x, y, z
+ * @return      V at that location
+ */
+double ring_Ay(Grid &par, Op &opr, int i, int j, int k);
+
+ /**
  * @brief       determines pAy for the standard fiber2d case
  * @ingroup     data
  * @param       Grid simulation data

@@ -322,6 +322,57 @@ double rotation_Ay(Grid &par, Op &opr, int i, int j, int k){
     return x[i] * omega * omegaY;
 }
 
+// Functions for a simple vortex ring
+double ring_Ax(Grid &par, Op &opr, int i, int j, int k){
+    double *x = par.dsval("x");
+    double *y = par.dsval("y");
+
+    //first, we need to determine the radial distance and angle
+    double angle = atan(x[i] / y[j]);
+    if (y[j] == 0 && x[i] == 0){
+        angle = 0;
+    }
+    if (y[j] < 0){
+        angle += M_PI;
+    }
+
+    double rad = sqrt(x[i]*x[i] + y[j]*y[j]) * cos(angle);
+
+    if (rad < 0){
+        rad *= -100;
+    }
+    else{
+        rad *= 100;
+    }
+
+    return rad;
+}
+
+double ring_Ay(Grid &par, Op &opr, int i, int j, int k){
+    double *x = par.dsval("x");
+    double *y = par.dsval("y");
+
+    //first, we need to determine the radial distance and angle
+    double angle = atan(x[i] / y[j]);
+    if (y[j] == 0 && x[i] == 0){
+        angle = 0;
+    }
+    if (y[j] < 0){
+        angle += M_PI;
+    }
+
+    double rad = sqrt(x[i]*x[i] + y[j]*y[j])*sin(angle);
+
+    if (rad < 0){
+        rad *= -100;
+    }
+    else{
+        rad *= 100;
+    }
+
+    return rad;
+}
+
 // Function to return 0, this is for constant gauge field tests.
 double constant_A(Grid &par, Op &opr, int i, int j, int k){
     return 0;
@@ -335,7 +386,7 @@ double test_Ax(Grid &par, Op &opr, int i, int j, int k){
     double omegaX = par.dval("omegaX");
     //double yMax = par.dval("yMax");
     //double val = -y[j]*y[j];
-    double val = sin(y[j] * 100000) * 0.0005;
+    double val = sin(y[j] * 100000) * 0.0001;
     return val;
 }
 
