@@ -336,13 +336,17 @@ double ring_Ax(Grid &par, Op &opr, int i, int j, int k){
         angle += M_PI;
     }
 
-    double rad = sqrt(x[i]*x[i] + y[j]*y[j]) * cos(angle);
+    double rad = sqrt(1000000000*x[i]*x[i] + 1000000000*y[j]*y[j]) * cos(angle);
 
     if (rad < 0){
-        rad *= -100;
+        rad = -1/(rad*100000);
     }
     else{
-        rad *= 100;
+        rad = 1/(rad*100000);
+    }
+
+    if (rad > 0.001){
+        rad = 0.001;
     }
 
     return rad;
@@ -361,13 +365,18 @@ double ring_Ay(Grid &par, Op &opr, int i, int j, int k){
         angle += M_PI;
     }
 
-    double rad = sqrt(x[i]*x[i] + y[j]*y[j])*sin(angle);
+    double rad = sqrt(1000000000*x[i]*x[i] + 1000000000*y[j]*y[j])*sin(angle);
 
+    //multiplying by an arbitrary constant
     if (rad < 0){
-        rad *= -100;
+        rad = -1/(rad*100000);
     }
     else{
-        rad *= 100;
+        rad = 1/(rad*100000);
+    }
+
+    if (rad > 0.001){
+        rad = 0.001;
     }
 
     return rad;
