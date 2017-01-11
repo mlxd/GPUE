@@ -22,7 +22,7 @@
 #include "../include/constants.h"
 #include <sys/stat.h>
 #include <unordered_map>
-#include <boost/math/special_functions.hpp>
+//#include <boost/math/special_functions.hpp>
 
 // function to find Bz, the curl of the gauge field
  /**

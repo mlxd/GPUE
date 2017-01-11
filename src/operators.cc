@@ -420,6 +420,7 @@ double fiber2d_Ay(Grid &par, Op &opr, int i, int j, int k){
     return val;
 }
 
+/*
 // Functions to determine Electric field at a provided point
 // Note that we need to multiply this by the dipole moment, (d)^2
 double LP01_E_squared(Grid &par, Op &opr, int i, int j, int k){
@@ -469,6 +470,7 @@ double LP01_E_squared(Grid &par, Op &opr, int i, int j, int k){
 
     return val;
 }
+*/
 
 // Now we need a function to read in the data from matlab
 // Note that this has already been parsed into a bunch of different files
