@@ -134,8 +134,11 @@ double torus_V(Grid &par, Op &opr, int i, int j, int k){
         angle += M_PI;
     }
 
+    // Creating a harmonic trap that stretches azimuthally in a toroidal shape
+    // this is done by combining x and y into an r term and comparing this
+    // to the large torus radius
     double rMax = sqrt(xMax*xMax + yMax*yMax);
-    double rad = sqrt(x[i]*x[i] + y[j]*y[j]) - rMax *0.5;
+    double rad = sqrt(x[i]*x[i] + y[j]*y[j]) - rMax * 0.5;
     double omegaR = sqrt(omegaX*omegaX + omegaY*omegaY);
     double V_r = omegaR*rad;
     V_r = V_r*V_r;
@@ -143,7 +146,7 @@ double torus_V(Grid &par, Op &opr, int i, int j, int k){
     double V_z = omegaZ*(z[k]+zOffset);
     V_z = V_z * V_z;
     if (par.Afn != "file"){
-        return 0.5 * mass * ( V_r * V_r + V_z * V_z) + 
+        return 0.5 * mass * ( V_r + V_z) + 
                0.5 * mass * pow(opr.Ax_fn(par.Afn)(par, opr, i, j, k),2) + 
                0.5 * mass * pow(opr.Az_fn(par.Afn)(par, opr, i, j, k),2) + 
                0.5 * mass * pow(opr.Ay_fn(par.Afn)(par, opr, i, j, k),2);
@@ -393,9 +396,9 @@ double test_Ax(Grid &par, Op &opr, int i, int j, int k){
     double *x = par.dsval("x");
     double omega = par.dval("omega");
     double omegaX = par.dval("omegaX");
-    //double yMax = par.dval("yMax");
+    double yMax = par.dval("yMax");
     //double val = -y[j]*y[j];
-    double val = sin(y[j] * 100000) * 0.0001;
+    double val = (sin(y[j] * 10000)+1) * omegaX * yMax * omega;
     return val;
 }
 
