@@ -23,6 +23,10 @@ def wfc_density(xDim, yDim, zDim, data_dir, pltval, i):
     wfc_im = np.reshape(lines_im, (xDim,yDim, zDim));
     wfc = abs(wfc_real + 1j * wfc_im)
     wfc = wfc * wfc
+    wfc = np.reshape(wfc,(xDim*yDim*zDim))
+    maximum = max(wfc)
+    wfc /= maximum
+    wfc = np.reshape(wfc,(xDim,yDim,zDim))
     #print(wfc)
     return wfc
 
@@ -57,6 +61,18 @@ def var(xDim, yDim, zDim, data_dir, pltval):
     val = np.reshape(lines, (xDim,yDim,zDim));
     return val
 
+def proj_var2d(xdim, yDim, zDim, data_dir, pltval):
+    filename = "../" + data_dir + "/" + "val"
+    file = open(filename,"w")
+    data = "../" + data_dir + "/" + pltval
+    lines = np.loadtxt(data)
+    var_data = np.reshape(lines, (xDim, yDim, zDim))
+    for k in range(0,xDim):
+        for j in range(0,yDim):
+            file.write(str(var_data[k][j][zDim / 2])+'\n')
+    file.close
+
+
 def proj_2d(xDim, yDim, zDim, data_dir, pltval, i):
     filename = "../" + data_dir + "/wfc_0"
     print(i)
@@ -75,7 +91,7 @@ def proj_2d(xDim, yDim, zDim, data_dir, pltval, i):
     file = open(filename,'w')
     for k in range(0,xDim):
         for j in range(0,yDim):
-            file.write(str(wfc[zDim/2][k][j]) + '\n')
+            file.write(str(wfc[j][k][zDim/2]) + '\n')
     file.close()
 
 def proj_k2d(xDim, yDim, zDim, data_dir, pltval, i):
@@ -93,15 +109,16 @@ def proj_k2d(xDim, yDim, zDim, data_dir, pltval, i):
     file = open(filename,'w')
     for k in range(0,xDim):
         for j in range(0,yDim):
-            file.write(str(wfc[zDim/2][k][j]) + '\n')
+            file.write(str(wfc[j][k][zDim/2]) + '\n')
     file.close()
 
-proj_2d(xDim, yDim, zDim,"data","wfc_ev",9)
-#proj_k2d(xDim, yDim, zDim,"data","wfc",10000)
+#proj_var2d(xDim, yDim, zDim, "data", "Ax_0")
+#proj_2d(xDim, yDim, zDim,"data","wfc",50000)
+#proj_k2d(xDim, yDim, zDim,"data","wfc",50000)
 
-item = wfc_density(xDim, yDim, zDim,"data","wfc_ev",9)
-#item = wfc_phase(xDim, yDim, zDim,"data","wfc_ev",0)
-#item = var(xDim, yDim, zDim,"data","Ax_0")
+#item = wfc_density(xDim, yDim, zDim,"data","wfc",50000)
+#item = wfc_phase(xDim, yDim, zDim,"data","wfc",90)
+item = var(xDim, yDim, zDim,"data","gauge_3d")
 
 nx, ny, nz, nframes = xDim, yDim, zDim,1
 header = np.array([nx,ny,nz,nframes])
