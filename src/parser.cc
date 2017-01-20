@@ -327,6 +327,10 @@ Grid parseArgs(int argc, char** argv){
                     par.Kfn = "rotation_K3d";
                     par.Vfn = "harmonic_V3d";
                     par.Wfcfn = "standard_3d";
+                    if (par.Afn == "file"){
+                        std::cout << "Finding file for Az..." << '\n';
+                        par.Azfile = filecheck("src/Azgauge");
+                    }
                 }
                 if (dimnum == 2){
                     par.store("zDim", 1);
@@ -349,8 +353,10 @@ Grid parseArgs(int argc, char** argv){
                     par.Axfile = filecheck("src/Axgauge");
                     std::cout << "Finding file for Ay..." << '\n';
                     par.Ayfile = filecheck("src/Aygauge");
-                    //std::cout << "Finding file for Az..." << '\n';
-                    //par.Azfile = filecheck("src/Azgauge");
+                    if (par.ival("dimnum") == 3){
+                        std::cout << "Finding file for Az..." << '\n';
+                        par.Azfile = filecheck("src/Azgauge");
+                    }
                 }
 
                 // If the dynamic gauge field is chosen, we need to read it in

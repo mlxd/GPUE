@@ -804,6 +804,16 @@ int init_3d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     //std::cout << "GAMMAY IS: " << gammaY << '\n';
     //#pragma omp parallel for private(k)
     #endif
+    // Setting Ax, Ay, and Az if from file
+    if (par.Afn == "file"){
+        file_A(par.Axfile, Ax);
+        opr.store("Ax",Ax);
+        file_A(par.Ayfile, Ay);
+        opr.store("Ay", Ay);
+        file_A(par.Azfile, Az);
+        opr.store("Az", Az);
+        std::cout << "finished reading Ax / Ay from file" << '\n';
+    }
     for( i=0; i < xDim; i++ ){
         for( j=0; j < yDim; j++ ){
             for( k=0; k < zDim; k++ ){
@@ -840,9 +850,11 @@ int init_3d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     
                 // Ax and Ay will be calculated here but are used only for
                 // debugging. They may be needed later for magnetic field calc
-                Ax[index] = opr.Ax_fn(par.Afn)(par, opr, i, j, k);
-                Ay[index] = opr.Ay_fn(par.Afn)(par, opr, i, j, k);
-                Az[index] = opr.Az_fn(par.Afn)(par, opr, i, j, k);
+                if (par.Afn != "file"){
+                    Ax[index] = opr.Ax_fn(par.Afn)(par, opr, i, j, k);
+                    Ay[index] = opr.Ay_fn(par.Afn)(par, opr, i, j, k);
+                    Az[index] = opr.Az_fn(par.Afn)(par, opr, i, j, k);
+                }
                 
                 pAy[index] = opr.pAy_fn("rotation")(par, opr, i, j, k);
                 pAx[index] = opr.pAx_fn("rotation")(par, opr, i, j, k);
