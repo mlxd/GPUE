@@ -112,17 +112,23 @@ def proj_k2d(xDim, yDim, zDim, data_dir, pltval, i):
             file.write(str(wfc[j][k][zDim/2]) + '\n')
     file.close()
 
+# function to output the bvox bin data of a matrix
+def to_bvox(item, xDim, yDim, zDim, nframes, filename):
+    header = np.array([xDim, yDim, zDim, nframes])
+    binfile = open(filename, "wb")
+    header.astype('<i4').tofile(binfile)
+    item.astype('<f4').tofile(binfile)
+    binfile.close()
+
+
 #proj_var2d(xDim, yDim, zDim, "data", "Ax_0")
 #proj_2d(xDim, yDim, zDim,"data","wfc",50000)
 #proj_k2d(xDim, yDim, zDim,"data","wfc",50000)
 
-#item = wfc_density(xDim, yDim, zDim,"data","wfc",50000)
+item_wfc = wfc_density(xDim, yDim, zDim,"data","wfc",50000)
 #item = wfc_phase(xDim, yDim, zDim,"data","wfc",90)
-item = var(xDim, yDim, zDim,"data","gauge_3d")
+item_var = var(xDim, yDim, zDim,"data","V_0")
 
-nx, ny, nz, nframes = xDim, yDim, zDim,1
-header = np.array([nx,ny,nz,nframes])
+to_bvox(item_wfc, xDim, yDim, zDim, 1, "test_wfc.bvox")
+to_bvox(item_var, xDim, yDim, zDim, 1, "test_var.bvox")
 
-binfile = open('test1.bvox','wb')
-header.astype('<i4').tofile(binfile)
-item.astype('<f4').tofile(binfile)

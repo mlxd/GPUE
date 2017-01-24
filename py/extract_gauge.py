@@ -30,5 +30,5 @@ def write_3d(var, outfile, fudge_factor):
     file.close()
 
 var = extract_field("Avec_128.mat","avec")
-write_3d(var, "gauge_3d", 1.0/100000.0)
-write_2d(var, "gauge_2d", 1.0/100000.0)
+write_3d(var, "gauge_3d", 1.0/1000000.0)
+write_2d(var, "gauge_2d", 1.0/1000000.0)
