@@ -54,7 +54,7 @@ Grid parseArgs(int argc, char** argv){
     optind = 1;
 
     while ((opt = getopt (argc, argv, 
-           "d:D:Cx:y:w:G:g:e:T:t:n:p:ro:L:lsi:P:X:Y:O:k:WU:V:S:ahz:H:uA:R:v:Z:fc:")) !=-1)
+           "d:D:Cx:y:w:G:g:e:T:t:n:p:rQ:L:lsi:P:X:Y:O:k:WU:V:S:ahz:H:uA:R:v:Z:fc:")) !=-1)
     {
         switch (opt)
         {
@@ -184,7 +184,7 @@ Grid parseArgs(int argc, char** argv){
                 par.store("gpe",true);
                 break;
             }
-            case 'o':
+            case 'Z':
             {
                 double omegaZ = atof(optarg);
                 printf("Argument for OmegaZ is given as %E\n",omegaZ);
@@ -310,7 +310,7 @@ Grid parseArgs(int argc, char** argv){
                 par.store("sepMinEpsilon",sepMinEpsilon);
                 break;
             }
-            case 'Z':
+            case 'Q':
             {
                 double z0_shift = atof(optarg);
                 printf("Argument for z0_shift is %lf\n",z0_shift);

@@ -808,11 +808,14 @@ int init_3d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     if (par.Afn == "file"){
         file_A(par.Axfile, Ax);
         opr.store("Ax",Ax);
+
         file_A(par.Ayfile, Ay);
         opr.store("Ay", Ay);
+
         file_A(par.Azfile, Az);
         opr.store("Az", Az);
-        std::cout << "finished reading Ax / Ay from file" << '\n';
+
+        std::cout << "finished reading Ax / Ay / Az from file" << '\n';
     }
     for( i=0; i < xDim; i++ ){
         for( j=0; j < yDim; j++ ){

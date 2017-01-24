@@ -57,9 +57,9 @@ Options:
 -l              Set ang_mom flag to use angular momentum
 -n 1            Set N, number of particles in simulation
 -O 0            Set angle_sweep, kicking potential rotation angle
--o 0            Set omega_z, tightly-confined z-dimension
 -P 0            Set laser_power, strength of kicking [hbar * omega_perp]
 -p 100          Set printSteps, frequency of printing
+-Q 0             Set z0_shift, z shift of kicking potential (bad flag, I know)
 -R              Set ramping flag for imaginary time evolution
 -r              Set read_wfc to read wavefunction from file
 -S 0            Set sepMinEpsilon, kicking potential lattice spacing scaling
@@ -76,7 +76,7 @@ Options:
 -x 256          Set xDim, dimension in X (power of 2, please!)
 -Y 6.283        Set omega_y
 -y 256          Set yDim, dimension in Y (power of 2, please!)
--Z              Set z0_shift, z shift of kicking potential (bad flag, I know)
+-Z 0            Set omega_z, tightly-confined z-dimension
 -z 256          Set zDim, dimension in Z (power of 2, please!)
 
 
