@@ -46,6 +46,7 @@ Grid parseArgs(int argc, char** argv){
     par.store("dimnum", 2);
     par.store("dimensionless", false);
     par.store("write_file", true);
+    par.store("fidge", 1.0);
     par.Afn = "rotation";
     par.Kfn = "rotation_K";
     par.Vfn = "harmonic_V";
@@ -54,7 +55,7 @@ Grid parseArgs(int argc, char** argv){
     optind = 1;
 
     while ((opt = getopt (argc, argv, 
-           "d:D:Cx:y:w:G:g:e:T:t:n:p:rQ:L:lsi:P:X:Y:O:k:WU:V:S:ahz:H:uA:R:v:Z:fc:")) !=-1)
+           "d:D:Cx:y:w:G:g:e:T:t:n:p:rQ:L:lsi:P:X:Y:O:k:WU:V:S:ahz:H:uA:R:v:Z:fc:F:")) !=-1)
     {
         switch (opt)
         {
@@ -105,6 +106,13 @@ Grid parseArgs(int argc, char** argv){
                 double esteps = atof(optarg);
                 printf("Argument for EvSteps is given as %E\n",esteps);
                 par.store("esteps",(int)esteps);
+                break;
+            }
+            case 'F':
+            {
+                double fudge = atof(optarg);
+                printf("Argument for Fudge Factor is given as %E\n",fudge);
+                par.store("fudge",fudge);
                 break;
             }
             case 'T':
