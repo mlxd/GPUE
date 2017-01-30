@@ -7,9 +7,10 @@ Options:
 
 -A              Set gauge field mode [beta]
 -a              Set flag to graph [deprecated]
+-C 0            Set device (Card) for GPU computing
 -c              Set coords (1, 2, 3 dimensions)
--D data         Set data directory / where to store data (here in data/)
--d 0            Set device for GPU computing
+-D 0.0          Set's offset for kill (-K flag) distance radially
+-d data         Set data directory / where to store data (here in data/)
 -e 1000         Set esteps, number of real-time evolution steps
 -f              Unset write to file flag
 -G 1            Set GammaY, ratio of omega_y to omega_x
@@ -17,6 +18,7 @@ Options:
 -h              Print help menu, exit GPUE
 -H phrase       Print help menu, searching for "phrase"
 -i 0            Set interaction strength between particles
+-K              Selects vortex with specified ID to be killed
 -k 0            Set kick_it, kicking for Moire lattice simulations
                 0 = off, 1 = periodic kicking, 2 = single kick
 -L 0            Set l, vortex winding [2*pi*L]

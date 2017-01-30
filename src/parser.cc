@@ -47,6 +47,8 @@ Grid parseArgs(int argc, char** argv){
     par.store("dimensionless", false);
     par.store("write_file", true);
     par.store("fudge", 1.0);
+    par.store("kill_idx", -1);
+    par.store("DX",0.0);
     par.Afn = "rotation";
     par.Kfn = "rotation_K";
     par.Vfn = "harmonic_V";
@@ -55,7 +57,7 @@ Grid parseArgs(int argc, char** argv){
     optind = 1;
 
     while ((opt = getopt (argc, argv, 
-           "d:D:Cx:y:w:G:g:e:T:t:n:p:rQ:L:lsi:P:X:Y:O:k:WU:V:S:ahz:H:uA:R:v:Z:fc:F:")) !=-1)
+           "d:D:C:x:y:w:G:g:e:T:t:n:p:rQ:L:lsi:P:X:Y:O:k:WU:V:S:ahz:H:uA:R:v:Z:fc:F:K;")) !=-1)
     {
         switch (opt)
         {
@@ -130,10 +132,10 @@ Grid parseArgs(int argc, char** argv){
                 par.store("dt",(double)dt);
                 break;
             }
-            case 'd':
+            case 'C':
             {
                 int device = atoi(optarg);
-                printf("Argument for device is given as %d\n",device);
+                printf("Argument for device (Card) is given as %d\n",device);
                 par.store("device",(int)device);
                 break;
             }
@@ -221,6 +223,7 @@ Grid parseArgs(int argc, char** argv){
                 par.store("interaction",interaction);
                 break;
             }
+/*
             case 'C':
             {
                 std::cout << "Dimensionless units will be used." << '\n'; 
@@ -231,6 +234,7 @@ Grid parseArgs(int argc, char** argv){
                 par.store("dimensionless", true);
                 break;
             }
+*/
             case 'P':
             {
                 double laser_power = atof(optarg);
@@ -272,7 +276,7 @@ Grid parseArgs(int argc, char** argv){
                 par.store("write_it",true);
                 break;
             }
-            case 'D':
+            case 'd':
             {
                 std::string data_dir = optarg;
                 std::cout << "Data directory is: " << data_dir << '\n';
@@ -453,6 +457,22 @@ Grid parseArgs(int argc, char** argv){
                 par.store("graph",true);
                 break;
             }
+
+            case 'K':
+            {
+                int kill_idx = atoi(optarg);
+                printf("Argument for kill_idx is %d\n",kill_idx);
+                par.store("kill_idx",kill_idx);
+                break;
+            }
+            case 'D':
+            {
+                double DX = atoi(optarg);
+                printf("Argument for DX is %d\n",DX);
+                par.store("DX",DX);
+                break;
+            }
+
             case '?':
             {
                 if (optopt == 'c') {
