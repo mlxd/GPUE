@@ -31,7 +31,7 @@ NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 '''
 import os
-CPUs = 4# os.environ['SLURM_JOB_CPUS_PER_NODE']
+CPUs = os.environ['SLURM_JOB_CPUS_PER_NODE']
 print "Number of cores: " + str(CPUs)
 from numpy import genfromtxt
 import math as m
@@ -320,13 +320,6 @@ def overlap(dataName, initValue, finalValue, increment):
 		print i, np.sum(b)
 
 if __name__ == '__main__':
-	try:
-		delaunay('vort_arr_',0)
-		stats.lsFit(0,evMaxVal,incr)
-		hist3d.plot_hist_pcolor(0,evMaxVal,incr,'b')
-		vort_traj('traj_plot',200)
-	except:
-		print "Unhandled error occurred. Blame Lee."
 	opPot('V_opt_0',200)
 	opPot('V_0',200)
 	opPot('K_0',200)
@@ -345,10 +338,6 @@ if __name__ == '__main__':
 	while evImgList:
 		i=evImgList.pop()
 		ev_proc.append(Process(target=image_gen_single,args=("wfc_ev",i,200,0b101000)))
-		#ev_proc.append(Process(target=mpld3.show,))
-		ev_proc.append(Process(target=delaunay,args=("vort_lsq_",'.csv',i)))
-		ev_proc.append(Process(target=voronoi,args=("vort_lsq_",'.csv',i)))
-		ev_proc.append(Process(target=hist_gen,args=("hist_ev",i,128)))
 	proc = gnd_proc + ev_proc
 	while proc:
 		#if (mp.cpu_count()/2) > len(mp.active_children()):

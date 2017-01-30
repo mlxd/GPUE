@@ -29,10 +29,10 @@
 #SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #!/bin/bash
 i=0
-EMAIL=lee.oriordan@oist.jp
+EMAIL=$1
 count=0
-NAME=$1
-PARAMS=$2
+NAME=$2
+PARAMS=$3
 declare -a JOBS=(-1 -1 -1 -1 -1 -1 -1 -1)
 function run_gpue_test {
 	echo $1
@@ -54,7 +54,7 @@ function run_gpue {
 	cd ./$NAME$A
 	pwd >> result.log
 	echo $1 >>result.log
-	mail -s "#Started GPU Job# $A" lee.oriordan@oist.jp < result.log
+	mail -s "#Started GPU Job# $A" ${EMAIL} < result.log
 	./gpue $1 2>&1> result.log
 	mkdir -p ./images
 	#python ./py/vis.py >> result.log
@@ -62,7 +62,6 @@ function run_gpue {
 	cd ./images
 	ls | grep wfc_evr | grep _abs | grep png | sort -k3 -t _ -n > list1.txt;mencoder mf://@list1.txt -mf w=1280:h=1024:fps=24:type=png -oac copy -ovc lavc -lavcopts vcodec=mpeg4:mbd=2:mv0:trell:v4mv:cbp:last_pred=3:predia=2:dia=2:vmax_b_frames=2:vb_strategy=1:precmp=2:cmp=2:subcmp=2:preme=2:qns=2:vbitrate=10000000 -o wfc_${PWD##*/}.avi
 	rm -rf ./*.png
-	#python ./py/hist3d.py
 	rm wfc*
 	mail -s "#Completed GPU Job# $A" $EMAIL < $(echo $(cat result.log; cat ./Params.dat))
 	cd ../../../../..
