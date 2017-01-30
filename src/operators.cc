@@ -148,7 +148,7 @@ double torus_V(Grid &par, Op &opr, int i, int j, int k){
     double V_z = omegaZ*(z[k]+zOffset);
     V_z = V_z * V_z;
     if (par.Afn != "file"){
-        return 0.5 * mass * ( V_r + V_z) + 
+        return 1 * 0.5 * mass * ( V_r + V_z) + 
                0.5 * mass * pow(opr.Ax_fn(par.Afn)(par, opr, i, j, k),2) + 
                0.5 * mass * pow(opr.Az_fn(par.Afn)(par, opr, i, j, k),2) + 
                0.5 * mass * pow(opr.Ay_fn(par.Afn)(par, opr, i, j, k),2);
@@ -160,13 +160,13 @@ double torus_V(Grid &par, Op &opr, int i, int j, int k){
         int yDim = par.ival("yDim");
         int zDim = par.ival("zDim");
         int count = i*yDim*zDim + j*zDim + k; 
-        return 0.5 * mass * ( V_r * V_r + V_z * V_z) + 
+        return 1 * 0.5 * mass * ( V_r + V_z) + 
                0.5 * mass * pow(Ax[count],2) + 
                0.5 * mass * pow(Az[count],2) + 
                0.5 * mass * pow(Ay[count],2);
     }
 
-    return V;
+    return V_r + V_z;
 }
 
 // Function for simple 3d harmonic V with i and j as the iterators

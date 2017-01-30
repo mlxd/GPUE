@@ -46,7 +46,7 @@ Grid parseArgs(int argc, char** argv){
     par.store("dimnum", 2);
     par.store("dimensionless", false);
     par.store("write_file", true);
-    par.store("fidge", 1.0);
+    par.store("fudge", 1.0);
     par.Afn = "rotation";
     par.Kfn = "rotation_K";
     par.Vfn = "harmonic_V";
