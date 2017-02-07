@@ -160,7 +160,7 @@ void evolve_2d(Wave &wave, Op &opr,
                     fileName = "wfc_ev";
                     vortexLocation = (int *) calloc(xDim * yDim, sizeof(int));
                     num_vortices[0] = Tracker::findVortex(vortexLocation, wfc,
-                                                         2e-4, xDim, x, i);
+                                                         1e-4, xDim, x, i);
 
                     // If initial step, locate vortices, least-squares to find
                     // exact centre, calculate lattice angle, generate optical 

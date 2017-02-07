@@ -225,6 +225,8 @@ std::string Grid::sval(std::string id){
 void Grid::write(std::string filename){
     std::ofstream output;
     output.open(filename);
+    output << "[Params]" <<"\n";
+    //output << "[Params]" << "\n"; //Needed to recognise Params.dat as .ini format for python post processing
     // We simply iterate through the int and double param maps
     for (auto item : param_double){
         output << item.first << "=" << item.second << '\n';
