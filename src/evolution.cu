@@ -22,6 +22,7 @@ void evolve_2d(Wave &wave, Op &opr,
     double laser_power = par.dval("laser_power");
     double gDenConst = par.dval("gDenConst");
     double DX = par.dval("DX");
+    double mask_2d = par.dval("mask_2d");
     double *x = par.dsval("x");
     double *y = par.dsval("y");
     double *V = opr.dsval("V");
@@ -160,7 +161,7 @@ void evolve_2d(Wave &wave, Op &opr,
                     fileName = "wfc_ev";
                     vortexLocation = (int *) calloc(xDim * yDim, sizeof(int));
                     num_vortices[0] = Tracker::findVortex(vortexLocation, wfc,
-                                                         1e-4, xDim, x, i);
+                                                          mask_2d, xDim, x, i);
 
                     // If initial step, locate vortices, least-squares to find
                     // exact centre, calculate lattice angle, generate optical 

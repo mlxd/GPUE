@@ -23,6 +23,7 @@ Options:
                 0 = off, 1 = periodic kicking, 2 = single kick
 -L 0            Set l, vortex winding [2*pi*L]
 -l              Set ang_mom flag to use angular momentum
+-m              Set 2d_mask for vortex tracking
 -n 1            Set N, number of particles in simulation
 -O 0            Set angle_sweep, kicking potential rotation angle
 -P 0            Set laser_power, strength of kicking [hbar * omega_perp]
@@ -55,6 +56,6 @@ Notes:
   specific problem.
 
 - You may generate a simple vortex lattice in 2d with the following command:
-  ./gpue -x 512 -y 512 -g 50000 -e 1 -p 5000 -W -w 0.5 -n 1e5 -s -l -z 10
+  ./gpue -x 512 -y 512 -g 50000 -e 1 -p 5000 -W -w 0.5 -n 1e5 -s -l -Z 10
 
 - Thanks for using GPUE!

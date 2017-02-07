@@ -49,6 +49,7 @@ Grid parseArgs(int argc, char** argv){
     par.store("fudge", 1.0);
     par.store("kill_idx", -1);
     par.store("DX",0.0);
+    par.store("mask_2d", 1e-4);
     par.Afn = "rotation";
     par.Kfn = "rotation_K";
     par.Vfn = "harmonic_V";
@@ -57,7 +58,7 @@ Grid parseArgs(int argc, char** argv){
     optind = 1;
 
     while ((opt = getopt (argc, argv, 
-           "d:D:C:x:y:w:G:g:e:T:t:n:p:rQ:L:lsi:P:X:Y:O:k:WU:V:S:ahz:H:uA:R:v:Z:fc:F:K;")) !=-1)
+           "d:D:C:x:y:w:m:G:g:e:T:t:n:p:rQ:L:lsi:P:X:Y:O:k:WU:V:S:ahz:H:uA:R:v:Z:fc:F:K;")) !=-1)
     {
         switch (opt)
         {
@@ -87,6 +88,13 @@ Grid parseArgs(int argc, char** argv){
                 double omega = atof(optarg);
                 printf("Argument for OmegaRotate is given as %E\n",omega);
                 par.store("omega",(double)omega);
+                break;
+            }
+            case 'm':
+            {
+                double mask_2d = atof(optarg);
+                printf("Argument for mask_2d is given as %E\n",mask_2d);
+                par.store("mask_2d",(double)mask_2d);
                 break;
             }
             case 'G':
