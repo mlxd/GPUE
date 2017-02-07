@@ -28,7 +28,7 @@ Grid parseArgs(int argc, char** argv){
     par.store("corotating", false);
     par.store("gpe", false);
     par.store("omegaZ", 6.283);
-    par.store("interaction",0.0);
+    par.store("interaction",1.0);
     par.store("laser_power",0.0);
     par.store("angle_sweep",0.0);
     par.store("kick_it", 0);
@@ -467,7 +467,7 @@ Grid parseArgs(int argc, char** argv){
             }
             case 'D':
             {
-                double DX = atoi(optarg);
+                double DX = atof(optarg);
                 printf("Argument for DX is %d\n",DX);
                 par.store("DX",DX);
                 break;

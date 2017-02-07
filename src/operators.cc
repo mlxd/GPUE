@@ -138,14 +138,16 @@ double torus_V(Grid &par, Op &opr, int i, int j, int k){
     // Creating a harmonic trap that stretches azimuthally in a toroidal shape
     // this is done by combining x and y into an r term and comparing this
     // to the large torus radius
-    double rMax = sqrt(xMax*xMax + yMax*yMax);
+    //double rMax = sqrt(xMax*xMax + yMax*yMax);
+    double rMax = xMax;
+
     double rad = sqrt((x[i] - xOffset) * (x[i] - xOffset)
-                      + (y[j] + yOffset) * (y[j] + yOffset)) - 0.5*rMax*fudge;
+                      + (y[j] - yOffset) * (y[j] - yOffset)) - 0.5*rMax*fudge;
     double omegaR = sqrt(omegaX*omegaX + omegaY*omegaY);
     double V_r = omegaR*rad;
     V_r = V_r*V_r;
 
-    double V_z = omegaZ*(z[k]+zOffset);
+    double V_z = omegaR*(z[k]+zOffset);
     V_z = V_z * V_z;
     if (par.Afn != "file"){
         return 1 * 0.5 * mass * ( V_r + V_z) + 

@@ -662,9 +662,14 @@ int init_3d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
                                                ( 1 - omega*omega) ) ));
 
     //std::cout << "Rxy is: " << Rxy << '\n';
+    double xMax = 2.5e-5;
+    double yMax = 2.5e-5;
+    double zMax = 2.5e-5;
+/*
     double xMax = 10*bec_length;//6*Rxy*a0x; //6*Rxy*a0x;
     double yMax = 10*bec_length;//6*Rxy*a0y; 
     double zMax = 10*bec_length;//6*Rxy*a0z;
+*/
     par.store("xMax",xMax);
     par.store("yMax",yMax);
     par.store("zMax",zMax);
@@ -742,7 +747,6 @@ int init_3d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     par.store("xp", xp);
     par.store("yp", yp);
     par.store("zp", zp);
-    
 
     //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%//
     
@@ -1324,5 +1328,6 @@ int main(int argc, char **argv){
     time(&fin);
     printf("Finish: %s\n", ctime(&fin));
     printf("Total time: %ld seconds\n ",(long)fin-start);
+    std::cout << '\n';
     return 0;
 }

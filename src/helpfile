@@ -2,10 +2,10 @@
 # output a "help" function for GPUE that outputs all possible command-line
 # options for GPUE
                                       GPUE
-          Graphics-Processing Units Gross--Piteavskii Equation solver
+          Graphics-Processing Unit Gross--Piteavskii Equation solver
 Options:
 
--A              Set gauge field mode [beta]
+-A rotation     Set gauge field mode [beta]
 -a              Set flag to graph [deprecated]
 -C 0            Set device (Card) for GPU computing
 -c              Set coords (1, 2, 3 dimensions)
@@ -17,7 +17,7 @@ Options:
 -g 1e4          Set gsteps, number of imaginary-time evolution steps
 -h              Print help menu, exit GPUE
 -H phrase       Print help menu, searching for "phrase"
--i 0            Set interaction strength between particles
+-i 1            Set interaction strength between particles
 -K              Selects vortex with specified ID to be killed
 -k 0            Set kick_it, kicking for Moire lattice simulations
                 0 = off, 1 = periodic kicking, 2 = single kick
@@ -55,6 +55,6 @@ Notes:
   specific problem.
 
 - You may generate a simple vortex lattice in 2d with the following command:
-  ./gpue -x 512 -y 512 -g 50000 -e 1 -p 5000 -W -w 0.5 -n 1e5 -s -l -o 10
+  ./gpue -x 512 -y 512 -g 50000 -e 1 -p 5000 -W -w 0.5 -n 1e5 -s -l -z 10
 
 - Thanks for using GPUE!
