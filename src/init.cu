@@ -524,6 +524,7 @@ int init_3d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     double omegaX = par.dval("omegaX");
     double omegaY = par.dval("omegaY");
     double omegaZ = par.dval("omegaZ");
+    double box_size = par.dval("box_size");
     double gammaY = par.dval("gammaY"); //Aspect ratio of trapping geometry.
     double l = par.dval("winding");
     double *x;
@@ -662,9 +663,9 @@ int init_3d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
                                                ( 1 - omega*omega) ) ));
 
     //std::cout << "Rxy is: " << Rxy << '\n';
-    double xMax = 2.5e-5;
-    double yMax = 2.5e-5;
-    double zMax = 2.5e-5;
+    double xMax = box_size;
+    double yMax = box_size;
+    double zMax = box_size;
 /*
     double xMax = 10*bec_length;//6*Rxy*a0x; //6*Rxy*a0x;
     double yMax = 10*bec_length;//6*Rxy*a0y; 

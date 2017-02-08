@@ -50,6 +50,7 @@ Grid parseArgs(int argc, char** argv){
     par.store("kill_idx", -1);
     par.store("DX",0.0);
     par.store("mask_2d", 1e-4);
+    par.store("box_size", 2.5e-5);
     par.Afn = "rotation";
     par.Kfn = "rotation_K";
     par.Vfn = "harmonic_V";
@@ -58,7 +59,7 @@ Grid parseArgs(int argc, char** argv){
     optind = 1;
 
     while ((opt = getopt (argc, argv, 
-           "d:D:C:x:y:w:m:G:g:e:T:t:n:p:rQ:L:lsi:P:X:Y:O:k:WU:V:S:ahz:H:uA:R:v:Z:fc:F:K;")) !=-1)
+           "b:d:D:C:x:y:w:m:G:g:e:T:t:n:p:rQ:L:lsi:P:X:Y:O:k:WU:V:S:ahz:H:uA:R:v:Z:fc:F:K;")) !=-1)
     {
         switch (opt)
         {
@@ -67,6 +68,13 @@ Grid parseArgs(int argc, char** argv){
                 int xDim = atoi(optarg);
                 printf("Argument for x is given as %d\n",xDim);
                 par.store("xDim",(int)xDim);
+                break;
+            }
+            case 'b':
+            {
+                double box_size = atof(optarg);
+                printf("Argument for box_size is given as %E\n",box_size);
+                par.store("box_size",(double)box_size);
                 break;
             }
             case 'y':

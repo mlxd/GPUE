@@ -156,7 +156,7 @@ __global__ void vecMult(double2 *in, double *factor, double2 *out){
 /**
  * Performs the non-linear evolution term of Gross--Pitaevskii equation.
  */
-__global__ void cMultDensity(double2* in1, double2* in2, double2* out, double dt, double mass, int gstate, int N, double gDenConst){
+__global__ void cMultDensity(double2* in1, double2* in2, double2* out, double dt, double mass, int gstate, double gDenConst){
     double2 result;
     double gDensity;
     //int gid = blockIdx.y*gridDim.x*blockDim.x + blockIdx.x*blockDim.x + threadIdx.x;

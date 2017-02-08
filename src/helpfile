@@ -7,6 +7,7 @@ Options:
 
 -A rotation     Set gauge field mode [beta]
 -a              Set flag to graph [deprecated]
+-b 2.5e-5       Set box size (xyzMax in 3d)
 -C 0            Set device (Card) for GPU computing
 -c              Set coords (1, 2, 3 dimensions)
 -D 0.0          Set's offset for kill (-K flag) distance radially
