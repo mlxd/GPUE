@@ -122,10 +122,11 @@ double torus_V(Grid &par, Op &opr, int i, int j, int k){
     double omegaX = par.dval("omegaX");
     double omegaY = par.dval("omegaY");
     double omegaZ = par.dval("omegaZ");
-    double yOffset = 0.0;
-    double xOffset = 0.0;
-    double zOffset = 0.0;
+    double yOffset = par.dval("x0_shift");
+    double xOffset = par.dval("y0_shift");
+    double zOffset = par.dval("z0_shift");
     double mass = par.dval("mass");
+    double fudge = par.dval("fudge");
 
     // Now we need to determine how we are representing V_xyz
 
@@ -137,16 +138,19 @@ double torus_V(Grid &par, Op &opr, int i, int j, int k){
     // Creating a harmonic trap that stretches azimuthally in a toroidal shape
     // this is done by combining x and y into an r term and comparing this
     // to the large torus radius
-    double rMax = sqrt(xMax*xMax + yMax*yMax);
-    double rad = sqrt(x[i]*x[i] + y[j]*y[j]) - rMax * 0.5;
+    //double rMax = sqrt(xMax*xMax + yMax*yMax);
+    double rMax = xMax;
+
+    double rad = sqrt((x[i] - xOffset) * (x[i] - xOffset)
+                      + (y[j] - yOffset) * (y[j] - yOffset)) - 0.5*rMax*fudge;
     double omegaR = sqrt(omegaX*omegaX + omegaY*omegaY);
     double V_r = omegaR*rad;
     V_r = V_r*V_r;
 
-    double V_z = omegaZ*(z[k]+zOffset);
+    double V_z = omegaR*(z[k]+zOffset);
     V_z = V_z * V_z;
     if (par.Afn != "file"){
-        return 0.5 * mass * ( V_r + V_z) + 
+        return 1 * 0.5 * mass * ( V_r + V_z) + 
                0.5 * mass * pow(opr.Ax_fn(par.Afn)(par, opr, i, j, k),2) + 
                0.5 * mass * pow(opr.Az_fn(par.Afn)(par, opr, i, j, k),2) + 
                0.5 * mass * pow(opr.Ay_fn(par.Afn)(par, opr, i, j, k),2);
@@ -158,13 +162,13 @@ double torus_V(Grid &par, Op &opr, int i, int j, int k){
         int yDim = par.ival("yDim");
         int zDim = par.ival("zDim");
         int count = i*yDim*zDim + j*zDim + k; 
-        return 0.5 * mass * ( V_r * V_r + V_z * V_z) + 
+        return 1 * 0.5 * mass * ( V_r + V_z) + 
                0.5 * mass * pow(Ax[count],2) + 
                0.5 * mass * pow(Az[count],2) + 
                0.5 * mass * pow(Ay[count],2);
     }
 
-    return V;
+    return V_r + V_z;
 }
 
 // Function for simple 3d harmonic V with i and j as the iterators
@@ -393,7 +397,7 @@ double constant_A(Grid &par, Op &opr, int i, int j, int k){
 // Fuinctions for Ax, y, z for rotation along the z axis
 double test_Ax(Grid &par, Op &opr, int i, int j, int k){
     double *y = par.dsval("y");
-    double *x = par.dsval("x");
+    //double *x = par.dsval("x");
     double omega = par.dval("omega");
     double omegaX = par.dval("omegaX");
     double yMax = par.dval("yMax");
@@ -814,6 +818,9 @@ cufftDoubleComplex torus_wfc(Grid &par, double Phi,
     double *x = par.dsval("x");
     double *y = par.dsval("y");
     double *z = par.dsval("z");
+    double xOffset = par.dval("x0_shift");
+    double yOffset = par.dval("y0_shift");
+    double fudge = par.dval("fudge");
 
     double xMax = par.dval("xMax");
     double yMax = par.dval("yMax");
@@ -821,14 +828,15 @@ cufftDoubleComplex torus_wfc(Grid &par, double Phi,
     double Rxy = par.dval("Rxy");
 
     double a0x = par.dval("a0x");
-    double a0y = par.dval("a0y");
+    //double a0y = par.dval("a0y");
     double a0z = par.dval("a0z");
 
     double rMax = sqrt(xMax*xMax + yMax*yMax);
 
     // We will now create a 2d projection and extend it in a torus shape
-    double rad = sqrt(x[i]*x[i] + y[j]*y[j]) - rMax * 0.5;
-    double a0r = sqrt(a0x*a0x + a0y*a0y);
+    double rad = sqrt((x[i] - xOffset) * (x[i] - xOffset) 
+                      + (y[j] - yOffset) * (y[j] - yOffset)) - 0.5*rMax*fudge;
+    //double a0r = sqrt(a0x*a0x + a0y*a0y);
 
     wfc.x = exp(-( pow((rad)/(Rxy*a0x*0.5),2) + 
                    pow((z[k])/(Rxy*a0z*0.5),2) ) );

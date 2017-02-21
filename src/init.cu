@@ -524,6 +524,7 @@ int init_3d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     double omegaX = par.dval("omegaX");
     double omegaY = par.dval("omegaY");
     double omegaZ = par.dval("omegaZ");
+    double box_size = par.dval("box_size");
     double gammaY = par.dval("gammaY"); //Aspect ratio of trapping geometry.
     double l = par.dval("winding");
     double *x;
@@ -662,9 +663,14 @@ int init_3d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
                                                ( 1 - omega*omega) ) ));
 
     //std::cout << "Rxy is: " << Rxy << '\n';
+    double xMax = box_size;
+    double yMax = box_size;
+    double zMax = box_size;
+/*
     double xMax = 10*bec_length;//6*Rxy*a0x; //6*Rxy*a0x;
     double yMax = 10*bec_length;//6*Rxy*a0y; 
     double zMax = 10*bec_length;//6*Rxy*a0z;
+*/
     par.store("xMax",xMax);
     par.store("yMax",yMax);
     par.store("zMax",zMax);
@@ -742,7 +748,6 @@ int init_3d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     par.store("xp", xp);
     par.store("yp", yp);
     par.store("zp", zp);
-    
 
     //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%//
     
@@ -804,6 +809,19 @@ int init_3d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     //std::cout << "GAMMAY IS: " << gammaY << '\n';
     //#pragma omp parallel for private(k)
     #endif
+    // Setting Ax, Ay, and Az if from file
+    if (par.Afn == "file"){
+        file_A(par.Axfile, Ax);
+        opr.store("Ax",Ax);
+
+        file_A(par.Ayfile, Ay);
+        opr.store("Ay", Ay);
+
+        file_A(par.Azfile, Az);
+        opr.store("Az", Az);
+
+        std::cout << "finished reading Ax / Ay / Az from file" << '\n';
+    }
     for( i=0; i < xDim; i++ ){
         for( j=0; j < yDim; j++ ){
             for( k=0; k < zDim; k++ ){
@@ -840,9 +858,11 @@ int init_3d(Op &opr, Cuda &cupar, Grid &par, Wave &wave){
     
                 // Ax and Ay will be calculated here but are used only for
                 // debugging. They may be needed later for magnetic field calc
-                Ax[index] = opr.Ax_fn(par.Afn)(par, opr, i, j, k);
-                Ay[index] = opr.Ay_fn(par.Afn)(par, opr, i, j, k);
-                Az[index] = opr.Az_fn(par.Afn)(par, opr, i, j, k);
+                if (par.Afn != "file"){
+                    Ax[index] = opr.Ax_fn(par.Afn)(par, opr, i, j, k);
+                    Ay[index] = opr.Ay_fn(par.Afn)(par, opr, i, j, k);
+                    Az[index] = opr.Az_fn(par.Afn)(par, opr, i, j, k);
+                }
                 
                 pAy[index] = opr.pAy_fn("rotation")(par, opr, i, j, k);
                 pAx[index] = opr.pAx_fn("rotation")(par, opr, i, j, k);
@@ -1309,5 +1329,6 @@ int main(int argc, char **argv){
     time(&fin);
     printf("Finish: %s\n", ctime(&fin));
     printf("Total time: %ld seconds\n ",(long)fin-start);
+    std::cout << '\n';
     return 0;
 }

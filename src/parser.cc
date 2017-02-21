@@ -28,7 +28,7 @@ Grid parseArgs(int argc, char** argv){
     par.store("corotating", false);
     par.store("gpe", false);
     par.store("omegaZ", 6.283);
-    par.store("interaction",0.0);
+    par.store("interaction",1.0);
     par.store("laser_power",0.0);
     par.store("angle_sweep",0.0);
     par.store("kick_it", 0);
@@ -46,6 +46,11 @@ Grid parseArgs(int argc, char** argv){
     par.store("dimnum", 2);
     par.store("dimensionless", false);
     par.store("write_file", true);
+    par.store("fudge", 1.0);
+    par.store("kill_idx", -1);
+    par.store("DX",0.0);
+    par.store("mask_2d", 1e-4);
+    par.store("box_size", 2.5e-5);
     par.Afn = "rotation";
     par.Kfn = "rotation_K";
     par.Vfn = "harmonic_V";
@@ -54,7 +59,7 @@ Grid parseArgs(int argc, char** argv){
     optind = 1;
 
     while ((opt = getopt (argc, argv, 
-           "d:D:Cx:y:w:G:g:e:T:t:n:p:ro:L:lsi:P:X:Y:O:k:WU:V:S:ahz:H:uA:R:v:Z:fc:")) !=-1)
+           "b:d:D:C:x:y:w:m:G:g:e:T:t:n:p:rQ:L:lsi:P:X:Y:O:k:WU:V:S:ahz:H:uA:R:v:Z:fc:F:K;")) !=-1)
     {
         switch (opt)
         {
@@ -63,6 +68,13 @@ Grid parseArgs(int argc, char** argv){
                 int xDim = atoi(optarg);
                 printf("Argument for x is given as %d\n",xDim);
                 par.store("xDim",(int)xDim);
+                break;
+            }
+            case 'b':
+            {
+                double box_size = atof(optarg);
+                printf("Argument for box_size is given as %E\n",box_size);
+                par.store("box_size",(double)box_size);
                 break;
             }
             case 'y':
@@ -86,6 +98,13 @@ Grid parseArgs(int argc, char** argv){
                 par.store("omega",(double)omega);
                 break;
             }
+            case 'm':
+            {
+                double mask_2d = atof(optarg);
+                printf("Argument for mask_2d is given as %E\n",mask_2d);
+                par.store("mask_2d",(double)mask_2d);
+                break;
+            }
             case 'G':
             {
                 double gammaY = atof(optarg);
@@ -107,6 +126,13 @@ Grid parseArgs(int argc, char** argv){
                 par.store("esteps",(int)esteps);
                 break;
             }
+            case 'F':
+            {
+                double fudge = atof(optarg);
+                printf("Argument for Fudge Factor is given as %E\n",fudge);
+                par.store("fudge",fudge);
+                break;
+            }
             case 'T':
             {
                 double gdt = atof(optarg);
@@ -122,10 +148,10 @@ Grid parseArgs(int argc, char** argv){
                 par.store("dt",(double)dt);
                 break;
             }
-            case 'd':
+            case 'C':
             {
                 int device = atoi(optarg);
-                printf("Argument for device is given as %d\n",device);
+                printf("Argument for device (Card) is given as %d\n",device);
                 par.store("device",(int)device);
                 break;
             }
@@ -184,7 +210,7 @@ Grid parseArgs(int argc, char** argv){
                 par.store("gpe",true);
                 break;
             }
-            case 'o':
+            case 'Z':
             {
                 double omegaZ = atof(optarg);
                 printf("Argument for OmegaZ is given as %E\n",omegaZ);
@@ -213,6 +239,7 @@ Grid parseArgs(int argc, char** argv){
                 par.store("interaction",interaction);
                 break;
             }
+/*
             case 'C':
             {
                 std::cout << "Dimensionless units will be used." << '\n'; 
@@ -223,6 +250,7 @@ Grid parseArgs(int argc, char** argv){
                 par.store("dimensionless", true);
                 break;
             }
+*/
             case 'P':
             {
                 double laser_power = atof(optarg);
@@ -264,7 +292,7 @@ Grid parseArgs(int argc, char** argv){
                 par.store("write_it",true);
                 break;
             }
-            case 'D':
+            case 'd':
             {
                 std::string data_dir = optarg;
                 std::cout << "Data directory is: " << data_dir << '\n';
@@ -310,7 +338,7 @@ Grid parseArgs(int argc, char** argv){
                 par.store("sepMinEpsilon",sepMinEpsilon);
                 break;
             }
-            case 'Z':
+            case 'Q':
             {
                 double z0_shift = atof(optarg);
                 printf("Argument for z0_shift is %lf\n",z0_shift);
@@ -327,6 +355,10 @@ Grid parseArgs(int argc, char** argv){
                     par.Kfn = "rotation_K3d";
                     par.Vfn = "harmonic_V3d";
                     par.Wfcfn = "standard_3d";
+                    if (par.Afn == "file"){
+                        std::cout << "Finding file for Az..." << '\n';
+                        par.Azfile = filecheck("src/Azgauge");
+                    }
                 }
                 if (dimnum == 2){
                     par.store("zDim", 1);
@@ -349,8 +381,10 @@ Grid parseArgs(int argc, char** argv){
                     par.Axfile = filecheck("src/Axgauge");
                     std::cout << "Finding file for Ay..." << '\n';
                     par.Ayfile = filecheck("src/Aygauge");
-                    //std::cout << "Finding file for Az..." << '\n';
-                    //par.Azfile = filecheck("src/Azgauge");
+                    if (par.ival("dimnum") == 3){
+                        std::cout << "Finding file for Az..." << '\n';
+                        par.Azfile = filecheck("src/Azgauge");
+                    }
                 }
 
                 // If the dynamic gauge field is chosen, we need to read it in
@@ -439,6 +473,22 @@ Grid parseArgs(int argc, char** argv){
                 par.store("graph",true);
                 break;
             }
+
+            case 'K':
+            {
+                int kill_idx = atoi(optarg);
+                printf("Argument for kill_idx is %d\n",kill_idx);
+                par.store("kill_idx",kill_idx);
+                break;
+            }
+            case 'D':
+            {
+                double DX = atof(optarg);
+                printf("Argument for DX is %d\n",DX);
+                par.store("DX",DX);
+                break;
+            }
+
             case '?':
             {
                 if (optopt == 'c') {

@@ -1,6 +1,6 @@
-CUDA_HOME = /opt/cuda/
+CUDA_HOME = /work/scratch/schloss/cuda_8.0/
 #CUTT_DIR = cutt/lib
-GPU_ARCH	= sm_30
+GPU_ARCH	= sm_60
 OS:=	$(shell uname)
 ifeq ($(OS),Darwin)
 CUDA_LIB	= $(CUDA_HOME)/lib

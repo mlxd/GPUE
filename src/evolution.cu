@@ -21,6 +21,8 @@ void evolve_2d(Wave &wave, Op &opr,
     double interaction = par.dval("interaction");
     double laser_power = par.dval("laser_power");
     double gDenConst = par.dval("gDenConst");
+    double DX = par.dval("DX");
+    double mask_2d = par.dval("mask_2d");
     double *x = par.dsval("x");
     double *y = par.dsval("y");
     double *V = opr.dsval("V");
@@ -40,6 +42,7 @@ void evolve_2d(Wave &wave, Op &opr,
     int xDim = par.ival("xDim");
     int yDim = par.ival("yDim");
     int gridSize = xDim * yDim;
+    int kill_idx = par.ival("kill_idx");
     cufftDoubleComplex *EV = opr.cufftDoubleComplexval("EV");
     cufftDoubleComplex *wfc = wave.cufftDoubleComplexval("wfc");
     cufftDoubleComplex *EV_opt = opr.cufftDoubleComplexval("EV_opt");
@@ -158,7 +161,7 @@ void evolve_2d(Wave &wave, Op &opr,
                     fileName = "wfc_ev";
                     vortexLocation = (int *) calloc(xDim * yDim, sizeof(int));
                     num_vortices[0] = Tracker::findVortex(vortexLocation, wfc,
-                                                         1e-4, xDim, x, i);
+                                                          mask_2d, xDim, x, i);
 
                     // If initial step, locate vortices, least-squares to find
                     // exact centre, calculate lattice angle, generate optical 
@@ -241,20 +244,25 @@ void evolve_2d(Wave &wave, Op &opr,
                         }
                         if(i==0) {
                             //Lambda for vortex annihilation/creation.
-                            auto killIt=[&](int idx) {
+                            auto killIt=[&](int idx, int winding, 
+                                            double delta_x) {
                                 WFC::phaseWinding(Phi, 1, x, y, dx, dy,
-                                                  lattice.getVortexUid(idx)->
-                                                      getData().coordsD.x,
-                                                  lattice.getVortexUid(idx)->
-                                                      getData().coordsD.y,xDim);
+                                    lattice.getVortexUid(idx)->
+                                    getData().coordsD.x 
+                                    +cos(angle_sweep + vort_angle)*delta_x,
+                                    lattice.getVortexUid(idx)->
+                                    getData().coordsD.y
+                                    +sin(angle_sweep + vort_angle)*delta_x,
+                                    xDim);
                                 cudaMemcpy(Phi_gpu, Phi, 
                                            sizeof(double) * xDim * yDim, 
                                            cudaMemcpyHostToDevice);
                                 cMultPhi <<<grid, threads>>> (gpuWfc, Phi_gpu, 
                                                               gpuWfc);
                             };
-                            //killIt(44); //Kills vortex with UID 44
-
+                            if (kill_idx > 0){
+                                killIt(kill_idx, 1, DX);
+                            }
 
                         }
                         lattice.createEdges(1.5 * 2e-5 / dx);
@@ -320,7 +328,7 @@ void evolve_2d(Wave &wave, Op &opr,
             //std::cout << Dt << '\t' << mass << '\t' << omegaZ << '\t' 
             //          << gstate << '\t' << N*interaction << '\n';
             cMultDensity<<<grid,threads>>>(V_gpu,gpuWfc,gpuWfc,0.5*Dt,
-                                           mass,gstate,N*interaction,gDenConst);
+                                           mass,gstate,interaction*gDenConst);
         }
         else {
             cMult<<<grid,threads>>>(V_gpu,gpuWfc,gpuWfc);
@@ -340,7 +348,7 @@ void evolve_2d(Wave &wave, Op &opr,
         // U_r(dt/2)*wfc
         if(nonlin == 1){
             cMultDensity<<<grid,threads>>>(V_gpu,gpuWfc,gpuWfc,Dt*0.5,
-                                           mass,gstate,N*interaction,gDenConst);
+                                           mass,gstate,interaction*gDenConst);
         }
         else {
             cMult<<<grid,threads>>>(V_gpu,gpuWfc,gpuWfc);
@@ -696,7 +704,7 @@ void evolve_3d(Wave &wave, Op &opr,
             //std::cout << Dt << '\t' << mass << '\t' << omegaZ << '\t' 
             //          << gstate << '\t' << N*interaction << '\n';
             cMultDensity<<<grid,threads>>>(V_gpu,gpuWfc,gpuWfc,0.5*Dt,
-                                           mass,gstate,N*interaction,gDenConst);
+                                           mass,gstate,interaction*gDenConst);
         }
         else {
             cMult<<<grid,threads>>>(V_gpu,gpuWfc,gpuWfc);
@@ -716,7 +724,7 @@ void evolve_3d(Wave &wave, Op &opr,
         // U_r(dt/2)*wfc
         if(nonlin == 1){
             cMultDensity<<<grid,threads>>>(V_gpu,gpuWfc,gpuWfc,Dt*0.5,
-                                           mass,gstate,N*interaction,gDenConst);
+                                           mass,gstate,interaction*gDenConst);
         }
         else {
             cMult<<<grid,threads>>>(V_gpu,gpuWfc,gpuWfc);

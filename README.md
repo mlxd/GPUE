@@ -1,32 +1,25 @@
+[![DOI](https://zenodo.org/badge/23153/mlxd/GPUE.svg)](https://zenodo.org/badge/latestdoi/23153/mlxd/GPUE)
+[![Code Climate](https://codeclimate.com/github/mlxd/GPUE/badges/gpa.svg)](https://codeclimate.com/github/mlxd/GPUE)
+![GPUE version](https://img.shields.io/badge/v-0.abs(exp(1i*pi))-blue.svg)
 ###############################################################################
 ###############################################################################
  
-                                    (
-                           (        )\ )               )
-                           )\ )    (()/(   (    (     ((
-                          (()/(     /(_))  )\   )\   /))
-                          /(_))_   (_))   ((_) ((_) ()/(_)
-                          ██████╗ ██████╗ ██╗   ██╗███████╗
-                         ██╔════╝ ██╔══██╗██║   ██║██╔════╝
-                         ██║  ███╗██████╔╝██║   ██║█████╗
-                         ██║   ██║██╔═══╝ ██║   ██║██╔══╝
-                         ╚██████╔╝██║     ╚██████╔╝███████╗
-                          ╚═════╝ ╚═╝      ╚═════╝ ╚══════╝
+[logo]: https://github.com/mlxd/GPUE/blob/master/logo.png "GPUE"
+![GPUE - GPU Gross-Pitaevskii Equation solver][logo]
 
-                    GPUE - GPU Gross-Pitaevskii Equation solver
-                             Version 0.abs(exp(i*pi))
+***
 
-                        https://bitbucket.org/loriordan/gpue
-                        https://github.com/mlxd/gpue
+[bb]: https://bitbucket.org/loriordan/gpue "Bitbucket"
+[gh]: https://github.com/mlxd/gpue "GitHub"
 
 ###############################################################################
 ## 0. Introduction
 ###############################################################################
 
-Welcome to GPUE, the [fastest zero temperature BEC routines in the land](http://peterwittek.com/gpe-comparison.html) (the last time I checked).
+Welcome to GPUE, the [fastest zero temperature BEC routines in the land](http://peterwittek.com/gpe-comparison.html) (the last time we checked).
 
 Runs on CUDA 7.0 (C++11 functionality needed) on both Linux and Mac OS X 
-(Nvidia GPU only). I have not tested on Windows. Other requirements are Python 
+(Nvidia GPU only). We have not tested on Windows. Other requirements are Python 
 2.6+ (though PyPy is MUCH faster), Numpy, Scipy, Matplotlib, Mencoder.
 
 To build, first check the predefined paths in the Makefile (CUDA lib/lib64, 
@@ -65,7 +58,7 @@ timescales needed to simulate such system, it was essential to write some
 accelerated code to understand the behaviour of such systems. If you would like 
 to know more, check my Google scholar profile 
 <https://scholar.google.com/citations?user=s-6jND0AAAAJ&hl=en>
-which will update as I finish some papers.
+which will update as we finish some papers.
 
 The premise is the following:
 We want to simulate how a Bose-Einstein condensate (BEC) behaves in a trap. 
@@ -84,10 +77,12 @@ The most interesting fact is that instead of getting bigger and bigger with
 faster rotation (as a tornado would), these vortices only allow themselves 
 to enter with a singular unit of angular momentum (think 100x 1 unit vortices 
 instead of 1x 100 unit vortex). This gives us a nice well arranged lattice if 
-performed correctly. It is this lattice that I have been researching (read as: 
+performed correctly. It is this lattice that we have been researching (read as: 
 playing with). However, this code can be used in any trapping geometry, 
-rotation, etc. that you wish to use. Bear in mind, I have developed this for 
-a 2D system only. Extensions to 3D should be straight-forward though.
+rotation, etc. that you wish to use. Bear in mind, we have developed this for 
+a 2D system only. Extensions to 3D are currently in the works, and are in the
+beta branch lead by the amazing James Schloss (leois). When completed, these 
+will be merged into master.
 
 ###############################################################################
 ## 2. Great! How do I make a BEC?
@@ -97,7 +92,7 @@ Well, first you need to look at the run_params.conf file, and give it some
 necessary parameters to generate your favourite condensate.
 
 As an example
-./gpue -x 256 -y 256 -T 1e-3 -t 1e-3 -n 1e5 -g 1e3 -e 1e3 -p 100 -w 0.3 -o 10 -d 1 -l -s -i 1.0 -P 0.0 -G 1.0 -X 1 -Y 1 -O 0.0 -W -U 0 -V 0 -S 0.0
+./gpue -x 256 -y 256 -T 1e-3 -t 1e-3 -n 1e5 -g 1e3 -e 1e3 -p 1 -r 0 -w 0.3 -o 10 -d 0 -l 1 -s 1 -i 1.0 -P 0.0 -G 1.0 -L 0 -X 1 -Y 1 -k 0 -O 0.0 -W 1 -U 0 -V 0 -S 0.0
 
 As an example, here are some simulations performed with the code:
 https://www.youtube.com/playlist?list=PLiRboSbbz10s6cXxvYLFOn3QbmQpdtQVd
@@ -117,9 +112,8 @@ Schrodinger and non-linear Schrodinger systems.
 ###############################################################################
 A citation would be nice :) Feel free to cite as:
 
-Moiré superlattice structures in kicked Bose-Einstein condensates,
-L. J. O'Riordan, A. C. White, and Th. Busch,
-Phys. Rev. A 93, 023609 (2016)
+Lee James O'Riordan et al., GPUE: Phasegineering release, Zenodo. (2016)
+\url{https://github.com/mlxd/GPUE} DOI:10.5281/zenodo.57968
 
 Otherwise, an email with a message, comments, or anything is appreciated. I'm 
 curious as to who is using this, so regardless of what you do with it, feel 
@@ -127,3 +121,18 @@ free to get in touch.
 
 If you would like to help, I am always looking for some additional improvements.
 There is a lot remaining to be done, but many hands make light work, after all.
+
+
+
+###############################################################################
+## 5. Acknowledgements
+###############################################################################
+We are greatly thankful to the support provided by Okinawa Institute of Science 
+and Technology Graduate University, without whom this research code would be a 
+fraction of what it currently has become. To the various people who have 
+contributed in ideas and parts to this project, in no particular order:
+Albert Benseney Cases, who assisted with the multivortex vortex tracking and
+various discussions; Angela White, who assisted with calculating the spectra
+and with a variety of physics discussions; Tadhg Morgan, for initial 
+discussions and works with simulating cold atoms; Thomas Busch, for guidance
+over the many areas of physics this code has touched upon.
